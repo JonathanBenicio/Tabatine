@@ -52,6 +52,13 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
             <span className="ml-auto px-2 py-0.5 rounded-md bg-orange-500/20 text-orange-400 text-[10px] uppercase font-bold">Novo</span>
           </Link>
 
+          <Link href="/notificacoes" className={`flex items-center px-3 py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/notificacoes' ? 'bg-blue-500/10 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}>
+            {pathname === '/notificacoes' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-r-md"></div>}
+            <Bell className={`w-5 h-5 mr-3 ${pathname === '/notificacoes' ? 'text-blue-400' : 'group-hover:text-blue-400 transition-colors'}`} />
+            <span className="text-sm font-medium">Notificações</span>
+            <span className="ml-auto w-2 h-2 rounded-full bg-blue-500"></span>
+          </Link>
+
           <Link href="/clientes" className={`flex items-center px-3 py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/clientes' ? 'bg-blue-500/10 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}>
             {pathname === '/clientes' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-r-md"></div>}
             <Users className={`w-5 h-5 mr-3 ${pathname === '/clientes' ? 'text-blue-400' : 'group-hover:text-blue-400 transition-colors'}`} />
