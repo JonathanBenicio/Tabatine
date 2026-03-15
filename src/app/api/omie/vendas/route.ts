@@ -2,11 +2,17 @@ import { NextResponse } from 'next/server';
 import axios from 'axios';
 
 const OMIE_API_URL = process.env.OMIE_API_URL || 'https://app.omie.com.br/api/v1/';
-const OMIE_Endpoint = `${OMIE_API_URL}vendas/pedido/`; // ListarPedidos lies here usually, otherwise produtos/pedido/
-// Actually, using the validated endpoint from my test:
-const Valid_Endpoint = `${OMIE_API_URL}produtos/pedido/`;
+const OMIE_Endpoint = `${OMIE_API_URL}produtos/pedido/`;
 const APP_KEY = process.env.APP_KEY;
 const APP_SECRET = process.env.APP_SECRET;
+
+interface CacheEntry {
+  timestamp: number;
+  data: any;
+}
+
+const cache = new Map<string, CacheEntry>();
+const CACHE_TTL = 2 * 60 * 1000; // 2 minutos
 
 export async function POST(req: Request) {
   try {
@@ -19,18 +25,28 @@ export async function POST(req: Request) {
       );
     }
 
+    // Check Cache
+    const cacheKey = JSON.stringify(body);
+    const cached = cache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return NextResponse.json(cached.data);
+    }
+
     const omiePayload = {
       ...body,
       app_key: APP_KEY,
       app_secret: APP_SECRET,
     };
 
-    const response = await axios.post(Valid_Endpoint, omiePayload, {
+    const response = await axios.post(OMIE_Endpoint, omiePayload, {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
     });
+
+    // Save to Cache
+    cache.set(cacheKey, { timestamp: Date.now(), data: response.data });
 
     return NextResponse.json(response.data);
   } catch (error: any) {

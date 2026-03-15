@@ -1,16 +1,17 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useNfStore } from '@/store/useNfStore';
-import { Search, FileText, AlertCircle, RefreshCw, Eye, CheckCircle2, XCircle, Clock, Hash, User, ShieldCheck } from 'lucide-react';
+import { Search, FileText, AlertCircle, RefreshCw, Eye, CheckCircle2, XCircle, Clock, Hash, User, ShieldCheck, DollarSign, Ban } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import Pagination from './Pagination';
+import Link from 'next/link';
 
 export default function NfTable() {
   const { nfs, loading, error, currentPage, totalPaginas, totalRegistros, fetchNfs } = useNfStore();
 
   useEffect(() => {
-    fetchNfs(currentPage);
+    fetchNfs(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -30,19 +31,27 @@ export default function NfTable() {
 
   const getStatusBadge = (status: string) => {
     const s = status?.toLowerCase();
-    if (s === 'faturado' || s === 'concluido') {
+    if (s === 'faturado' || s === 'concluido' || s === 'f' || s === 'autorizado' || s === 'a') {
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-[10px] font-black tracking-tight uppercase shadow-[0_0_15px_rgba(16,185,129,0.1)]">
           <CheckCircle2 size={10} />
-          Faturado
+          {status}
         </span>
       );
     }
-    if (s === 'cancelado') {
+    if (s === 'cancelado' || s === 'c') {
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-full text-[10px] font-black tracking-tight uppercase shadow-[0_0_15px_rgba(244,63,94,0.1)]">
           <XCircle size={10} />
-          Cancelado
+          {status}
+        </span>
+      );
+    }
+    if (s === 'denegado' || s === 'd') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-500/10 text-orange-400 border border-orange-500/20 rounded-full text-[10px] font-black tracking-tight uppercase shadow-[0_0_15px_rgba(249,115,22,0.1)]">
+          <Ban size={10} />
+          {status}
         </span>
       );
     }
@@ -53,6 +62,15 @@ export default function NfTable() {
       </span>
     );
   };
+
+  // Summary stats
+  const stats = useMemo(() => {
+    const faturados = nfs.filter(n => ['faturado', 'autorizado'].includes(n.status_nf.toLowerCase()));
+    const cancelados = nfs.filter(n => n.status_nf.toLowerCase() === 'cancelado');
+    const totalFaturado = faturados.reduce((sum, n) => sum + (n.valor_total_nf || 0), 0);
+    const totalCancelado = cancelados.reduce((sum, n) => sum + (n.valor_total_nf || 0), 0);
+    return { faturados: faturados.length, cancelados: cancelados.length, totalFaturado, totalCancelado };
+  }, [nfs]);
 
   return (
     <div className="w-full space-y-6">
@@ -106,7 +124,33 @@ export default function NfTable() {
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-emerald-500/30 transition-all opacity-60">
+        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-emerald-500/30 transition-all">
+          <div className="flex justify-between items-start mb-4">
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Total Faturado</span>
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+              <DollarSign size={16} />
+            </div>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-emerald-400 tracking-tight">{formatCurrency(stats.totalFaturado)}</p>
+            <p className="text-[10px] text-zinc-500 mt-1">{stats.faturados} notas faturadas</p>
+          </div>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-rose-500/30 transition-all">
+          <div className="flex justify-between items-start mb-4">
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Canceladas</span>
+            <div className="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-400 group-hover:scale-110 transition-transform">
+              <XCircle size={16} />
+            </div>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-rose-400 tracking-tight">{formatCurrency(stats.totalCancelado)}</p>
+            <p className="text-[10px] text-zinc-500 mt-1">{stats.cancelados} notas canceladas</p>
+          </div>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-emerald-500/30 transition-all">
           <div className="flex justify-between items-start mb-4">
             <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Segurança Fiscal</span>
             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
@@ -139,8 +183,10 @@ export default function NfTable() {
               <tr className="border-b border-zinc-800/50 bg-zinc-900/20">
                 <th className="py-5 px-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] font-sans">Emissão</th>
                 <th className="py-5 px-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] font-sans">NF-e No.</th>
+                <th className="py-5 px-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] font-sans">Série</th>
                 <th className="py-5 px-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] font-sans">Destinatário / Cliente</th>
                 <th className="py-5 px-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] font-sans">Doc. Cliente</th>
+                <th className="py-5 px-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] font-sans">Nat. Operação</th>
                 <th className="py-5 px-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] font-sans text-right">Valor Líquido</th>
                 <th className="py-5 px-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] font-sans">Status</th>
                 <th className="py-5 px-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] font-sans text-center">Ações</th>
@@ -152,8 +198,10 @@ export default function NfTable() {
                   <tr key={i} className="animate-pulse">
                     <td className="py-5 px-6"><div className="h-4 bg-zinc-800/50 rounded-md w-16"></div></td>
                     <td className="py-5 px-6"><div className="h-4 bg-zinc-800/50 rounded-md w-20"></div></td>
+                    <td className="py-5 px-6"><div className="h-4 bg-zinc-800/50 rounded-md w-10"></div></td>
                     <td className="py-5 px-6"><div className="h-4 bg-zinc-800/50 rounded-md w-48"></div></td>
                     <td className="py-5 px-6"><div className="h-4 bg-zinc-800/50 rounded-md w-24"></div></td>
+                    <td className="py-5 px-6"><div className="h-4 bg-zinc-800/50 rounded-md w-32"></div></td>
                     <td className="py-5 px-6"><div className="h-4 bg-zinc-800/50 rounded-md w-24 ml-auto"></div></td>
                     <td className="py-5 px-6"><div className="h-6 bg-zinc-800/50 rounded-full w-24"></div></td>
                     <td className="py-5 px-6"><div className="h-4 bg-zinc-800/50 rounded-md w-10 mx-auto"></div></td>
@@ -161,7 +209,7 @@ export default function NfTable() {
                 ))
               ) : nfs.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-24 px-6 text-center">
+                  <td colSpan={9} className="py-24 px-6 text-center">
                     <div className="flex flex-col items-center justify-center gap-4">
                       <div className="w-16 h-16 rounded-full bg-zinc-900/50 border border-zinc-800 flex items-center justify-center text-zinc-700">
                         <FileText size={32} />
@@ -171,43 +219,55 @@ export default function NfTable() {
                   </td>
                 </tr>
               ) : (
-                nfs.map((nf, idx) => (
+                nfs.map((nf) => (
                   <tr 
-                    key={nf.id_nf || idx} 
+                    key={nf.id_nf} 
                     className="group/row hover:bg-blue-500/[0.02] transition-all duration-300"
                   >
                     <td className="py-5 px-6 text-xs font-medium text-zinc-400 font-mono">
-                      {formatDate(nf.data_emissao || nf.dEmissao)}
+                      {formatDate(nf.data_emissao)}
                     </td>
                     <td className="py-5 px-6">
-                      <span className="text-sm font-bold text-white tracking-tight">#{nf.numero_nf || nf.cNumero || '---'}</span>
+                      <span className="text-sm font-bold text-white tracking-tight">#{nf.numero_nf}</span>
+                    </td>
+                    <td className="py-5 px-6">
+                      <span className="text-xs font-mono text-zinc-400">{nf.serie}</span>
                     </td>
                     <td className="py-5 px-6">
                       <div className="flex items-center gap-2">
                         <User size={12} className="text-zinc-600" />
                         <span className="text-sm font-medium text-zinc-300 group-hover/row:text-white transition-colors">
-                          {nf.razao_social || nf.sNomeRazao || 'Não identificado'}
+                          {nf.razao_social}
                         </span>
                       </div>
                     </td>
                     <td className="py-5 px-6">
                        <span className="text-[10px] font-bold text-zinc-500 font-mono">
-                         {nf.cnpj_cpf_destinatario || nf.cnpj_cpf || '---'}
+                         {nf.cnpj_cpf}
                        </span>
+                    </td>
+                    <td className="py-5 px-6">
+                      <span className="text-xs text-zinc-400 max-w-[150px] truncate block">
+                        {nf.natureza_operacao}
+                      </span>
                     </td>
                     <td className="py-5 px-6 text-right">
                       <span className="text-sm font-black text-white group-hover/row:text-blue-400 transition-colors">
-                        {formatCurrency(nf.valor_total_nf || nf.nValorTotal || 0)}
+                        {formatCurrency(nf.valor_total_nf)}
                       </span>
                     </td>
                     <td className="py-5 px-6">
-                      {getStatusBadge(nf.status_nf || nf.cStatus)}
+                      {getStatusBadge(nf.status_nf)}
                     </td>
                     <td className="py-5 px-6">
                       <div className="flex justify-center opacity-0 group-hover/row:opacity-100 transition-all translate-x-1 group-hover/row:translate-x-0">
-                        <button className="p-2 bg-blue-500 hover:bg-blue-400 text-white rounded-lg transition-colors shadow-lg shadow-blue-500/20" title="Abrir Detalhes">
+                        <Link 
+                          href={`/nf/${nf.id_nf}`}
+                          className="p-2 bg-blue-500 hover:bg-blue-400 text-white rounded-lg transition-colors shadow-lg shadow-blue-500/20" 
+                          title="Abrir Detalhes"
+                        >
                           <Eye size={14} />
-                        </button>
+                        </Link>
                       </div>
                     </td>
                   </tr>

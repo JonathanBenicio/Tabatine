@@ -2,12 +2,16 @@
 
 import React, { useEffect } from 'react';
 import { useVendasStore } from '@/store/useVendasStore';
+import { useLookupStore } from '@/store/useLookupStore';
 import { Search, TrendingUp, AlertCircle, RefreshCw, Eye, Package, User, Wallet, Calendar } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import { useRouter } from 'next/navigation';
 import Pagination from './Pagination';
 
 export default function VendasTable() {
-  const { vendas, loading, error, currentPage, totalPaginas, totalRegistros, fetchVendas } = useVendasStore();
+  const router = useRouter();
+  const { vendas, loading, error, currentPage, totalPaginas, totalRegistros, fetchVendas, anoSelecionado, setAnoSelecionado } = useVendasStore();
+  const { getClienteNome, getVendedorNome, getContaNome } = useLookupStore();
 
   useEffect(() => {
     fetchVendas(1);
@@ -17,6 +21,8 @@ export default function VendasTable() {
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
   };
+
+  const yearOptions = [2023, 2024, 2025, 2026, 2027];
 
   const formatDate = (dateStr: string) => {
     if (!dateStr || dateStr === '--') return '--';
@@ -28,13 +34,40 @@ export default function VendasTable() {
     }
   };
 
+  const etapaMap: Record<string, { label: string; color: string }> = {
+    '10': { label: 'Pedido', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
+    '20': { label: 'Separar', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' },
+    '30': { label: 'Faturar', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
+    '50': { label: 'Faturado', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+    '60': { label: 'Entregue', color: 'text-teal-400 bg-teal-500/10 border-teal-500/20' },
+    '70': { label: 'Cancelado', color: 'text-rose-400 bg-rose-500/10 border-rose-500/20' },
+    '80': { label: 'Devolvido', color: 'text-red-400 bg-red-500/10 border-red-500/20' },
+  };
+
+  const formatEtapa = (etapa: string) => {
+    const mapped = etapaMap[etapa];
+    if (mapped) return mapped;
+    return { label: etapa || 'Pendente', color: 'text-zinc-400 bg-zinc-800 border-zinc-700' };
+  };
+
   const headers = [
     "📅 DATA", "👥 CLIENTE", "👤 VENDEDOR", "📦 PEDIDO", "📄 NF",
     "🛒 PRODUTO", "📦 UND", "💰 VALOR VENDA", "💳 COND. PAGTO.",
     "🚚 FRETE", "📈 COMS. %", "🎯 VALOR TOTAL", "🏦 FORMA PG",
     "🏛️ BANCO", "💰 Parcela 1", "📅 Venc. 1", "🚦 Status Venc.",
-    "💰 Parcela 2", "📅 Venc. 2", "💰 Parcela 3", "📅 Venc. 3", "🎗️ Status Comissão"
+    "💰 Parcela 2", "📅 Venc. 2", "💰 Parcela 3", "📅 Venc. 3", "🎗️ Status Comissão", "⚡ AÇÕES"
   ];
+
+  const sortedVendas = [...vendas].sort((a, b) => {
+    const parseCustomDate = (d: string) => {
+      if (!d || d === '--') return 0;
+      const parts = d.split('/');
+      if (parts.length === 3) return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0])).getTime();
+      const iso = parseISO(d).getTime();
+      return isNaN(iso) ? 0 : iso;
+    };
+    return parseCustomDate(b.data) - parseCustomDate(a.data);
+  });
 
   return (
     <div className="w-full space-y-6">
@@ -61,7 +94,23 @@ export default function VendasTable() {
               className="pl-10 pr-4 py-2.5 bg-zinc-900/40 border border-zinc-800 focus:border-orange-500/40 rounded-xl text-sm placeholder:text-zinc-600 outline-none w-full lg:w-72 transition-all focus:ring-4 focus:ring-orange-500/5 backdrop-blur-sm"
             />
           </div>
-          <button 
+
+          <div className="relative group">
+            <select
+              value={anoSelecionado}
+              onChange={(e) => setAnoSelecionado(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+              disabled={loading}
+              className="appearance-none pl-4 pr-10 py-2.5 bg-zinc-900/40 border border-zinc-800 focus:border-orange-500/40 rounded-xl text-sm text-zinc-300 outline-none w-32 transition-all cursor-pointer backdrop-blur-sm"
+            >
+              <option value="all">Todos os Anos</option>
+              {yearOptions.reverse().map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+            <Calendar className="w-4 h-4 text-zinc-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none group-focus-within:text-orange-400 transition-colors" />
+          </div>
+
+          <button  
             onClick={() => fetchVendas(1)} 
             disabled={loading}
             className="p-2.5 bg-zinc-900/40 border border-zinc-800 hover:border-zinc-700 rounded-xl text-zinc-400 hover:text-white transition-all active:scale-95 disabled:opacity-50 group backdrop-blur-sm"
@@ -137,7 +186,7 @@ export default function VendasTable() {
                   </td>
                 </tr>
               ) : (
-                vendas.map((v, idx) => (
+                sortedVendas.map((v, idx) => (
                   <tr 
                     key={v.id_linha || idx} 
                     className="group/row hover:bg-orange-500/[0.03] transition-all duration-300"
@@ -146,14 +195,20 @@ export default function VendasTable() {
                     <td className="py-4 px-5 min-w-[220px]">
                       <div className="flex items-center gap-2 group-hover/row:translate-x-1 transition-transform">
                         <User size={12} className="text-zinc-600" />
-                        <span className="text-xs font-bold text-white group-hover/row:text-orange-400 transition-colors">{v.cliente}</span>
+                        <span className="text-xs font-bold text-white group-hover/row:text-orange-400 transition-colors">
+                          {getClienteNome(v.cliente)}
+                        </span>
                       </div>
                     </td>
-                    <td className="py-4 px-5 min-w-[150px] text-[11px] text-zinc-400 font-medium">{v.vendedor}</td>
+                    <td className="py-4 px-5 min-w-[150px] text-[11px] text-zinc-400 font-medium">
+                      {getVendedorNome(v.vendedor)}
+                    </td>
                     <td className="py-4 px-5 whitespace-nowrap">
                       <span className="text-[11px] font-black text-orange-500/80 bg-orange-500/5 px-2 py-0.5 rounded-lg border border-orange-500/10">#{v.pedido}</span>
                     </td>
-                    <td className="py-4 px-5 text-[11px] text-zinc-500 font-mono">{v.nf || '---'}</td>
+                    <td className="py-4 px-5 text-[11px] text-zinc-500 font-mono">
+                      {v.nf || '---'}
+                    </td>
                     
                     <td className="py-4 px-5 min-w-[200px]">
                       <div className="flex items-center gap-2">
@@ -171,13 +226,15 @@ export default function VendasTable() {
                     </td>
                     <td className="py-4 px-5 text-xs font-black text-white">{formatCurrency(v.valorTotal)}</td>
                     <td className="py-4 px-5 text-[11px] text-zinc-400 uppercase tracking-tighter">{v.formaPg}</td>
-                    <td className="py-4 px-5 text-[10px] text-zinc-500 font-medium">{v.banco}</td>
+                    <td className="py-4 px-5 text-[10px] text-zinc-500 font-medium">
+                      {getContaNome(v.banco)}
+                    </td>
 
                     <td className="py-4 px-5 text-[11px] font-bold text-amber-500/80">{v.parcela1 ? formatCurrency(v.parcela1.valor) : '---'}</td>
                     <td className="py-4 px-5 text-[10px] font-mono text-zinc-500">{v.parcela1 ? formatDate(v.parcela1.vencimento) : '---'}</td>
                     <td className="py-4 px-5">
-                        <span className="px-2 py-0.5 rounded-md bg-zinc-800 text-[9px] font-black text-zinc-400 uppercase tracking-tighter border border-zinc-700">
-                          {v.vencimentoStatus}
+                        <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-tighter border ${formatEtapa(v.vencimentoStatus).color}`}>
+                          {formatEtapa(v.vencimentoStatus).label}
                         </span>
                     </td>
 
@@ -191,6 +248,15 @@ export default function VendasTable() {
                         <span className="px-2 py-1 rounded-lg bg-orange-500/10 text-orange-400 text-[9px] font-black uppercase border border-orange-500/20">
                             {v.statusComissao}
                         </span>
+                    </td>
+                    <td className="py-4 px-5 text-right">
+                      <button 
+                        onClick={() => router.push(`/vendas/${v.id_linha}`)}
+                        className="p-2 rounded-lg bg-zinc-800/50 hover:bg-orange-500/20 text-zinc-400 hover:text-orange-400 transition-colors border border-zinc-700/50 hover:border-orange-500/30 group"
+                        title="Ver Detalhes"
+                      >
+                        <Eye size={16} className="group-hover:scale-110 transition-transform" />
+                      </button>
                     </td>
                   </tr>
                 ))

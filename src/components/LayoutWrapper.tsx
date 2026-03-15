@@ -12,7 +12,9 @@ import {
   Settings, 
   LogOut, 
   Bell, 
-  Search
+  Search,
+  ArrowRight,
+  Banknote
 } from 'lucide-react';
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
@@ -34,8 +36,9 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
         <nav className="flex-1 py-6 px-4 space-y-2">
           <p className="px-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">Menu Principal</p>
           
-          <Link href="#" className="flex items-center px-3 py-2.5 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all group">
-            <LayoutDashboard className="w-5 h-5 mr-3 group-hover:text-blue-400 transition-colors" />
+          <Link href="/dashboard" className={`flex items-center px-3 py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/dashboard' ? 'bg-purple-500/10 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}>
+            {pathname === '/dashboard' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-500 rounded-r-md"></div>}
+            <LayoutDashboard className={`w-5 h-5 mr-3 ${pathname === '/dashboard' ? 'text-purple-400' : 'group-hover:text-purple-400 transition-colors'}`} />
             <span className="text-sm font-medium">Dashboard</span>
           </Link>
           
@@ -63,6 +66,12 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
             {pathname === '/clientes' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-r-md"></div>}
             <Users className={`w-5 h-5 mr-3 ${pathname === '/clientes' ? 'text-blue-400' : 'group-hover:text-blue-400 transition-colors'}`} />
             <span className="text-sm font-medium">Clientes</span>
+          </Link>
+
+          <Link href="/conciliacao" className={`flex items-center px-3 py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/conciliacao' ? 'bg-emerald-500/10 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}>
+            {pathname === '/conciliacao' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 rounded-r-md"></div>}
+            <Banknote className={`w-5 h-5 mr-3 ${pathname === '/conciliacao' ? 'text-emerald-400' : 'group-hover:text-emerald-400 transition-colors'}`} />
+            <span className="text-sm font-medium">Conciliação</span>
           </Link>
         </nav>
 

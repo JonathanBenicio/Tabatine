@@ -1,11 +1,33 @@
 import { create } from 'zustand';
+import { useLookupStore } from './useLookupStore';
+import { useNfStore } from './useNfStore';
+
+export interface ParcelaInfo {
+  numero: number;
+  valor: number;
+  vencimento: string;
+  percentual: number;
+  meioPagamento: string;
+  categoria: string;
+  nsu: string;
+}
+
+export interface ImpostoDetalhe {
+  aliquota: number;
+  base: number;
+  valor: number;
+  cst: string;
+}
 
 export interface VendaPlana {
   id_linha: string;
   data: string;
   cliente: string;
   vendedor: string;
+  codVendedor: number;
+  codProjeto: number;
   pedido: string;
+  numeroPedido: string;
   nf: string;
   produto: string;
   und: string;
@@ -16,54 +38,271 @@ export interface VendaPlana {
   valorTotal: number;
   formaPg: string;
   banco: string;
+  codContaCorrente: number;
   parcela1?: { valor: number; vencimento: string };
   parcela2?: { valor: number; vencimento: string };
   parcela3?: { valor: number; vencimento: string };
   vencimentoStatus: string;
   statusComissao: 'PAGO' | 'PENDENTE' | 'CANCELADA' | string;
+  omieData?: any;
+
+  // Cabecalho extra
+  dataPedido: string;
+  dataPrevisao: string;
+  etapa: string;
+  qtdItens: number;
+  observacao: string;
+  observacaoInterna: string;
+
+  // Informações adicionais
+  contato: string;
+  dadosAdicionaisNf: string;
+
+  // Produto extra
+  codigoProduto: string;
+  nIdItem: number;
+  ncm: string;
+  cfop: string;
+  quantidade: number;
+  percDesconto: number;
+  valorDesconto: number;
+
+  // Impostos
+  impostos: {
+    icms: ImpostoDetalhe;
+    pis: ImpostoDetalhe;
+    cofins: ImpostoDetalhe;
+    ibs: { valor: number; aliquota: number; base: number };
+    cbs: { valor: number; aliquota: number; base: number };
+  };
+
+  // Frete detalhado
+  freteDetalhado: {
+    modalidade: string;
+    valor: number;
+    pesoBruto: number;
+    pesoLiq: number;
+    qtdVolumes: number;
+    previsaoEntrega: string;
+    transportadora: string;
+    codTransportadora: number;
+  };
+
+  // Info NF / Auditoria
+  dataFaturamento: string;
+  dataInclusao: string;
+  horaInclusao: string;
+  dataAlteracao: string;
+  horaAlteracao: string;
+  usuarioInclusao: string;
+  usuarioAlteracao: string;
+  chaveNfe: string;
+  statusNfe: string;
+  cancelado: string;
+  denegado: string;
+  autorizado: string;
+
+  // Totais do pedido
+  totalPedido: {
+    valorTotal: number;
+    baseIcms: number;
+    valorIcms: number;
+    valorMercadorias: number;
+    valorIpi: number;
+    valorPis: number;
+    valorCofins: number;
+  };
+
+  // Todas as parcelas
+  todasParcelas: ParcelaInfo[];
 }
 
 interface VendasStoreState {
   vendas: VendaPlana[];
   loading: boolean;
   error: string | null;
+  hasFetchedInitial: boolean;
   totalPaginas: number;
   totalRegistros: number;
   currentPage: number;
-  fetchVendas: (page?: number) => Promise<void>;
+  anoSelecionado: number | 'all';
+  setAnoSelecionado: (ano: number | 'all') => void;
+  fetchVendas: (page?: number, forceRefresh?: boolean) => Promise<void>;
 }
 
 export const useVendasStore = create<VendasStoreState>((set, get) => ({
   vendas: [],
   loading: false,
   error: null,
+  hasFetchedInitial: false,
   totalPaginas: 1,
   totalRegistros: 0,
   currentPage: 1,
+  anoSelecionado: new Date().getFullYear(),
 
-  fetchVendas: async (page = 1) => {
-    set({ loading: true, error: null });
+  setAnoSelecionado: (ano) => {
+    set({ anoSelecionado: ano, totalRegistros: 0, totalPaginas: 1, hasFetchedInitial: false, vendas: [], currentPage: 1 });
+    get().fetchVendas(1, true);
+  },
+
+  fetchVendas: async (page = 1, forceRefresh = false) => {
+    // Evitar fetch duplicado se já estivermos na mesma página
+    if (page === get().currentPage && get().hasFetchedInitial && !forceRefresh) return;
+
+    set({ loading: true, error: null, hasFetchedInitial: true });
     try {
-      const response = await fetch('/api/omie/vendas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          call: 'ListarPedidos',
-          param: [{ pagina: page, registros_por_pagina: 10 }]
-        }),
-      });
+      // --- Lookups Population ---
+      const lookupStore = useLookupStore.getState();
+      const nfStore = useNfStore.getState();
+      
+      // Pre-populate client names from NF data if available
+      if (nfStore.nfs.length > 0) {
+        const clientMap: Record<number, string> = {};
+        nfStore.nfs.forEach(nf => {
+          if (nf.cod_cliente && nf.razao_social) {
+            clientMap[nf.cod_cliente] = nf.razao_social;
+          }
+        });
+        lookupStore.setClientesLookup(clientMap);
+      }
 
-      const data = await response.json();
+      // Removed background lookups for all vendors and accounts,
+      // as they will now be fetched by ID strictly on the details page.
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch Vendas');
+      let totalPaginasOmie = get().totalPaginas;
+      let totalRegistrosAtuais = get().totalRegistros;
+      const registrosPorPagina = 500;
+      const currentYear = get().anoSelecionado;
+
+      const baseParam: any = {
+        pagina: 1,
+        registros_por_pagina: 1,
+        ordenar_por: 'DATA_FATURAMENTO'
+      };
+
+      if (currentYear !== 'all') {
+        baseParam.data_faturamento_de = `01/01/${currentYear}`;
+        baseParam.data_faturamento_ate = `31/12/${currentYear}`;
+      }
+
+      // First, get the total records so we know the last page (only if not already loaded)
+      if (totalRegistrosAtuais === 0 || forceRefresh) {
+        // --- CACHE CHECK INITIAL TOTAL (5 minutes) ---
+        const cacheTotalKey = `omie_vendas_total_registros_${currentYear}`;
+        const cachedTotalRaw = typeof window !== 'undefined' ? localStorage.getItem(cacheTotalKey) : null;
+        let shouldUseTotalCache = false;
+
+        if (cachedTotalRaw) {
+          try {
+            const cachedTotalPayload = JSON.parse(cachedTotalRaw);
+            const cacheAgeMs = Date.now() - cachedTotalPayload.timestamp;
+            if (cacheAgeMs < 5 * 60 * 1000) {
+              totalRegistrosAtuais = cachedTotalPayload.totalRegistros;
+              shouldUseTotalCache = true;
+            }
+          } catch (e) {
+               // Ignore cache
+          }
+        }
+
+        if (!shouldUseTotalCache) {
+          const initialRes = await fetch('/api/omie/vendas', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              call: 'ListarPedidos',
+              param: [baseParam]
+            }),
+          });
+          const initialData = await initialRes.json();
+          if (!initialRes.ok) throw new Error(initialData.error || 'Failed to fetch initial Vendas');
+
+          totalRegistrosAtuais = initialData.total_de_registros || 0;
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(cacheTotalKey, JSON.stringify({
+              timestamp: Date.now(),
+              totalRegistros: totalRegistrosAtuais
+            }));
+          }
+        }
+
+        totalPaginasOmie = Math.ceil(totalRegistrosAtuais / registrosPorPagina) || 1;
+        set({ totalRegistros: totalRegistrosAtuais, totalPaginas: totalPaginasOmie });
+      }
+
+      const targetOmiePage = page;
+
+      // --- CACHE CHECK (2 minutes) ---
+      const cacheKey = `omie_vendas_page_desc_${targetOmiePage}_${currentYear}`;
+      const cachedDataRaw = typeof window !== 'undefined' ? localStorage.getItem(cacheKey) : null;
+      let shouldUseCache = false;
+      let data;
+
+      if (cachedDataRaw) {
+        try {
+          const cachedPayload = JSON.parse(cachedDataRaw);
+          const cacheAgeMs = Date.now() - cachedPayload.timestamp;
+          // Omie blocks identical requests under 1 MINUTE. We cache for 2 minutes just to be safe.
+          if (cacheAgeMs < 120 * 1000) {
+            data = cachedPayload.data;
+            shouldUseCache = true;
+          }
+        } catch (e) {
+             // Cache is broken, ignore it
+        }
+      }
+
+      if (!shouldUseCache) {
+        const fetchParam: any = {
+          pagina: targetOmiePage,
+          registros_por_pagina: registrosPorPagina,
+          ordenar_por: 'DATA_FATURAMENTO',
+          ordem_descrescente: 'S'
+        };
+        
+        if (currentYear !== 'all') {
+          fetchParam.data_faturamento_de = `01/01/${currentYear}`;
+          fetchParam.data_faturamento_ate = `31/12/${currentYear}`;
+        }
+
+        const response = await fetch('/api/omie/vendas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            call: 'ListarPedidos',
+            param: [fetchParam]
+          }),
+        });
+
+        data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch Vendas');
+        }
+
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(cacheKey, JSON.stringify({
+            timestamp: Date.now(),
+            data: data
+          }));
+        }
       }
 
       const rawPedidos = data.pedido_venda_produto || [];
+
+      let pedidosToProcess = rawPedidos;
+      // Strict client-side filter: Omie returns by inclusion date, which might bleed old dates.
+      if (currentYear !== 'all') {
+         pedidosToProcess = rawPedidos.filter((ped: any) => {
+            const dateStr = ped.infoCadastro?.dFat || ped.cabecalho?.data_previsao || ped.cabecalho?.data_pedido || '';
+            return dateStr.includes(currentYear.toString());
+         });
+      }
+
       const flatVendas: VendaPlana[] = [];
 
       // Flatten each order -> each product
-      rawPedidos.forEach((ped: any) => {
+      pedidosToProcess.forEach((ped: any) => {
         const cabecalho = ped.cabecalho || {};
         const det = ped.det || [];
         const frete = ped.frete || {};
@@ -75,29 +314,150 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
         const p2 = parcelasInfo[1] ? { valor: parcelasInfo[1].valor || 0, vencimento: parcelasInfo[1].data_vencimento || '' } : undefined;
         const p3 = parcelasInfo[2] ? { valor: parcelasInfo[2].valor || 0, vencimento: parcelasInfo[2].data_vencimento || '' } : undefined;
 
+        // Map all installments
+        const todasParcelas: ParcelaInfo[] = parcelasInfo.map((parc: any, pIdx: number) => ({
+          numero: parc.numero_parcela || pIdx + 1,
+          valor: parc.valor || 0,
+          vencimento: parc.data_vencimento || '',
+          percentual: parc.percentual || 0,
+          meioPagamento: parc.meio_pagamento || '',
+          categoria: parc.categoria || '',
+          nsu: parc.nsu || '',
+        }));
+
+        const infoAdicional = ped.informacoes_adicionais || {};
+        const totalPedido = ped.total_pedido || {};
+        const observacoes = ped.observacoes || {};
+
         det.forEach((item: any, idx: number) => {
           const prod = item.produto || {};
+          const itemIde = item.ide || {};
+          const imp = item.imposto || {};
+          const icms = imp.icms || {};
+          const pis = imp.pis_padrao || {};
+          const cofins = imp.cofins_padrao || {};
+          const ibs = imp.ibs || {};
+          const cbs = imp.cbs || {};
+
           flatVendas.push({
-            id_linha: `${cabecalho.numero_pedido}-${idx}`,
-            data: cabecalho.data_previsao || cabecalho.data_pedido || '--',
-            cliente: cabecalho.codigo_cliente?.toString() || '--', // Might be ID, requires Client API join later ideally
-            vendedor: cabecalho.codigo_vendedor?.toString() || '--',
+            id_linha: `${cabecalho.codigo_pedido}-${idx}`,
+            data: info.dFat || cabecalho.data_previsao || cabecalho.data_pedido || '--',
+            cliente: cabecalho.codigo_cliente?.toString() || '--',
+            vendedor: infoAdicional.codVend?.toString() || '--',
+            codVendedor: infoAdicional.codVend || 0,
+            codProjeto: infoAdicional.codProj || 0,
             pedido: cabecalho.numero_pedido || '',
+            numeroPedido: cabecalho.numero_pedido || '',
             nf: info.numero_nfe || '', 
-            produto: prod.descricao || prod.xProd || 'Produto sem nome',
-            und: prod.unidade || prod.uCom || 'UN',
-            valorVenda: prod.valor_unitario || prod.vUnCom || 0,
+            produto: prod.descricao || 'Produto sem nome',
+            und: prod.unidade || 'UN',
+            valorVenda: prod.valor_unitario || 0,
             condPagto: cabecalho.codigo_parcela || '--',
             frete: frete.valor_frete || 0,
-            percComissao: prod.perc_desconto || 0, // Fallback if no commision
-            valorTotal: prod.valor_mercadoria || prod.vProd || 0,
+            percComissao: prod.perc_desconto || 0,
+            valorTotal: prod.valor_total || 0,
             formaPg: cabecalho.forma_pagamento || '--',
-            banco: cabecalho.conta_corrente || '--',
+            banco: infoAdicional.codigo_conta_corrente?.toString() || '--',
+            codContaCorrente: infoAdicional.codigo_conta_corrente || 0,
             parcela1: p1,
             parcela2: p2,
             parcela3: p3,
             vencimentoStatus: cabecalho.etapa || 'Pendente',
-            statusComissao: 'PENDENTE'
+            statusComissao: 'PENDENTE',
+            omieData: ped,
+
+            // Cabecalho extra
+            dataPedido: cabecalho.data_pedido || '--',
+            dataPrevisao: cabecalho.data_previsao || '--',
+            etapa: cabecalho.etapa || '--',
+            qtdItens: det.length,
+            observacao: observacoes.obs_venda || '',
+            observacaoInterna: observacoes.obs_interna || '',
+
+            // Informações adicionais
+            contato: infoAdicional.contato || '',
+            dadosAdicionaisNf: infoAdicional.dados_adicionais_nf || '',
+
+            // Produto extra
+            codigoProduto: prod.codigo || '',
+            nIdItem: itemIde.codigo_item || 0,
+            ncm: prod.ncm || '--',
+            cfop: prod.cfop || '--',
+            quantidade: prod.quantidade || 0,
+            percDesconto: prod.percentual_desconto || 0,
+            valorDesconto: prod.valor_desconto || 0,
+
+            // Impostos
+            impostos: {
+              icms: {
+                aliquota: icms.aliq_icms || 0,
+                base: icms.base_icms || 0,
+                valor: icms.valor_icms || 0,
+                cst: icms.cst_icms || '--',
+              },
+              pis: {
+                aliquota: pis.aliq_pis || 0,
+                base: pis.base_pis || 0,
+                valor: pis.valor_pis || 0,
+                cst: pis.cod_sit_trib_pis || '--',
+              },
+              cofins: {
+                aliquota: cofins.aliq_cofins || 0,
+                base: cofins.base_cofins || 0,
+                valor: cofins.valor_cofins || 0,
+                cst: cofins.cod_sit_trib_cofins || '--',
+              },
+              ibs: {
+                valor: ibs.valor_ibs || 0,
+                aliquota: ibs.aliquota_ibs_uf || 0,
+                base: item.imposto?.ibs_cbs?.base_ibs_cbs || 0,
+              },
+              cbs: {
+                valor: cbs.valor_cbs || 0,
+                aliquota: cbs.aliquota_cbs || 0,
+                base: item.imposto?.ibs_cbs?.base_ibs_cbs || 0,
+              },
+            },
+
+            // Frete detalhado
+            freteDetalhado: {
+              modalidade: frete.modalidade || '--',
+              valor: frete.valor_frete || 0,
+              pesoBruto: frete.peso_bruto || 0,
+              pesoLiq: frete.peso_liquido || 0,
+              qtdVolumes: frete.quantidade_volumes || 0,
+              previsaoEntrega: frete.previsao_entrega || '--',
+              transportadora: frete.codigo_transportadora?.toString() || '--',
+              codTransportadora: frete.codigo_transportadora || 0,
+            },
+
+            // Info NF / Auditoria
+            dataFaturamento: info.dFat || '--',
+            dataInclusao: info.dInc || '--',
+            horaInclusao: info.hInc || '--',
+            dataAlteracao: info.dAlt || '--',
+            horaAlteracao: info.hAlt || '--',
+            usuarioInclusao: info.uInc || '',
+            usuarioAlteracao: info.uAlt || '',
+            chaveNfe: info.chave_nfe || '',
+            statusNfe: info.cancelado === 'S' ? 'CANCELADA' : info.denegado === 'S' ? 'DENEGADA' : info.autorizado === 'S' ? 'AUTORIZADA' : info.numero_nfe ? 'EMITIDA' : 'PENDENTE',
+            cancelado: info.cancelado || 'N',
+            denegado: info.denegado || 'N',
+            autorizado: info.autorizado || 'N',
+
+            // Totais do pedido
+            totalPedido: {
+              valorTotal: totalPedido.valor_total_pedido || 0,
+              baseIcms: totalPedido.base_calculo_icms || 0,
+              valorIcms: totalPedido.valor_icms || 0,
+              valorMercadorias: totalPedido.valor_mercadorias || 0,
+              valorIpi: totalPedido.valor_IPI || 0,
+              valorPis: totalPedido.valor_pis || 0,
+              valorCofins: totalPedido.valor_cofins || 0,
+            },
+
+            // Todas as parcelas
+            todasParcelas,
           });
         });
       });
@@ -110,7 +470,15 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
         loading: false,
       });
     } catch (error: any) {
-      set({ error: error.message, loading: false });
+      const errorMessage = error.message || '';
+      if (errorMessage.includes('consumo indevido') || errorMessage.includes('425') || errorMessage.includes('bloqueada')) {
+        set({ 
+          error: ' limite de requisições da Omie atingido. A API bloqueou temporariamente novas consultas por segurança. Mínimo de 1 minuto de aguardo.',
+          loading: false 
+        });
+      } else {
+        set({ error: errorMessage, loading: false });
+      }
     }
   },
 }));
