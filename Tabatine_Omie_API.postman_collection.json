@@ -544,7 +544,7 @@
 		},
 		{
 			"name": "5. Vendedores",
-			"description": "Endpoint: /geral/vendedores/\nDocumentação: https://app.omie.com.br/api/v1/geral/vendedores/",
+			"description": "Endpoint: /geral/vendedores/\nRoute local: src/app/api/omie/vendedores/route.ts\nDocumentação: https://app.omie.com.br/api/v1/geral/vendedores/",
 			"item": [
 				{
 					"name": "ListarVendedores",
@@ -747,6 +747,45 @@
 			]
 		},
 		{
+			"name": "5.1. Produtos",
+			"description": "Endpoint: /geral/produtos/\nRoute local: src/app/api/omie/produtos/route.ts\nDocumentação: https://app.omie.com.br/api/v1/geral/produtos/",
+			"item": [
+				{
+					"name": "ListarProdutos",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"call\": \"ListarProdutos\",\n  \"app_key\": \"{{APP_KEY}}\",\n  \"app_secret\": \"{{APP_SECRET}}\",\n  \"param\": [\n    {\n      \"pagina\": 1,\n      \"registros_por_pagina\": 50,\n      \"apenas_importado_api\": \"N\",\n      \"filtrar_apenas_omiepdv\": \"N\"\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{OMIE_BASE_URL}}/geral/produtos/",
+							"host": [
+								"{{OMIE_BASE_URL}}"
+							],
+							"path": [
+								"geral",
+								"produtos",
+								""
+							]
+						},
+						"description": "Lista produtos com paginação."
+					}
+				}
+			]
+		},
+		{
 			"name": "6. Usuários CRM",
 			"description": "Endpoint: /crm/usuarios/\nDocumentação: https://app.omie.com.br/api/v1/crm/usuarios/",
 			"item": [
@@ -820,7 +859,7 @@
 		},
 		{
 			"name": "7. Contas Correntes",
-			"description": "Endpoint: /financas/contacorrente/\nRoute local: src/app/api/omie/contas/route.ts\nDocumentação: https://app.omie.com.br/api/v1/financas/contacorrente/",
+			"description": "Endpoint: /geral/contacorrente/\nRoute local: src/app/api/omie/contas/route.ts\nDocumentação: https://app.omie.com.br/api/v1/geral/contacorrente/",
 			"item": [
 				{
 					"name": "ListarContasCorrentes",
@@ -842,17 +881,107 @@
 							}
 						},
 						"url": {
-							"raw": "{{OMIE_BASE_URL}}/financas/contacorrente/",
+							"raw": "{{OMIE_BASE_URL}}/geral/contacorrente/",
 							"host": [
 								"{{OMIE_BASE_URL}}"
 							],
 							"path": [
-								"financas",
+								"geral",
 								"contacorrente",
 								""
 							]
 						},
 						"description": "Lista contas correntes (bancos) com paginação."
+					}
+				},
+				{
+					"name": "ConsultarContaCorrente",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"call\": \"ConsultarContaCorrente\",\n  \"app_key\": \"{{APP_KEY}}\",\n  \"app_secret\": \"{{APP_SECRET}}\",\n  \"param\": [\n    {\n      \"nCodCC\": 0\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{OMIE_BASE_URL}}/geral/contacorrente/",
+							"host": [
+								"{{OMIE_BASE_URL}}"
+							],
+							"path": [
+								"geral",
+								"contacorrente",
+								""
+							]
+						},
+						"description": "Consulta uma conta corrente específica por nCodCC."
+					}
+				}
+			]
+		},
+		{
+			"name": "8. Webhooks",
+			"description": "Endpoints para recebimento e consulta de Webhooks do Omie.\n\nRoute local (Receber): src/app/api/webhooks/omie/route.ts\nRoute local (Consultar): src/app/api/webhooks/recent/route.ts",
+			"item": [
+				{
+					"name": "Receber Webhook (Proxy)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": {\n    \"topic\": \"venda.pago\",\n    \"payload\": {}\n  }\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/webhooks/omie",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"webhooks",
+								"omie"
+							]
+						},
+						"description": "Simula o recebimento de um webhook do Omie na rota local."
+					}
+				},
+				{
+					"name": "Listar Webhooks Recebidos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/webhooks/recent",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"webhooks",
+								"recent"
+							]
+						},
+						"description": "Lista os últimos webhooks recebidos e armazenados em memória no servidor local (apenas desenvolvimento)."
 					}
 				}
 			]

@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { useVendasStore, VendaPlana } from '@/store/useVendasStore';
 import { useLookupStore } from '@/store/useLookupStore';
-import { useNfStore } from '@/store/useNfStore';
 import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft, Package, User, Calendar, CreditCard, TrendingUp,
@@ -86,18 +85,36 @@ function StatCard({ icon: Icon, iconBg, label, value, subValue }: {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    AUTORIZADA: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    EMITIDA: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    CANCELADA: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-    DENEGADA: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-    PENDENTE: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    PAGO: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  if (!status) return null;
+
+  const statusMap: Record<string, { label: string; bg: string }> = {
+    '10': { label: 'Pedido', bg: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
+    '20': { label: 'Separar', bg: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' },
+    '30': { label: 'Faturar', bg: 'bg-purple-500/10 text-purple-400 border-purple-500/20' },
+    '50': { label: 'Faturado', bg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+    '60': { label: 'Entregue', bg: 'bg-teal-500/10 text-teal-400 border-teal-500/20' },
+    '70': { label: 'Cancelado', bg: 'bg-rose-500/10 text-rose-400 border-rose-500/20' },
+    '80': { label: 'Devolvido', bg: 'bg-red-500/10 text-red-400 border-red-500/20' },
+    '100': { label: 'Autorizada', bg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' }, // SEFAZ 100 Autorizado o uso da NF-e
+    '006': { label: 'Autorizada', bg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' }, // Omie Status 006 is often Autorizada
+    'AUTORIZADA': { label: 'Autorizada', bg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+    'EMITIDA': { label: 'Emitida', bg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+    'CANCELADA': { label: 'Cancelada', bg: 'bg-rose-500/10 text-rose-400 border-rose-500/20' },
+    'DENEGADA': { label: 'Denegada', bg: 'bg-rose-500/10 text-rose-400 border-rose-500/20' },
+    'PENDENTE': { label: 'Pendente', bg: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
+    'PAGO': { label: 'Pago', bg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
   };
-  const c = colors[status] || 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20';
+
+  const mapped = statusMap[status] || { label: status, bg: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' };
+  
+  // If the status is naturally text exactly like the label (e.g. 'AUTORIZADA' vs 'Autorizada'), don't duplicate it
+  const displayLabel = (statusMap[status] && status.toUpperCase() !== mapped.label.toUpperCase()) 
+    ? `${status} - ${mapped.label}` 
+    : mapped.label;
+
   return (
-    <span className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${c}`}>
-      {status}
+    <span className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${mapped.bg}`}>
+      {displayLabel}
     </span>
   );
 }
@@ -140,20 +157,16 @@ export default function VendaDetailsPage() {
     getClienteNome, getVendedorNome, getContaNome,
     fetchCliente, fetchVendedor, fetchConta 
   } = useLookupStore();
-  const { nfs, fetchNfs } = useNfStore();
   const [venda, setVenda] = useState<VendaPlana | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
-
+  const [nfeInfo, setNfeInfo] = useState<any>(null);
 
   useEffect(() => {
     if (vendas.length === 0 && !loading) {
       fetchVendas(1);
     }
-    if (nfs.length === 0) {
-      fetchNfs(1);
-    }
-  }, [vendas.length, fetchVendas, loading, nfs.length, fetchNfs]);
+  }, [vendas.length, fetchVendas, loading]);
 
   useEffect(() => {
     if (vendas.length > 0) {
@@ -171,6 +184,29 @@ export default function VendaDetailsPage() {
       if (venda.cliente && venda.cliente !== '--') fetchCliente(Number(venda.cliente));
       if (venda.codVendedor) fetchVendedor(venda.codVendedor);
       if (venda.codContaCorrente) fetchConta(venda.codContaCorrente);
+
+      const fetchStatusPedido = async () => {
+        try {
+          const res = await fetch('/api/omie/vendas', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              call: 'StatusPedido',
+              param: [{ codigo_pedido: venda.omieData?.cabecalho?.codigo_pedido }]
+            })
+          });
+          const data = await res.json();
+          if (data.ListaNfe && data.ListaNfe.length > 0) {
+            setNfeInfo(data.ListaNfe[0]);
+          }
+        } catch (e) {
+          console.error('Failed to fetch StatusPedido', e);
+        }
+      };
+      
+      if (venda.omieData?.cabecalho?.codigo_pedido) {
+        fetchStatusPedido();
+      }
     }
   }, [venda, fetchCliente, fetchVendedor, fetchConta]);
 
@@ -419,23 +455,26 @@ export default function VendaDetailsPage() {
             <div className="space-y-0">
               <InfoRow 
                 label="Número NF" 
-                value={(nfs.find(n => n.id_pedido === venda?.omieData?.cabecalho?.codigo_pedido)?.numero_nf) || venda?.nf || 'Aguardando Emissão'} 
-                className={((nfs.find(n => n.id_pedido === venda?.omieData?.cabecalho?.codigo_pedido)?.numero_nf) || venda?.nf) ? 'text-white font-bold' : 'text-zinc-500 italic'} 
+                value={nfeInfo ? `${nfeInfo.numero_nfe} (Série ${nfeInfo.serie})` : (venda.nf || 'Aguardando Emissão')} 
+                className={(nfeInfo || venda.nf) ? 'text-white font-bold' : 'text-zinc-500 italic'} 
               />
-              <InfoRow label="Status" value={<StatusBadge status={venda.statusNfe} />} />
-              <InfoRow label="Data Faturamento" value={fmtDate(venda.dataFaturamento)} />
+              <InfoRow label="Status" value={<StatusBadge status={nfeInfo?.status_nfe || venda.statusNfe} />} />
+              <InfoRow label="Data Emissão" value={fmtDate(nfeInfo?.data_emissao || venda.dataFaturamento)} />
               <InfoRow label="Data Inclusão" value={fmtDate(venda.dataInclusao)} />
-              <InfoRow label="Data Alteração" value={fmtDate(venda.dataAlteracao)} />
             </div>
-            {venda.chaveNfe && (
+            {(nfeInfo?.chave_nfe || venda.chaveNfe) && (
               <div className="mt-4">
                 <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block mb-2">Chave de Acesso NFe</span>
                 <button
-                  onClick={handleCopyKey}
+                  onClick={() => {
+                    navigator.clipboard.writeText(nfeInfo?.chave_nfe || venda.chaveNfe);
+                    setCopiedKey(true);
+                    setTimeout(() => setCopiedKey(false), 2000);
+                  }}
                   className="w-full p-3 rounded-xl bg-zinc-950/80 border border-zinc-800/50 text-left flex items-center gap-2 hover:border-cyan-500/30 transition-colors group"
                 >
                   <code className="text-[10px] text-cyan-400/80 font-mono break-all flex-1">
-                    {venda.chaveNfe}
+                    {nfeInfo?.chave_nfe || venda.chaveNfe}
                   </code>
                   {copiedKey ? (
                     <Check size={14} className="text-emerald-400 shrink-0" />
@@ -444,6 +483,17 @@ export default function VendaDetailsPage() {
                   )}
                 </button>
               </div>
+            )}
+            {nfeInfo?.danfe && (
+              <a
+                href={nfeInfo.danfe}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 w-full p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center gap-2 hover:bg-blue-500/20 transition-colors font-bold text-sm"
+              >
+                <FileText size={16} />
+                Visualizar DANFE
+              </a>
             )}
           </SectionCard>
 
