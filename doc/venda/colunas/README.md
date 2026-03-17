@@ -21,28 +21,28 @@ Documentação dos campos exibidos na tabela de vendas (`VendasTable.tsx`), com 
 
 | # | Coluna | Campo no Store | Origem | Fonte na API Omie | Observações |
 |---|--------|----------------|--------|--------------------|-------------|
-| 1 | 📅 Data | `data` | ✅ API | `cabecalho.data_previsao` ou `cabecalho.data_pedido` | Fallback para `data_pedido` se `data_previsao` não existir |
-| 2 | 👥 Cliente | `cliente` | ✅ API | `cabecalho.codigo_cliente` | Exibe o **código numérico** do cliente, não o nome. Seria necessário um join com a API de Clientes para exibir o nome |
-| 3 | 👤 Vendedor | `vendedor` | ✅ API | `cabecalho.codigo_vendedor` | Exibe o **código numérico** do vendedor, não o nome |
+| 1 | 📅 Data | `data` | ✅ API | `infoCadastro.dFat` | Fallback para `data_previsao` ou `data_pedido`. Prioriza a data de faturamento |
+| 2 | 👥 Cliente | `cliente` | ✅ API | `cabecalho.codigo_cliente` | Usa `getClienteNome` para exibir a **razão social**. Cache alimentado via NFs |
+| 3 | 👤 Vendedor | `vendedor` | ✅ API | `infoAdicional.codVend` | Usa `getVendedorNome` para exibir o **nome do vendedor** |
 | 4 | 📦 Pedido | `pedido` | ✅ API | `cabecalho.numero_pedido` | Número do pedido de venda |
 | 5 | 📄 NF | `nf` | ✅ API | `infoCadastro.numero_nfe` | Número da nota fiscal eletrônica associada |
-| 6 | 🛒 Produto | `produto` | ✅ API | `det[].produto.descricao` ou `det[].produto.xProd` | Descrição do produto no item do pedido |
-| 7 | 📦 Und | `und` | ✅ API | `det[].produto.unidade` ou `det[].produto.uCom` | Unidade de medida (ex: UN, CX, KG) |
-| 8 | 💰 Valor Venda | `valorVenda` | ✅ API | `det[].produto.valor_unitario` ou `det[].produto.vUnCom` | Valor unitário do produto |
+| 6 | 🛒 Produto | `produto` | ✅ API | `det[].produto.descricao` | Descrição do produto no item do pedido |
+| 7 | 📦 Und | `und` | ✅ API | `det[].produto.unidade` | Unidade de medida (ex: UN, CX, KG) |
+| 8 | 💰 Valor Venda | `valorVenda` | ✅ API | `det[].produto.valor_unitario` | Valor unitário do produto |
 | 9 | 💳 Cond. Pagto. | `condPagto` | ✅ API | `cabecalho.codigo_parcela` | Código da condição de pagamento |
 | 10 | 🚚 Frete | `frete` | ✅ API | `frete.valor_frete` | Valor do frete do pedido |
-| 11 | 📈 Coms. % | `percComissao` | ⚠️ Aproximado | `det[].produto.perc_desconto` | **Não é a comissão real.** Usa o percentual de desconto do produto como fallback. A API `ListarPedidos` não retorna comissão diretamente |
-| 12 | 🎯 Valor Total | `valorTotal` | ✅ API | `det[].produto.valor_mercadoria` ou `det[].produto.vProd` | Valor total do item (quantidade × valor unitário) |
+| 11 | 📈 Coms. % | `percComissao` | ⚠️ Aproximado | `det[].produto.perc_desconto` | **Não é a comissão real.** Usa o percentual de desconto do produto como fallback |
+| 12 | 🎯 Valor Total | `valorTotal` | ✅ API | `det[].produto.valor_total` | Valor total do item (quantidade × valor unitário) |
 | 13 | 🏦 Forma Pg | `formaPg` | ✅ API | `cabecalho.forma_pagamento` | Forma de pagamento do pedido |
-| 14 | 🏛️ Banco | `banco` | ✅ API | `cabecalho.conta_corrente` | Conta corrente / banco vinculado |
+| 14 | 🏛️ Banco | `banco` | ✅ API | `infoAdicional.codigo_conta_corrente` | Usa `getContaNome` para exibir o **nome da conta** |
 | 15 | 💰 Parcela 1 | `parcela1.valor` | ✅ API | `lista_parcelas.parcela[0].valor` | Valor da 1ª parcela |
 | 16 | 📅 Venc. 1 | `parcela1.vencimento` | ✅ API | `lista_parcelas.parcela[0].data_vencimento` | Data de vencimento da 1ª parcela |
-| 17 | 🚦 Status Venc. | `vencimentoStatus` | ⚠️ Aproximado | `cabecalho.etapa` | **Não é o status de vencimento real.** Usa a `etapa` do pedido (ex: "20 - Faturar", "50 - Entregue"), que indica o estágio do pedido e não se a parcela venceu |
+| 17 | 🚦 Status Venc. | `vencimentoStatus` | ✅ API | `cabecalho.etapa` | Mapeado via `etapaMap` no `VendasTable.tsx` para labels como "Faturado", "Entregue", etc |
 | 18 | 💰 Parcela 2 | `parcela2.valor` | ✅ API | `lista_parcelas.parcela[1].valor` | Valor da 2ª parcela |
 | 19 | 📅 Venc. 2 | `parcela2.vencimento` | ✅ API | `lista_parcelas.parcela[1].data_vencimento` | Data de vencimento da 2ª parcela |
 | 20 | 💰 Parcela 3 | `parcela3.valor` | ✅ API | `lista_parcelas.parcela[2].valor` | Valor da 3ª parcela |
 | 21 | 📅 Venc. 3 | `parcela3.vencimento` | ✅ API | `lista_parcelas.parcela[2].data_vencimento` | Data de vencimento da 3ª parcela |
-| 22 | 🎗️ Status Comissão | `statusComissao` | ❌ Hardcoded | — | **Sempre exibe `PENDENTE`**. Valor fixo no código (`useVendasStore.ts:225`). Não existe consulta a nenhuma API para esse dado |
+| 22 | 🎗️ Status Comissão | `statusComissao` | ❌ Hardcoded | — | **Sempre exibe `PENDENTE`**. Valor fixo no código |
 
 ---
 

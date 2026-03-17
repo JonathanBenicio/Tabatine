@@ -14,7 +14,8 @@ import {
   Bell, 
   Search,
   ArrowRight,
-  Banknote
+  Banknote,
+  Package
 } from 'lucide-react';
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
@@ -68,10 +69,28 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
             <span className="text-sm font-medium">Clientes</span>
           </Link>
 
+          <Link href="/vendedores" className={`flex items-center px-3 py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/vendedores' ? 'bg-blue-500/10 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}>
+            {pathname === '/vendedores' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-r-md"></div>}
+            <ArrowRight className={`w-5 h-5 mr-3 ${pathname === '/vendedores' ? 'text-blue-400' : 'group-hover:text-blue-400 transition-colors'}`} />
+            <span className="text-sm font-medium">Vendedores</span>
+          </Link>
+          
+          <Link href="/produtos" className={`flex items-center px-3 py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/produtos' ? 'bg-indigo-500/10 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}>
+            {pathname === '/produtos' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-r-md"></div>}
+            <Package className={`w-5 h-5 mr-3 ${pathname === '/produtos' ? 'text-indigo-400' : 'group-hover:text-indigo-400 transition-colors'}`} />
+            <span className="text-sm font-medium">Produtos</span>
+          </Link>
+
           <Link href="/conciliacao" className={`flex items-center px-3 py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/conciliacao' ? 'bg-emerald-500/10 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}>
             {pathname === '/conciliacao' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 rounded-r-md"></div>}
             <Banknote className={`w-5 h-5 mr-3 ${pathname === '/conciliacao' ? 'text-emerald-400' : 'group-hover:text-emerald-400 transition-colors'}`} />
             <span className="text-sm font-medium">Conciliação</span>
+          </Link>
+
+          <Link href="/contas-correntes" className={`flex items-center px-3 py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/contas-correntes' ? 'bg-emerald-500/10 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}>
+            {pathname === '/contas-correntes' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 rounded-r-md"></div>}
+            <Building2 className={`w-5 h-5 mr-3 ${pathname === '/contas-correntes' ? 'text-emerald-400' : 'group-hover:text-emerald-400 transition-colors'}`} />
+            <span className="text-sm font-medium">Bancos</span>
           </Link>
         </nav>
 

@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tabatine - Omie Connect
 
-## Getting Started
+Plataforma de gestão integrada com o **Omie ERP**, desenvolvida para visualização de relatórios, sincronização de dados e acompanhamento de processos financeiros e de vendas.
 
-First, run the development server:
+## 🚀 Tecnologias Utilizadas
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+A aplicação utiliza as tecnologias mais modernas do ecossistema React/Next.js:
+
+- **Framework**: [Next.js 16.1.6](https://nextjs.org/) (App Router)
+- **Linguagem**: [TypeScript](https://www.typescriptlang.org/)
+- **Estilização**: [Tailwind CSS 4](https://tailwindcss.com/)
+- **Gerenciamento de Estado**: [Zustand](https://zustand-demo.pmnd.rs/) (Stores modulares e leves)
+- **Ícones**: [Lucide React](https://lucide.dev/)
+- **Gráficos**: [Recharts](https://recharts.org/)
+- **Consumo de API**: [Axios](https://axios-http.com/) e Fetch API
+- **Datas**: [date-fns](https://date-fns.org/)
+
+## 📂 Estrutura de Páginas
+
+A navegação está organizada de forma intuitiva no `LayoutWrapper`:
+
+- **Dashboard** (`/dashboard`): Visão geral com métricas e gráficos de desempenho.
+- **Relatório Vendas** (`/vendas`): Listagem detalhada de pedidos de venda sincronizados.
+- **Notas Fiscais** (`/`): Gestão de NFs emitidas e recebidas (página inicial).
+- **Clientes** (`/clientes`): Base de clientes cadastrados no Omie.
+- **Vendedores** (`/vendedores`): Gestão da equipe de vendas e comissões.
+- **Produtos** (`/produtos`): Catálogo de produtos, SKUs e preços.
+- **Bancos** (`/contas-correntes`): Controle de contas correntes e movimentações bancárias.
+- **Conciliação** (`/conciliacao`): Ferramentas para conciliação bancária e financeira.
+- **Notificações** (`/notificacoes`): Central de alertas e webhooks recebidos em tempo real.
+
+## 🏗️ Padrões de Arquitetura
+
+1. **Proxy API**: As chamadas para a API do Omie são feitas através de rotas internas do Next.js (`src/app/api/omie`), protegendo as credenciais (`APP_KEY`, `APP_SECRET`) no servidor.
+2. **State Management**: Utiliza **Zustand** para persistência e compartilhamento de estado global entre componentes, evitando *prop drilling* e facilitando a sincronização com o backend.
+3. **Componentização**: Interface construída com componentes reutilizáveis em `src/components`, seguindo uma estética moderna de Glassmorphism e Dark Mode.
+4. **Hooks Customizados**: Lógica de busca e paginação separada da interface para reaproveitamento nos stores.
+
+## 📦 Dependências Principais
+
+```json
+"dependencies": {
+  "axios": "^1.13.6",
+  "lucide-react": "^0.577.0",
+  "next": "16.1.6",
+  "react": "19.2.3",
+  "recharts": "^3.8.0",
+  "zustand": "^5.0.11"
+}
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠️ Como Iniciar
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Instale as dependências:
+   ```bash
+   npm install
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. Configure seu arquivo `.env.local` com as chaves do Omie:
+   ```env
+   APP_KEY=seu_app_key
+   APP_SECRET=seu_app_secret
+   OMIE_API_URL=https://app.omie.com.br/api/v1/
+   ```
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3. Inicie o servidor de desenvolvimento:
+   ```bash
+   npm run dev
+   ```
