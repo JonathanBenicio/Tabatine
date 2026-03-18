@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { KeyRound, AlertCircle } from 'lucide-react'
 import { updatePassword } from './actions'
 
-export default async function SetPasswordPage({
+export default async function ResetPasswordPage({
   searchParams,
 }: {
   searchParams: { [key: string]: string | string[] | undefined }

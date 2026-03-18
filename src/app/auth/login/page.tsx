@@ -1,5 +1,6 @@
-import { Building2, AlertCircle } from 'lucide-react';
+import { Building2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { login } from '../actions';
+import Link from 'next/link';
 
 export default function LoginPage({
   searchParams,
@@ -7,6 +8,7 @@ export default function LoginPage({
   searchParams: { [key: string]: string | string[] | undefined }
 }) {
   const errorMessage = searchParams?.error as string | undefined;
+  const successMessage = searchParams?.msg as string | undefined;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-4">
@@ -32,6 +34,13 @@ export default function LoginPage({
           </div>
         )}
 
+        {successMessage && (
+          <div className="mb-6 flex items-center gap-3 p-3 text-sm text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+            <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+            <p>{successMessage}</p>
+          </div>
+        )}
+
         {/* Login Form */}
         <form action={login} className="space-y-4">
           <div>
@@ -49,9 +58,14 @@ export default function LoginPage({
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-zinc-400 mb-1.5">
-              Senha
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label htmlFor="password" className="block text-sm font-medium text-zinc-400">
+                Senha
+              </label>
+              <Link href="/auth/forgot-password" className="text-sm text-blue-500 hover:text-blue-400 transition-colors">
+                Esqueceu a senha?
+              </Link>
+            </div>
             <input
               id="password"
               name="password"

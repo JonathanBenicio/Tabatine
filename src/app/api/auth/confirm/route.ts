@@ -18,16 +18,13 @@ export async function GET(request: NextRequest) {
     })
 
     if (!error) {
-      // Se type for invite ou recovery, o ideal é forçar o utilizador a definir uma nova password
       if (type === 'invite' || type === 'recovery') {
-         return NextResponse.redirect(new URL(`/set-password?next=${next}`, request.url))
+         return NextResponse.redirect(new URL(`/reset-password?next=${next}`, request.url))
       }
 
-      // redirect user to specified redirect URL or root of app
-      return NextResponse.redirect(new URL(`/${next.slice(1)}`, request.url))
+      return NextResponse.redirect(new URL(next.startsWith('/') ? next : `/${next}`, request.url))
     }
   }
 
-  // redirect the user to an error page with some instructions
   return NextResponse.redirect(new URL('/auth/login?error=Token+invalido+ou+expirado', request.url))
 }
