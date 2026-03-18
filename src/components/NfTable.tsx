@@ -8,12 +8,23 @@ import Pagination from './Pagination';
 import Link from 'next/link';
 
 export default function NfTable() {
-  const { nfs, loading, error, currentPage, totalPaginas, totalRegistros, fetchNfs } = useNfStore();
+  const { 
+    nfs, loading, error, currentPage, totalPaginas, totalRegistros, 
+    fetchNfs, searchTerm, setSearchTerm 
+  } = useNfStore();
 
   useEffect(() => {
     fetchNfs(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchNfs(1, searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm, fetchNfs]);
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
@@ -94,6 +105,8 @@ export default function NfTable() {
             <input 
               type="text" 
               placeholder="Localizar NF-e ou cliente..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-2.5 bg-zinc-900/40 border border-zinc-800 focus:border-blue-500/40 rounded-xl text-sm placeholder:text-zinc-600 outline-none w-full lg:w-72 transition-all focus:ring-4 focus:ring-blue-500/5 backdrop-blur-sm"
             />
           </div>

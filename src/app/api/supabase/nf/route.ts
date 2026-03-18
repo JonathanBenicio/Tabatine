@@ -8,6 +8,7 @@ export async function GET(req: Request) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
     const year = searchParams.get('year') || 'all';
+    const search = searchParams.get('search') || '';
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -23,6 +24,24 @@ export async function GET(req: Request) {
         ),
         NotaFiscalTitulos (*)
       `, { count: 'exact' });
+
+    // 1. Search Logic (100% SDK)
+    if (search) {
+      // Step A: Find IDs of clients matching the search term
+      const { data: clientesMatch } = await supabase
+        .from('Clientes')
+        .select('Id')
+        .or(`RazaoSocial.ilike.%${search}%,NomeFantasia.ilike.%${search}%`);
+
+      const clienteIds = (clientesMatch || []).map(c => c.Id);
+
+      // Step B: Apply OR filter on main table (NF Number, Access Key OR matching ClientId)
+      if (clienteIds.length > 0) {
+        query = query.or(`NumeroNf.ilike.%${search}%,ChaveAcesso.ilike.%${search}%,ClienteId.in.(${clienteIds.join(',')})`);
+      } else {
+        query = query.or(`NumeroNf.ilike.%${search}%,ChaveAcesso.ilike.%${search}%`);
+      }
+    }
 
     if (year !== 'all') {
       const yearInt = parseInt(year);

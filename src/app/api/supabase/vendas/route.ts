@@ -15,31 +15,6 @@ export async function GET(req: Request) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
-    let filteredIds: string[] | null = null;
-    if (search) {
-      const { data: searchData, error: searchError } = await supabase
-        .from('v_vendas_search_helper')
-        .select('"PedidoId"')
-        .or(`NumeroPedido.ilike.%${search}%,RazaoSocial.ilike.%${search}%,NomeFantasia.ilike.%${search}%`);
-      
-      if (searchError) {
-        console.error('Search helper error:', searchError);
-        return NextResponse.json({ error: searchError.message }, { status: 500 });
-      }
-      
-      filteredIds = (searchData || []).map((item: any) => item.PedidoId);
-      
-      // If search was performed but no results found, return empty response immediately
-      if (filteredIds.length === 0) {
-        return NextResponse.json({
-          pedido_venda_produto: [],
-          total_de_paginas: 0,
-          total_de_registros: 0,
-          pagina: page
-        });
-      }
-    }
-
     let query = supabase
       .from('PedidosVenda')
       .select(`
@@ -55,9 +30,22 @@ export async function GET(req: Request) {
         NotasFiscais (*)
       `, { count: 'exact' });
 
-    // Filter by IDs if search was performed
-    if (filteredIds) {
-      query = query.in('Id', filteredIds);
+    // 1. Search Logic (100% SDK) - Workaround for cross-table OR limitation
+    if (search) {
+      // Step A: Find IDs of clients matching the search term
+      const { data: clientesMatch } = await supabase
+        .from('Clientes')
+        .select('Id')
+        .or(`RazaoSocial.ilike.%${search}%,NomeFantasia.ilike.%${search}%`);
+
+      const clienteIds = (clientesMatch || []).map(c => c.Id);
+
+      // Step B: Apply OR filter on main table (Order Number OR matching ClientId)
+      if (clienteIds.length > 0) {
+        query = query.or(`NumeroPedido.ilike.%${search}%,ClienteId.in.(${clienteIds.join(',')})`);
+      } else {
+        query = query.or(`NumeroPedido.ilike.%${search}%`);
+      }
     }
 
     if (year !== 'all') {
