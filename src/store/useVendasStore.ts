@@ -169,123 +169,15 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
       // Removed background lookups for all vendors and accounts,
       // as they will now be fetched by ID strictly on the details page.
 
-      let totalPaginasOmie = get().totalPaginas;
-      let totalRegistrosAtuais = get().totalRegistros;
+      const targetOmiePage = page;
       const registrosPorPagina = 500;
       const currentYear = get().anoSelecionado;
 
-      const baseParam: any = {
-        pagina: 1,
-        registros_por_pagina: 1,
-        ordenar_por: 'DATA_FATURAMENTO'
-      };
+      const response = await fetch(`/api/supabase/vendas?page=${targetOmiePage}&limit=${registrosPorPagina}&year=${currentYear}`);
+      const data = await response.json();
 
-      if (currentYear !== 'all') {
-        baseParam.data_faturamento_de = `01/01/${currentYear}`;
-        baseParam.data_faturamento_ate = `31/12/${currentYear}`;
-      }
-
-      // First, get the total records so we know the last page (only if not already loaded)
-      if (totalRegistrosAtuais === 0 || forceRefresh) {
-        // --- CACHE CHECK INITIAL TOTAL (5 minutes) ---
-        const cacheTotalKey = `omie_vendas_total_registros_${currentYear}`;
-        const cachedTotalRaw = typeof window !== 'undefined' ? localStorage.getItem(cacheTotalKey) : null;
-        let shouldUseTotalCache = false;
-
-        if (cachedTotalRaw) {
-          try {
-            const cachedTotalPayload = JSON.parse(cachedTotalRaw);
-            const cacheAgeMs = Date.now() - cachedTotalPayload.timestamp;
-            if (cacheAgeMs < 5 * 60 * 1000) {
-              totalRegistrosAtuais = cachedTotalPayload.totalRegistros;
-              shouldUseTotalCache = true;
-            }
-          } catch (e) {
-               // Ignore cache
-          }
-        }
-
-        if (!shouldUseTotalCache) {
-          const initialRes = await fetch('/api/omie/vendas', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              call: 'ListarPedidos',
-              param: [baseParam]
-            }),
-          });
-          const initialData = await initialRes.json();
-          if (!initialRes.ok) throw new Error(initialData.error || 'Failed to fetch initial Vendas');
-
-          totalRegistrosAtuais = initialData.total_de_registros || 0;
-          if (typeof window !== 'undefined') {
-            localStorage.setItem(cacheTotalKey, JSON.stringify({
-              timestamp: Date.now(),
-              totalRegistros: totalRegistrosAtuais
-            }));
-          }
-        }
-
-        totalPaginasOmie = Math.ceil(totalRegistrosAtuais / registrosPorPagina) || 1;
-        set({ totalRegistros: totalRegistrosAtuais, totalPaginas: totalPaginasOmie });
-      }
-
-      const targetOmiePage = page;
-
-      // --- CACHE CHECK (2 minutes) ---
-      const cacheKey = `omie_vendas_page_desc_${targetOmiePage}_${currentYear}`;
-      const cachedDataRaw = typeof window !== 'undefined' ? localStorage.getItem(cacheKey) : null;
-      let shouldUseCache = false;
-      let data;
-
-      if (cachedDataRaw) {
-        try {
-          const cachedPayload = JSON.parse(cachedDataRaw);
-          const cacheAgeMs = Date.now() - cachedPayload.timestamp;
-          // Omie blocks identical requests under 1 MINUTE. We cache for 2 minutes just to be safe.
-          if (cacheAgeMs < 120 * 1000) {
-            data = cachedPayload.data;
-            shouldUseCache = true;
-          }
-        } catch (e) {
-             // Cache is broken, ignore it
-        }
-      }
-
-      if (!shouldUseCache) {
-        const fetchParam: any = {
-          pagina: targetOmiePage,
-          registros_por_pagina: registrosPorPagina,
-          ordenar_por: 'DATA_FATURAMENTO',
-          ordem_descrescente: 'S'
-        };
-        
-        if (currentYear !== 'all') {
-          fetchParam.data_faturamento_de = `01/01/${currentYear}`;
-          fetchParam.data_faturamento_ate = `31/12/${currentYear}`;
-        }
-
-        const response = await fetch('/api/omie/vendas', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            call: 'ListarPedidos',
-            param: [fetchParam]
-          }),
-        });
-
-        data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to fetch Vendas');
-        }
-
-        if (typeof window !== 'undefined') {
-          localStorage.setItem(cacheKey, JSON.stringify({
-            timestamp: Date.now(),
-            data: data
-          }));
-        }
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch Vendas from Supabase');
       }
 
       const rawPedidos = data.pedido_venda_produto || [];
