@@ -15,9 +15,8 @@ export async function GET(request: Request) {
       const { data: { user } } = await supabase.auth.getUser()
 
       if (user && user.email) {
-        // Enforce `@tabatine` domain restriction
-        // We can accept @tabatine.com, @tabatine.com.br, etc., so we check if it includes `@tabatine.` or is exactly `@tabatine`
-        const isTabatine = user.email.includes('@tabatine.');
+        // Enforce `@tabatine` domain restriction OR allow specific developer email
+        const isTabatine = user.email.includes('@tabatine.') || user.email === 'jonathan.developer.fullstack@gmail.com';
 
         if (!isTabatine) {
           // Sign out immediately
