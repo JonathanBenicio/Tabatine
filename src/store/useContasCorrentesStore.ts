@@ -34,32 +34,29 @@ export const useContasCorrentesStore = create<ContasCorrentesStoreState>((set, g
   fetchContas: async (page = 1) => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch('/api/omie/contas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          call: 'ListarContasCorrentes',
-          param: [
-            {
-              pagina: page,
-              registros_por_pagina: 20,
-              apenas_importado_api: 'N',
-            },
-          ],
-        }),
-      });
-
+      const response = await fetch('/api/supabase/contas');
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch Contas Correntes');
+        throw new Error(data.error || 'Failed to fetch Contas Correntes from Supabase');
       }
 
+      const mappedContas = (data.contas || []).map((c: any) => ({
+        nCodCC: c.OmieId,
+        descricao: c.Descricao,
+        codigo_banco: c.CodigoBanco,
+        codigo_agencia: c.CodigoAgencia,
+        numero_conta_corrente: c.NumeroContaCorrente,
+        tipo: c.Tipo,
+        tipo_conta_corrente: c.TipoContaCorrente,
+        inativo: c.Inativo ? 'S' : 'N'
+      }));
+
       set({
-        contas: data.ListarContasCorrentes || [],
-        totalPaginas: data.total_de_paginas || 1,
-        totalRegistros: data.total_de_registros || 0,
-        currentPage: data.pagina || page,
+        contas: mappedContas,
+        totalPaginas: 1,
+        totalRegistros: mappedContas.length,
+        currentPage: 1,
         loading: false,
       });
     } catch (error: any) {

@@ -72,6 +72,7 @@ export interface VendaPlana {
     icms: ImpostoDetalhe;
     pis: ImpostoDetalhe;
     cofins: ImpostoDetalhe;
+    ipi?: ImpostoDetalhe;
     ibs: { valor: number; aliquota: number; base: number };
     cbs: { valor: number; aliquota: number; base: number };
   };
@@ -236,122 +237,146 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
           const ibs = imp.ibs || {};
           const cbs = imp.cbs || {};
 
-          flatVendas.push({
-            id_linha: `${cabecalho.codigo_pedido}-${idx}`,
-            data: info.dFat || cabecalho.data_previsao || cabecalho.data_pedido || '--',
-            cliente: cabecalho.codigo_cliente?.toString() || '--',
-            vendedor: infoAdicional.codVend?.toString() || '--',
-            codVendedor: infoAdicional.codVend || 0,
-            codProjeto: infoAdicional.codProj || 0,
-            pedido: cabecalho.numero_pedido || '',
-            numeroPedido: cabecalho.numero_pedido || '',
-            nf: info.numero_nfe || '', 
-            produto: prod.descricao || 'Produto sem nome',
-            und: prod.unidade || 'UN',
-            valorVenda: prod.valor_unitario || 0,
-            condPagto: cabecalho.codigo_parcela || '--',
-            frete: frete.valor_frete || 0,
-            percComissao: prod.perc_desconto || 0,
-            valorTotal: prod.valor_total || 0,
-            formaPg: cabecalho.forma_pagamento || '--',
-            banco: infoAdicional.codigo_conta_corrente?.toString() || '--',
-            codContaCorrente: infoAdicional.codigo_conta_corrente || 0,
-            parcela1: p1,
-            parcela2: p2,
-            parcela3: p3,
-            vencimentoStatus: cabecalho.etapa || 'Pendente',
-            statusComissao: 'PENDENTE',
-            omieData: ped,
+            // Auditoria helper
+            const formatISO = (iso: string) => {
+              if (!iso || iso === '--') return { d: '--', h: '--' };
+              try {
+                const dt = new Date(iso);
+                if (isNaN(dt.getTime())) return { d: iso, h: '--' };
+                return {
+                  d: dt.toLocaleDateString('pt-BR'),
+                  h: dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                };
+              } catch {
+                return { d: iso, h: '--' };
+              }
+            };
 
-            // Cabecalho extra
-            dataPedido: cabecalho.data_pedido || '--',
-            dataPrevisao: cabecalho.data_previsao || '--',
-            etapa: cabecalho.etapa || '--',
-            qtdItens: det.length,
-            observacao: observacoes.obs_venda || '',
-            observacaoInterna: observacoes.obs_interna || '',
+            const incInfo = formatISO(info.dInc);
+            const altInfo = formatISO(info.dAlt);
 
-            // Informações adicionais
-            contato: infoAdicional.contato || '',
-            dadosAdicionaisNf: infoAdicional.dados_adicionais_nf || '',
+            flatVendas.push({
+              id_linha: `${cabecalho.codigo_pedido}-${idx}`,
+              data: info.dFat || cabecalho.data_previsao || cabecalho.data_pedido || '--',
+              cliente: cabecalho.codigo_cliente?.toString() || '--',
+              vendedor: infoAdicional.codVend?.toString() || '--',
+              codVendedor: infoAdicional.codVend || 0,
+              codProjeto: infoAdicional.codProj || 0,
+              pedido: cabecalho.numero_pedido || '',
+              numeroPedido: cabecalho.numero_pedido || '',
+              nf: info.numero_nfe || '', 
+              produto: prod.descricao || 'Produto sem nome',
+              und: prod.unidade || 'UN',
+              valorVenda: prod.valor_unitario || 0,
+              condPagto: cabecalho.codigo_parcela || '',
+              frete: frete.valor_frete || 0,
+              percComissao: infoAdicional.perc_comissao || 0,
+              valorTotal: prod.valor_total || 0,
+              formaPg: cabecalho.forma_pagamento || '',
+              banco: infoAdicional.codigo_conta_corrente?.toString() || '',
+              codContaCorrente: infoAdicional.codigo_conta_corrente || 0,
+              parcela1: p1,
+              parcela2: p2,
+              parcela3: p3,
+              vencimentoStatus: cabecalho.etapa || 'Pendente',
+              statusComissao: 'PENDENTE',
+              omieData: ped,
 
-            // Produto extra
-            codigoProduto: prod.codigo || '',
-            nIdItem: itemIde.codigo_item || 0,
-            ncm: prod.ncm || '--',
-            cfop: prod.cfop || '--',
-            quantidade: prod.quantidade || 0,
-            percDesconto: prod.percentual_desconto || 0,
-            valorDesconto: prod.valor_desconto || 0,
+              // Cabecalho extra
+              dataPedido: cabecalho.data_pedido || '--',
+              dataPrevisao: cabecalho.data_previsao || '--',
+              etapa: cabecalho.etapa || '--',
+              qtdItens: det.length,
+              observacao: observacoes.obs_venda || '',
+              observacaoInterna: observacoes.obs_interna || '',
 
-            // Impostos
-            impostos: {
-              icms: {
-                aliquota: icms.aliq_icms || 0,
-                base: icms.base_icms || 0,
-                valor: icms.valor_icms || 0,
-                cst: icms.cst_icms || '--',
+              // Informações adicionais
+              contato: infoAdicional.contato || '',
+              dadosAdicionaisNf: infoAdicional.dados_adicionais_nf || '',
+
+              // Produto extra
+              codigoProduto: prod.codigo || '',
+              nIdItem: itemIde.codigo_item || 0,
+              ncm: prod.ncm || '--',
+              cfop: prod.cfop || '--',
+              quantidade: prod.quantidade || 0,
+              percDesconto: prod.percentual_desconto || 0,
+              valorDesconto: prod.valor_desconto || 0,
+
+              // Impostos
+              impostos: {
+                icms: {
+                  aliquota: icms.aliq_icms || 0,
+                  base: icms.base_icms || 0,
+                  valor: icms.valor_icms || 0,
+                  cst: icms.cst_icms || '--',
+                },
+                pis: {
+                  aliquota: pis.aliq_pis || 0,
+                  base: pis.base_pis || 0,
+                  valor: pis.valor_pis || 0,
+                  cst: pis.cod_sit_trib_pis || '--',
+                },
+                cofins: {
+                  aliquota: cofins.aliq_cofins || 0,
+                  base: cofins.base_cofins || 0,
+                  valor: cofins.valor_cofins || 0,
+                  cst: cofins.cod_sit_trib_cofins || '--',
+                },
+                ipi: {
+                  aliquota: imp.ipi?.aliq_ipi || 0,
+                  base: imp.ipi?.base_ipi || 0,
+                  valor: imp.ipi?.valor_ipi || 0,
+                  cst: imp.ipi?.cst_ipi || '--',
+                },
+                ibs: {
+                  valor: ibs.valor_ibs || 0,
+                  aliquota: ibs.aliquota_ibs_uf || 0,
+                  base: item.imposto?.ibs_cbs?.base_ibs_cbs || 0,
+                },
+                cbs: {
+                  valor: cbs.valor_cbs || 0,
+                  aliquota: cbs.aliquota_cbs || 0,
+                  base: item.imposto?.ibs_cbs?.base_ibs_cbs || 0,
+                },
               },
-              pis: {
-                aliquota: pis.aliq_pis || 0,
-                base: pis.base_pis || 0,
-                valor: pis.valor_pis || 0,
-                cst: pis.cod_sit_trib_pis || '--',
-              },
-              cofins: {
-                aliquota: cofins.aliq_cofins || 0,
-                base: cofins.base_cofins || 0,
-                valor: cofins.valor_cofins || 0,
-                cst: cofins.cod_sit_trib_cofins || '--',
-              },
-              ibs: {
-                valor: ibs.valor_ibs || 0,
-                aliquota: ibs.aliquota_ibs_uf || 0,
-                base: item.imposto?.ibs_cbs?.base_ibs_cbs || 0,
-              },
-              cbs: {
-                valor: cbs.valor_cbs || 0,
-                aliquota: cbs.aliquota_cbs || 0,
-                base: item.imposto?.ibs_cbs?.base_ibs_cbs || 0,
-              },
-            },
 
-            // Frete detalhado
-            freteDetalhado: {
-              modalidade: frete.modalidade || '--',
-              valor: frete.valor_frete || 0,
-              pesoBruto: frete.peso_bruto || 0,
-              pesoLiq: frete.peso_liquido || 0,
-              qtdVolumes: frete.quantidade_volumes || 0,
-              previsaoEntrega: frete.previsao_entrega || '--',
-              transportadora: frete.codigo_transportadora?.toString() || '--',
-              codTransportadora: frete.codigo_transportadora || 0,
-            },
+              // Frete detalhado
+              freteDetalhado: {
+                modalidade: frete.modalidade || '--',
+                valor: frete.valor_frete || 0,
+                pesoBruto: frete.peso_bruto || 0,
+                pesoLiq: frete.peso_liquido || 0,
+                qtdVolumes: frete.quantidade_volumes || 0,
+                previsaoEntrega: frete.previsao_entrega || '--',
+                transportadora: frete.codigo_transportadora?.toString() || '--',
+                codTransportadora: frete.codigo_transportadora || 0,
+              },
 
-            // Info NF / Auditoria
-            dataFaturamento: info.dFat || '--',
-            dataInclusao: info.dInc || '--',
-            horaInclusao: info.hInc || '--',
-            dataAlteracao: info.dAlt || '--',
-            horaAlteracao: info.hAlt || '--',
-            usuarioInclusao: info.uInc || '',
-            usuarioAlteracao: info.uAlt || '',
-            chaveNfe: info.chave_nfe || '',
-            statusNfe: info.cancelado === 'S' ? 'CANCELADA' : info.denegado === 'S' ? 'DENEGADA' : info.autorizado === 'S' ? 'AUTORIZADA' : info.numero_nfe ? 'EMITIDA' : 'PENDENTE',
-            cancelado: info.cancelado || 'N',
-            denegado: info.denegado || 'N',
-            autorizado: info.autorizado || 'N',
+              // Info NF / Auditoria
+              dataFaturamento: info.dFat || '--',
+              dataInclusao: incInfo.d,
+              horaInclusao: incInfo.h,
+              dataAlteracao: altInfo.d,
+              horaAlteracao: altInfo.h,
+              usuarioInclusao: info.uInc || '',
+              usuarioAlteracao: info.uAlt || '',
+              chaveNfe: info.chave_nfe || '',
+              statusNfe: info.cancelado === 'S' ? 'CANCELADA' : info.denegado === 'S' ? 'DENEGADA' : info.autorizado === 'S' ? 'AUTORIZADA' : info.numero_nfe ? 'EMITIDA' : 'PENDENTE',
+              cancelado: info.cancelado || 'N',
+              denegado: info.denegado || 'N',
+              autorizado: info.autorizado || 'N',
 
-            // Totais do pedido
-            totalPedido: {
-              valorTotal: totalPedido.valor_total_pedido || 0,
-              baseIcms: totalPedido.base_calculo_icms || 0,
-              valorIcms: totalPedido.valor_icms || 0,
-              valorMercadorias: totalPedido.valor_mercadorias || 0,
-              valorIpi: totalPedido.valor_IPI || 0,
-              valorPis: totalPedido.valor_pis || 0,
-              valorCofins: totalPedido.valor_cofins || 0,
-            },
+              // Totais do pedido
+              totalPedido: {
+                valorTotal: totalPedido.valor_total_pedido || 0,
+                baseIcms: totalPedido.base_calculo_icms || 0,
+                valorIcms: totalPedido.valor_icms || 0,
+                valorMercadorias: totalPedido.valor_mercadorias || 0,
+                valorIpi: totalPedido.valor_IPI || 0,
+                valorPis: totalPedido.valor_pis || 0,
+                valorCofins: totalPedido.valor_cofins || 0,
+              },
 
             // Todas as parcelas
             todasParcelas,

@@ -96,8 +96,8 @@ export const useNfStore = create<NfStoreState>((set) => ({
       const clientesMap: Record<number, string> = {};
 
       rawNfs.forEach((nf: any) => {
-        if (nf.dest?.nCodCli && nf.dest?.xNome) {
-          clientesMap[nf.dest.nCodCli] = nf.dest.xNome;
+        if (nf.nfDestInt?.nCodCli && nf.nfDestInt?.xNome) {
+          clientesMap[nf.nfDestInt.nCodCli] = nf.nfDestInt.xNome;
         }
       });
       lookupStore.setClientes(clientesMap);
@@ -157,7 +157,7 @@ export const useNfStore = create<NfStoreState>((set) => ({
         }
 
         // Destinatário
-        const razao = dest.cRazao || 'Desconhecido';
+        const razao = dest.xNome || 'Desconhecido';
         const cnpjCpf = dest.cnpj_cpf || '---';
         const nCodCli = dest.nCodCli || 0;
 

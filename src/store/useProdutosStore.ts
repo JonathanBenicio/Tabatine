@@ -32,84 +32,37 @@ export const useProdutosStore = create<ProdutosStoreState>((set, get) => ({
   currentPage: 1,
 
   fetchProdutos: async (page = 1, forceRefresh = false) => {
-    // Avoid double fetch if already on the same page
     if (page === get().currentPage && get().hasFetchedInitial && !forceRefresh) return;
 
     set({ loading: true, error: null, hasFetchedInitial: true });
     
     try {
-      const registrosPorPagina = 50;
-      const targetPage = page;
+      const response = await fetch(`/api/supabase/produtos?page=${page}&limit=50`);
+      const data = await response.json();
 
-      // --- CACHE CHECK (2 minutes) ---
-      const cacheKey = `omie_produtos_page_${targetPage}`;
-      const cachedDataRaw = typeof window !== 'undefined' ? localStorage.getItem(cacheKey) : null;
-      let shouldUseCache = false;
-      let data;
-
-      if (cachedDataRaw) {
-        try {
-          const cachedPayload = JSON.parse(cachedDataRaw);
-          const cacheAgeMs = Date.now() - cachedPayload.timestamp;
-          if (cacheAgeMs < 120 * 1000) {
-            data = cachedPayload.data;
-            shouldUseCache = true;
-          }
-        } catch (e) {
-          // Ignore broken cache
-        }
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch produtos from Supabase');
       }
 
-      if (!shouldUseCache) {
-        const response = await fetch('/api/omie/produtos', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            call: 'ListarProdutos',
-            param: [
-              {
-                pagina: targetPage,
-                registros_por_pagina: registrosPorPagina,
-                apenas_importado_api: 'N',
-                filtrar_apenas_omiepdv: 'N'
-              }
-            ]
-          }),
-        });
-
-        data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to fetch produtos');
-        }
-
-        if (typeof window !== 'undefined') {
-          localStorage.setItem(cacheKey, JSON.stringify({
-            timestamp: Date.now(),
-            data: data
-          }));
-        }
-      }
-
-      const rawProdutos = data.produto_servico_cadastro || [];
+      const mappedProdutos = (data.produtos || []).map((p: any) => ({
+        codigo_produto: p.OmieId,
+        codigo: p.CodigoProduto,
+        descricao: p.Descricao,
+        unidade: p.UnidadeMedida,
+        valor_unitario: p.ValorUnitario,
+        ncm: p.Ncm,
+        excluido: 'N'
+      }));
       
       set({
-        produtos: rawProdutos,
+        produtos: mappedProdutos,
         totalPaginas: data.total_de_paginas || 1,
         totalRegistros: data.total_de_registros || 0,
         currentPage: data.pagina || page,
         loading: false,
       });
     } catch (error: any) {
-      const errorMessage = error.message || 'Error loading products';
-      if (errorMessage.includes('consumo indevido') || errorMessage.includes('425')) {
-        set({ 
-          error: 'Limite de requisições atingido. Aguarde 1 minuto.',
-          loading: false 
-        });
-      } else {
-        set({ error: errorMessage, loading: false });
-      }
+      set({ error: error.message, loading: false });
     }
   },
 }));

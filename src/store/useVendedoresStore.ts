@@ -32,32 +32,26 @@ export const useVendedoresStore = create<VendedoresStoreState>((set, get) => ({
   fetchVendedores: async (page = 1) => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch('/api/omie/vendedores', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          call: 'ListarVendedores',
-          param: [
-            {
-              pagina: page,
-              registros_por_pagina: 20,
-              apenas_importado_api: 'N',
-            },
-          ],
-        }),
-      });
-
+      const response = await fetch('/api/supabase/vendedores');
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch Vendedores');
+        throw new Error(data.error || 'Failed to fetch Vendedores from Supabase');
       }
 
+      const mappedVendedores = (data.vendedores || []).map((v: any) => ({
+        codigo: v.OmieId,
+        nome: v.Nome,
+        email: v.Email,
+        comissao: v.Comissao,
+        inativo: v.Inativo ? 'S' : 'N'
+      }));
+
       set({
-        vendedores: data.cadastro || [],
-        totalPaginas: data.total_de_paginas || 1,
-        totalRegistros: data.total_de_registros || 0,
-        currentPage: data.pagina || page,
+        vendedores: mappedVendedores,
+        totalPaginas: 1,
+        totalRegistros: mappedVendedores.length,
+        currentPage: 1,
         loading: false,
       });
     } catch (error: any) {

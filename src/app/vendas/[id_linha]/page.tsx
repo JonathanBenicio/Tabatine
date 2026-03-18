@@ -154,8 +154,7 @@ export default function VendaDetailsPage() {
   const { id_linha } = params as { id_linha: string };
   const { vendas, fetchVendas, loading } = useVendasStore();
   const { 
-    getClienteNome, getVendedorNome, getContaNome,
-    fetchCliente, fetchVendedor, fetchConta 
+    getClienteNome, getVendedorNome, getContaNome 
   } = useLookupStore();
   const [venda, setVenda] = useState<VendaPlana | null>(null);
   const [notFound, setNotFound] = useState(false);
@@ -181,9 +180,7 @@ export default function VendaDetailsPage() {
 
   useEffect(() => {
     if (venda) {
-      if (venda.cliente && venda.cliente !== '--') fetchCliente(Number(venda.cliente));
-      if (venda.codVendedor) fetchVendedor(venda.codVendedor);
-      if (venda.codContaCorrente) fetchConta(venda.codContaCorrente);
+      // Lookups are now handled passively by the store during listing fetch
 
       const fetchStatusPedido = async () => {
         try {
@@ -208,7 +205,7 @@ export default function VendaDetailsPage() {
         fetchStatusPedido();
       }
     }
-  }, [venda, fetchCliente, fetchVendedor, fetchConta]);
+  }, [venda]);
 
   const handleCopyKey = () => {
     if (venda?.chaveNfe) {

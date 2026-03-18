@@ -50,12 +50,19 @@ export async function GET(req: Request) {
         hReg: nf.CreatedAt?.split('T')[1]?.substring(0, 5),
         cStatus: nf.CodigoStatus?.toString(),
       },
-      dest: {
+      nfDestInt: {
         xNome: nf.Clientes?.RazaoSocial || nf.Clientes?.NomeFantasia,
         nCodCli: nf.Clientes?.OmieId,
+        cnpj_cpf: nf.Clientes?.CnpjCpf,
+      },
+      nfEmitInt: {},
+      info: {
+        cImpAPI: 'S'
       },
       total: {
-        vNF: nf.ValorTotal,
+        ICMSTot: {
+          vNF: nf.ValorTotal,
+        }
       },
       det: (nf.ItensNotaFiscal || []).map((item: any) => ({
         prod: {

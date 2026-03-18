@@ -36,29 +36,28 @@ export const useClienteStore = create<ClienteStoreState>((set, get) => ({
   fetchClientes: async (page = 1) => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch('/api/omie/clientes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          call: 'ListarClientes',
-          param: [
-            {
-              pagina: page,
-              registros_por_pagina: 20,
-              apenas_importado_api: 'N',
-            },
-          ],
-        }),
-      });
-
+      const response = await fetch(`/api/supabase/clientes?page=${page}&limit=20`);
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch Clientes');
+        throw new Error(data.error || 'Failed to fetch Clientes from Supabase');
       }
 
+      const mappedClientes = (data.clientes || []).map((c: any) => ({
+        codigo_cliente_omie: c.OmieId,
+        razao_social: c.RazaoSocial,
+        nome_fantasia: c.NomeFantasia,
+        cnpj_cpf: c.CnpjCpf,
+        telefone1_ddd: c.TelefoneDdd,
+        telefone1_numero: c.TelefoneNumero,
+        email: c.Email,
+        cidade: c.Cidade,
+        estado: c.Estado,
+        tags: [] // Tags are not yet synced to Supabase in this version
+      }));
+
       set({
-        clientes: data.clientes_cadastro || [],
+        clientes: mappedClientes,
         totalPaginas: data.total_de_paginas || 1,
         totalRegistros: data.total_de_registros || 0,
         currentPage: data.pagina || page,
