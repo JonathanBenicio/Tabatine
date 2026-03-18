@@ -22,7 +22,9 @@ interface ClienteStoreState {
   totalPaginas: number;
   totalRegistros: number;
   currentPage: number;
-  fetchClientes: (page?: number) => Promise<void>;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  fetchClientes: (page?: number, search?: string) => Promise<void>;
 }
 
 export const useClienteStore = create<ClienteStoreState>((set, get) => ({
@@ -32,11 +34,19 @@ export const useClienteStore = create<ClienteStoreState>((set, get) => ({
   totalPaginas: 1,
   totalRegistros: 0,
   currentPage: 1,
+  searchTerm: '',
+  setSearchTerm: (term: string) => set({ searchTerm: term }),
 
-  fetchClientes: async (page = 1) => {
+  fetchClientes: async (page = 1, search) => {
+    const currentSearch = search !== undefined ? search : get().searchTerm;
     set({ loading: true, error: null });
     try {
-      const response = await fetch(`/api/supabase/clientes?page=${page}&limit=20`);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '50',
+        search: currentSearch
+      });
+      const response = await fetch(`/api/supabase/clientes?${params}`);
       const data = await response.json();
 
       if (!response.ok) {

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useProdutosStore, Produto } from '../store/useProdutosStore';
+import React, { useEffect } from 'react';
+import { useProdutosStore } from '@/store/useProdutosStore';
 import { 
   Search, 
   Package, 
@@ -16,21 +16,26 @@ import {
 import Pagination from './Pagination';
 
 export default function ProdutosTable() {
-  const { produtos, loading, error, currentPage, totalPaginas, totalRegistros, fetchProdutos } = useProdutosStore();
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const filteredProdutos = produtos.filter(prod => 
-    prod.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    prod.codigo.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const { 
+    produtos, loading, error, currentPage, totalPaginas, totalRegistros, 
+    fetchProdutos, searchTerm, setSearchTerm 
+  } = useProdutosStore();
 
   const handlePageChange = (page: number) => {
     fetchProdutos(page);
   };
 
   const handleRefresh = () => {
-    fetchProdutos(currentPage, true);
+    fetchProdutos(currentPage, searchTerm);
   };
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchProdutos(1, searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm, fetchProdutos]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -107,8 +112,8 @@ export default function ProdutosTable() {
                     </td>
                   </tr>
                 ))
-              ) : filteredProdutos.length > 0 ? (
-                filteredProdutos.map((produto) => (
+              ) : produtos.length > 0 ? (
+                produtos.map((produto) => (
                   <tr key={produto.codigo_produto} className="group hover:bg-white/[0.02] transition-colors">
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-4">
@@ -175,7 +180,7 @@ export default function ProdutosTable() {
         {/* Footer */}
         <div className="px-6 py-4 border-t border-zinc-800/50 bg-zinc-900/10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-zinc-500 font-medium">
-            Mostrando <span className="text-zinc-300">{filteredProdutos.length}</span> de <span className="text-zinc-300">{totalRegistros}</span> produtos
+            Mostrando <span className="text-zinc-300">{produtos.length}</span> de <span className="text-zinc-300">{totalRegistros}</span> produtos
           </p>
           <Pagination
             currentPage={currentPage}

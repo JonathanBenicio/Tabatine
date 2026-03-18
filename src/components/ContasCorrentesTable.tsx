@@ -6,12 +6,23 @@ import { Search, Banknote, AlertCircle, RefreshCw, Eye, Building2, CreditCard, B
 import Pagination from './Pagination';
 
 export default function ContasCorrentesTable() {
-  const { contas, loading, error, currentPage, totalPaginas, totalRegistros, fetchContas } = useContasCorrentesStore();
+  const { 
+    contas, loading, error, currentPage, totalPaginas, totalRegistros, 
+    fetchContas, searchTerm, setSearchTerm 
+  } = useContasCorrentesStore();
 
   useEffect(() => {
     fetchContas(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchContas(1, searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm, fetchContas]);
 
   return (
     <div className="w-full space-y-6">
@@ -35,6 +46,8 @@ export default function ContasCorrentesTable() {
             <input 
               type="text" 
               placeholder="Pesquisar contas..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-2.5 bg-zinc-900/40 border border-zinc-800 focus:border-emerald-500/40 rounded-xl text-sm placeholder:text-zinc-600 outline-none w-full lg:w-72 transition-all focus:ring-4 focus:ring-emerald-500/5 backdrop-blur-sm"
             />
           </div>

@@ -18,7 +18,9 @@ interface VendedoresStoreState {
   totalPaginas: number;
   totalRegistros: number;
   currentPage: number;
-  fetchVendedores: (page?: number) => Promise<void>;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  fetchVendedores: (page?: number, search?: string) => Promise<void>;
 }
 
 export const useVendedoresStore = create<VendedoresStoreState>((set, get) => ({
@@ -28,11 +30,19 @@ export const useVendedoresStore = create<VendedoresStoreState>((set, get) => ({
   totalPaginas: 1,
   totalRegistros: 0,
   currentPage: 1,
+  searchTerm: '',
+  setSearchTerm: (term: string) => set({ searchTerm: term }),
 
-  fetchVendedores: async (page = 1) => {
+  fetchVendedores: async (page = 1, search) => {
+    const currentSearch = search !== undefined ? search : get().searchTerm;
     set({ loading: true, error: null });
     try {
-      const response = await fetch('/api/supabase/vendedores');
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '50',
+        search: currentSearch
+      });
+      const response = await fetch(`/api/supabase/vendedores?${params}`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -49,9 +59,9 @@ export const useVendedoresStore = create<VendedoresStoreState>((set, get) => ({
 
       set({
         vendedores: mappedVendedores,
-        totalPaginas: 1,
-        totalRegistros: mappedVendedores.length,
-        currentPage: 1,
+        totalPaginas: data.total_de_paginas || 1,
+        totalRegistros: data.total_de_registros || 0,
+        currentPage: data.pagina || page,
         loading: false,
       });
     } catch (error: any) {

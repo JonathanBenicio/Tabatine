@@ -6,12 +6,23 @@ import { Search, Users as UsersIcon, AlertCircle, RefreshCw, Eye, MapPin, Mail, 
 import Pagination from './Pagination';
 
 export default function ClientesTable() {
-  const { clientes, loading, error, currentPage, totalPaginas, totalRegistros, fetchClientes } = useClienteStore();
+  const { 
+    clientes, loading, error, currentPage, totalPaginas, totalRegistros, 
+    fetchClientes, searchTerm, setSearchTerm 
+  } = useClienteStore();
 
   useEffect(() => {
     fetchClientes(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchClientes(1, searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm, fetchClientes]);
 
   return (
     <div className="w-full space-y-6">
@@ -35,6 +46,8 @@ export default function ClientesTable() {
             <input 
               type="text" 
               placeholder="Pesquisar clientes..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-2.5 bg-zinc-900/40 border border-zinc-800 focus:border-indigo-500/40 rounded-xl text-sm placeholder:text-zinc-600 outline-none w-full lg:w-72 transition-all focus:ring-4 focus:ring-indigo-500/5 backdrop-blur-sm"
             />
           </div>

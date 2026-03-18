@@ -6,12 +6,23 @@ import { Search, UserCheck, AlertCircle, RefreshCw, Eye, Mail, Percent, Ban, Che
 import Pagination from './Pagination';
 
 export default function VendedoresTable() {
-  const { vendedores, loading, error, currentPage, totalPaginas, totalRegistros, fetchVendedores } = useVendedoresStore();
+  const { 
+    vendedores, loading, error, currentPage, totalPaginas, totalRegistros, 
+    fetchVendedores, searchTerm, setSearchTerm 
+  } = useVendedoresStore();
 
   useEffect(() => {
     fetchVendedores(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchVendedores(1, searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm, fetchVendedores]);
 
   return (
     <div className="w-full space-y-6">
@@ -35,6 +46,8 @@ export default function VendedoresTable() {
             <input 
               type="text" 
               placeholder="Pesquisar vendedores..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-2.5 bg-zinc-900/40 border border-zinc-800 focus:border-blue-500/40 rounded-xl text-sm placeholder:text-zinc-600 outline-none w-full lg:w-72 transition-all focus:ring-4 focus:ring-blue-500/5 backdrop-blur-sm"
             />
           </div>
