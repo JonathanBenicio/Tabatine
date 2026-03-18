@@ -1,11 +1,11 @@
 import { createClient } from '@/utils/supabase/server';
+import { escapeFilterValue } from '@/utils/supabase/filter-utils';
 import { NextResponse } from 'next/server';
 
 export async function GET(req: Request) {
   try {
     const supabase = await createClient();
 
-<<<<<<< fix-security-supabase-auth-vendas-route-ts-8305843264772311109
     // Verify user session
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -13,8 +13,6 @@ export async function GET(req: Request) {
     }
     
     // Get query params for pagination
-=======
->>>>>>> master
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -42,17 +40,20 @@ export async function GET(req: Request) {
       `, { count: 'exact' });
 
     if (search) {
+      const escapedSearch = escapeFilterValue(`%${search}%`);
+
+      // Step A: Find IDs of clients matching the search term
       const { data: clientesMatch } = await supabase
         .from('Clientes')
         .select('Id')
-        .or(`RazaoSocial.ilike.%${search}%,NomeFantasia.ilike.%${search}%`);
+        .or(`RazaoSocial.ilike.${escapedSearch},NomeFantasia.ilike.${escapedSearch}`);
 
       const clienteIds = (clientesMatch || []).map(c => c.Id);
 
       if (clienteIds.length > 0) {
-        query = query.or(`NumeroPedido.ilike.%${search}%,ClienteId.in.(${clienteIds.join(',')})`);
+        query = query.or(`NumeroPedido.ilike.${escapedSearch},ClienteId.in.(${clienteIds.join(',')})`);
       } else {
-        query = query.or(`NumeroPedido.ilike.%${search}%`);
+        query = query.or(`NumeroPedido.ilike.${escapedSearch}`);
       }
     }
 
