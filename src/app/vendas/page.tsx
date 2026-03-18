@@ -1,7 +1,16 @@
+import { createClient } from '@/utils/supabase/server';
+import { redirect } from 'next/navigation';
 import VendasTable from '@/components/VendasTable';
 import { TrendingUp } from 'lucide-react';
 
-export default function VendasPage() {
+export default async function VendasPage() {
+  const supabase = await createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    redirect('/auth/login');
+  }
+
   return (
     <div className="max-w-[100vw] mx-auto space-y-8 animate-in fade-in zoom-in duration-500 overflow-x-hidden">
       {/* Banner */}

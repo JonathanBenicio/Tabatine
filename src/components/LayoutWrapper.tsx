@@ -21,6 +21,11 @@ import {
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
+  // Se a rota for de autenticação, não renderiza sidebar nem header
+  if (pathname.startsWith('/auth') || pathname === '/reset-password') {
+    return <>{children}</>;
+  }
+
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
