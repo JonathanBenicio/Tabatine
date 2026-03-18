@@ -56,7 +56,9 @@ export async function GET(req: Request) {
           cChaveNFe: nf.ChaveAcesso,
           dEmi: dataEmiFormatada,
           hEmi: nf.HoraEmissao,
-          xNatureza: nf.NaturezaOperacao || 'Venda de Mercadoria', // Fallback comum
+          xNatureza: nf.NaturezaOperacao || 'Venda de Mercadoria',
+          cInfCpl: nf.InformacoesComplementares,
+          cInfAdFisco: nf.InformacoesFisco,
         },
         ide: {
           dEmi: dataEmiFormatada, // Crucial for useNfStore
@@ -67,6 +69,9 @@ export async function GET(req: Request) {
           nNF: nf.NumeroNf,
           serie: nf.Serie || '1',
           mod: nf.Modelo || '55', 
+          tpNF: nf.TipoOperacao,
+          finNFe: nf.Finalidade,
+          cAmbiente: nf.Ambiente,
           cDeneg: nf.Denegada ? 'S' : 'N',
         },
         nfDestInt: {
@@ -87,9 +92,14 @@ export async function GET(req: Request) {
             vPIS: nf.ValorPis || 0,
             vCOFINS: nf.ValorCofins || 0,
             vProd: nf.ValorProd || 0,
+            vFrete: nf.ValorFrete || 0,
+            vSeg: nf.ValorSeguro || 0,
+            vDesc: nf.ValorDesconto || 0,
+            vOutro: nf.ValorOutrasDespesas || 0,
           },
           ISSQNtot: {
             vISS: nf.ValorIss || 0,
+            vBC: nf.IssqnBaseCalculo || 0,
           },
           Retencoes: {
             vIRRF: nf.ValorIr || 0,

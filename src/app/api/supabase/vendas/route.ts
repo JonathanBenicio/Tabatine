@@ -69,6 +69,7 @@ export async function GET(req: Request) {
           data_previsao: order.DataPrevisao,
           codigo_cliente: order.Clientes?.OmieId,
           codigo_parcela: order.CodigoParcela,
+          meio_pagamento: order.MeioPagamento,
           quantidade_itens: itens.length
         },
         det: itens.map((item: any) => ({
@@ -145,7 +146,8 @@ export async function GET(req: Request) {
           modalidade: order.FreteModalidade || ''
         },
         observacoes: {
-          obs_venda: order.ObservacoesVenda
+          obs_venda: order.ObservacoesVenda,
+          obs_interna: order.ObservacoesInternas
         }
       };
     });
