@@ -105,7 +105,7 @@ export default function NfDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const { id_nf } = params as { id_nf: string };
-  const { nfs, fetchNfs, loading } = useNfStore();
+  const { nfs, nfsMap, fetchNfs, loading } = useNfStore();
   const [nf, setNf] = useState<NfCadastroFlat | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
@@ -119,14 +119,14 @@ export default function NfDetailsPage() {
 
   useEffect(() => {
     if (nfs.length > 0) {
-      const found = nfs.find(n => n.id_nf.toString() === id_nf);
+      const found = nfsMap[id_nf];
       if (found) {
         setNf(found);
       } else {
         setNotFound(true);
       }
     }
-  }, [nfs, id_nf]);
+  }, [nfs, nfsMap, id_nf]);
 
   const handleCopyKey = () => {
     const chave = nf?.chave_nfe || raw?.compl?.cChaveNFe || raw?.info?.cChaveNFe || '';
