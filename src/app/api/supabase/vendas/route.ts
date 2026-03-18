@@ -15,15 +15,36 @@ export async function GET(req: Request) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
-    // Use !inner on Clientes ONLY when searching to avoid logic tree parsing errors
-    // and to allow filtering by joined table fields.
-    const clientesSelect = search ? 'Clientes!inner (*)' : 'Clientes (*)';
+    let filteredIds: string[] | null = null;
+    if (search) {
+      const { data: searchData, error: searchError } = await supabase
+        .from('v_vendas_search_helper')
+        .select('"PedidoId"')
+        .or(`NumeroPedido.ilike.%${search}%,RazaoSocial.ilike.%${search}%,NomeFantasia.ilike.%${search}%`);
+      
+      if (searchError) {
+        console.error('Search helper error:', searchError);
+        return NextResponse.json({ error: searchError.message }, { status: 500 });
+      }
+      
+      filteredIds = (searchData || []).map((item: any) => item.PedidoId);
+      
+      // If search was performed but no results found, return empty response immediately
+      if (filteredIds.length === 0) {
+        return NextResponse.json({
+          pedido_venda_produto: [],
+          total_de_paginas: 0,
+          total_de_registros: 0,
+          pagina: page
+        });
+      }
+    }
 
     let query = supabase
       .from('PedidosVenda')
       .select(`
         *,
-        ${clientesSelect},
+        Clientes (*),
         Vendedores (*),
         ContasCorrente (*),
         ItensPedido (
@@ -34,9 +55,9 @@ export async function GET(req: Request) {
         NotasFiscais (*)
       `, { count: 'exact' });
 
-    // Search filter across parent and joined tables
-    if (search) {
-      query = query.or(`NumeroPedido.ilike.%${search}%,Clientes.RazaoSocial.ilike.%${search}%,Clientes.NomeFantasia.ilike.%${search}%`);
+    // Filter by IDs if search was performed
+    if (filteredIds) {
+      query = query.in('Id', filteredIds);
     }
 
     if (year !== 'all') {
@@ -85,10 +106,28 @@ export async function GET(req: Request) {
             ncm: item.Produtos?.Ncm,
           },
           imposto: {
-            icms: { valor_icms: item.ValorIcms },
-            pis_padrao: { valor_pis: item.ValorPis },
-            cofins_padrao: { valor_cofins: item.ValorCofins },
-            ipi: { valor_ipi: item.ValorIpi }
+            icms: { 
+              valor_icms: item.ValorIcms,
+              base_calculo: item.BaseIcms,
+              aliquota: item.AliqIcms,
+              cst: item.CstIcms
+            },
+            ipi: { 
+              valor_ipi: item.ValorIpi,
+              base_calculo: item.BaseIpi,
+              aliquota: item.AliqIpi,
+              cst: item.CstIpi
+            },
+            pis_padrao: { 
+              valor_pis: item.ValorPis,
+              base_calculo: item.BasePis,
+              aliquota: item.AliqPis
+            },
+            cofins_padrao: { 
+              valor_cofins: item.ValorCofins,
+              base_calculo: item.BaseCofins,
+              aliquota: item.AliqCofins
+            }
           },
           ide: {
             codigo_item: item.OmieId

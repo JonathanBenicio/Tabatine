@@ -119,6 +119,21 @@ export async function GET(req: Request) {
             vTotItem: item.ValorTotal,
             NCM: item.Ncm || item.Produtos?.Ncm || '---',
             CFOP: item.Cfop || '5102', // Fallback para venda padrão
+          },
+          imposto: {
+            ICMS: {
+              vBC: item.BaseIcms,
+              pICMS: item.AliqIcms,
+              CST: item.CstIcms
+            },
+            IPI: {
+              vBC: item.BaseIpi,
+              pIPI: item.AliqIpi,
+              vIPI: item.ValorIpi,
+              CST: item.CstIpi
+            },
+            PIS: { vPIS: item.ValorPis },
+            COFINS: { vCOFINS: item.ValorCofins }
           }
         })),
         titulos: (nf.NotaFiscalTitulos || []).map((t: any) => ({

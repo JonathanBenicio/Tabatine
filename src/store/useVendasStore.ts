@@ -289,7 +289,7 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
               frete: frete.valor_frete || 0,
               percComissao: infoAdicional.perc_comissao || 0,
               valorTotal: prod.valor_total || 0,
-              formaPg: cabecalho.forma_pagamento || '',
+              formaPg: cabecalho.meio_pagamento || '',
               banco: infoAdicional.codigo_conta_corrente?.toString() || '',
               codContaCorrente: infoAdicional.codigo_conta_corrente || 0,
               parcela1: p1,
@@ -309,7 +309,7 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
 
               // Informações adicionais
               contato: infoAdicional.contato || '',
-              dadosAdicionaisNf: infoAdicional.dados_adicionais_nf || '',
+              dadosAdicionaisNf: infoAdicional.observacoes?.obs_venda || '',
 
               // Produto extra
               codigoProduto: prod.codigo || '',
@@ -323,28 +323,28 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
               // Impostos
               impostos: {
                 icms: {
-                  aliquota: icms.aliq_icms || 0,
-                  base: icms.base_icms || 0,
-                  valor: icms.valor_icms || 0,
-                  cst: icms.cst_icms || '--',
+                  aliquota: icms.aliquota || icms.pICMS || icms.aliq_icms || 0,
+                  base: icms.base_calculo || icms.vBC || icms.base_icms || 0,
+                  valor: icms.valor_icms || icms.vICMS || 0,
+                  cst: icms.cst || icms.CST || icms.cst_icms || '--',
                 },
                 pis: {
-                  aliquota: pis.aliq_pis || 0,
-                  base: pis.base_pis || 0,
-                  valor: pis.valor_pis || 0,
-                  cst: pis.cod_sit_trib_pis || '--',
+                  aliquota: pis.aliquota || pis.pPIS || pis.aliq_pis || 0,
+                  base: pis.base_calculo || pis.vBC || pis.base_pis || 0,
+                  valor: pis.valor_pis || pis.vPIS || 0,
+                  cst: pis.cst || pis.CST || pis.cod_sit_trib_pis || '--',
                 },
                 cofins: {
-                  aliquota: cofins.aliq_cofins || 0,
-                  base: cofins.base_cofins || 0,
-                  valor: cofins.valor_cofins || 0,
-                  cst: cofins.cod_sit_trib_cofins || '--',
+                  aliquota: cofins.aliquota || cofins.pCOFINS || cofins.aliq_cofins || 0,
+                  base: cofins.base_calculo || cofins.vBC || cofins.base_cofins || 0,
+                  valor: cofins.valor_cofins || cofins.vCOFINS || 0,
+                  cst: cofins.cst || cofins.CST || cofins.cod_sit_trib_cofins || '--',
                 },
                 ipi: {
-                  aliquota: imp.ipi?.aliq_ipi || 0,
-                  base: imp.ipi?.base_ipi || 0,
-                  valor: imp.ipi?.valor_ipi || 0,
-                  cst: imp.ipi?.cst_ipi || '--',
+                  aliquota: imp.ipi?.aliquota || imp.ipi?.pIPI || imp.ipi?.aliq_ipi || 0,
+                  base: imp.ipi?.base_calculo || imp.ipi?.vBC || imp.ipi?.base_ipi || 0,
+                  valor: imp.ipi?.valor_ipi || imp.ipi?.vIPI || 0,
+                  cst: imp.ipi?.cst || imp.ipi?.CST || imp.ipi?.cst_ipi || '--',
                 },
                 ibs: {
                   valor: ibs.valor_ibs || 0,
