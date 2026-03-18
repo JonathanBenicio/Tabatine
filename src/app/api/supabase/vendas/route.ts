@@ -5,6 +5,7 @@ export async function GET(req: Request) {
   try {
     const supabase = await createClient();
 
+<<<<<<< fix-security-supabase-auth-vendas-route-ts-8305843264772311109
     // Verify user session
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -12,6 +13,8 @@ export async function GET(req: Request) {
     }
     
     // Get query params for pagination
+=======
+>>>>>>> master
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -21,6 +24,7 @@ export async function GET(req: Request) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
+    // INCLUSÃO DO 'FormasPagamento (*)' PARA TRAZER A FORMA DE PAGAMENTO
     let query = supabase
       .from('PedidosVenda')
       .select(`
@@ -28,6 +32,7 @@ export async function GET(req: Request) {
         Clientes (*),
         Vendedores (*),
         ContasCorrente (*),
+        FormasPagamento (*),
         ItensPedido (
           *,
           Produtos (*)
@@ -36,9 +41,7 @@ export async function GET(req: Request) {
         NotasFiscais (*)
       `, { count: 'exact' });
 
-    // 1. Search Logic (100% SDK) - Workaround for cross-table OR limitation
     if (search) {
-      // Step A: Find IDs of clients matching the search term
       const { data: clientesMatch } = await supabase
         .from('Clientes')
         .select('Id')
@@ -46,7 +49,6 @@ export async function GET(req: Request) {
 
       const clienteIds = (clientesMatch || []).map(c => c.Id);
 
-      // Step B: Apply OR filter on main table (Order Number OR matching ClientId)
       if (clienteIds.length > 0) {
         query = query.or(`NumeroPedido.ilike.%${search}%,ClienteId.in.(${clienteIds.join(',')})`);
       } else {
@@ -70,11 +72,10 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Map Supabase structure to something closer to Omie's nested structure
     const mappedData = (data || []).map((order: any) => {
       const itens = order.ItensPedido || [];
       const nf = (order.NotasFiscais || [])[0];
-      
+
       return {
         cabecalho: {
           codigo_pedido: order.OmieId,
@@ -84,7 +85,8 @@ export async function GET(req: Request) {
           data_previsao: order.DataPrevisao,
           codigo_cliente: order.Clientes?.OmieId,
           codigo_parcela: order.CodigoParcela,
-          meio_pagamento: order.MeioPagamento,
+          // RECUPERANDO A DESCRIÇÃO DA FORMA DE PAGAMENTO
+          meio_pagamento: order.FormasPagamento?.Descricao || order.MeioPagamento || '',
           quantidade_itens: itens.length
         },
         det: itens.map((item: any) => ({
@@ -100,24 +102,24 @@ export async function GET(req: Request) {
             ncm: item.Produtos?.Ncm,
           },
           imposto: {
-            icms: { 
+            icms: {
               valor_icms: item.ValorIcms,
               base_calculo: item.BaseIcms,
               aliquota: item.AliqIcms,
               cst: item.CstIcms
             },
-            ipi: { 
+            ipi: {
               valor_ipi: item.ValorIpi,
               base_calculo: item.BaseIpi,
               aliquota: item.AliqIpi,
               cst: item.CstIpi
             },
-            pis_padrao: { 
+            pis_padrao: {
               valor_pis: item.ValorPis,
               base_calculo: item.BasePis,
               aliquota: item.AliqPis
             },
-            cofins_padrao: { 
+            cofins_padrao: {
               valor_cofins: item.ValorCofins,
               base_calculo: item.BaseCofins,
               aliquota: item.AliqCofins
@@ -138,9 +140,10 @@ export async function GET(req: Request) {
         informacoes_adicionais: {
           codVend: order.Vendedores?.OmieId,
           vendedor_nome: order.Vendedores?.Nome,
-          perc_comissao: order.ComissaoVendedor,
           codigo_conta_corrente: order.ContasCorrente?.OmieId,
-          conta_corrente_nome: order.ContasCorrente?.Descricao,
+          // RECUPERANDO A DESCRIÇÃO DO BANCO/CONTA CORRENTE
+          conta_corrente_nome: order.ContasCorrente?.Descricao || '',
+          perc_comissao: order.ComissaoVendedor,
           contato: order.Contato
         },
         infoCadastro: {
@@ -149,6 +152,7 @@ export async function GET(req: Request) {
           uInc: order.UsuarioInclusao,
           dAlt: order.UpdatedAt,
           uAlt: order.UsuarioAlteracao,
+          // RECUPERANDO O NÚMERO DA NOTA FISCAL
           numero_nfe: nf?.NumeroNf || '',
           chave_nfe: nf?.ChaveAcesso || '',
           cancelado: order.Cancelado ? 'S' : 'N',
