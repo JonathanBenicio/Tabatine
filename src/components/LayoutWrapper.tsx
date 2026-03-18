@@ -22,7 +22,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const pathname = usePathname();
 
   // Se a rota for de autenticação, não renderiza sidebar nem header
-  if (pathname.startsWith('/auth')) {
+  if (pathname.startsWith('/auth') || pathname === '/reset-password') {
     return <>{children}</>;
   }
 
