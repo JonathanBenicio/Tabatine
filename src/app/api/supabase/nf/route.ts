@@ -41,6 +41,14 @@ export async function GET(req: Request) {
     const mappedData = (data || []).map((nf: any) => {
       const dataEmiFormatada = nf.DataEmissao?.split('T')[0]?.split('-').reverse().join('/');
       
+      // Status derivado do campo texto sincronizado do Omie (Status: AUTORIZADA/CANCELADA/DENEGADA)
+      const statusTexto = nf.Status || '';
+      let statusLabel = '';
+      if (statusTexto === 'CANCELADA') statusLabel = 'Cancelado';
+      else if (statusTexto === 'DENEGADA' || nf.Denegada) statusLabel = 'Denegado';
+      else if (statusTexto === 'AUTORIZADA') statusLabel = 'Autorizado';
+      else statusLabel = statusTexto || 'Pendente';
+
       return {
         compl: {
           nIdNF: nf.OmieId,
@@ -55,9 +63,10 @@ export async function GET(req: Request) {
           hEmi: nf.HoraEmissao,
           dReg: nf.CreatedAt?.split('T')[0]?.split('-').reverse().join('/'),
           hReg: nf.CreatedAt?.split('T')[1]?.substring(0, 5),
-          cStatus: nf.CodigoStatus?.toString(),
+          cStatus: statusLabel,
           nNF: nf.NumeroNf,
           serie: nf.Serie,
+          cDeneg: nf.Denegada ? 'S' : 'N',
         },
         nfDestInt: {
           xNome: nf.Clientes?.RazaoSocial || nf.Clientes?.NomeFantasia,
@@ -71,6 +80,12 @@ export async function GET(req: Request) {
         total: {
           ICMSTot: {
             vNF: nf.ValorTotal,
+            vBC: nf.IcmsBaseCalculo || 0,
+            vICMS: nf.IcmsValor || 0,
+            vIPI: nf.ValorIpi || 0,
+            vPIS: nf.ValorPis || 0,
+            vCOFINS: nf.ValorCofins || 0,
+            vProd: nf.ValorProd || 0,
           },
           ISSQNtot: {
             vISS: nf.ValorIss || 0,

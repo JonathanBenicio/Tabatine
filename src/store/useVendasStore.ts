@@ -75,6 +75,10 @@ export interface VendaPlana {
     ipi?: ImpostoDetalhe;
     ibs: { valor: number; aliquota: number; base: number };
     cbs: { valor: number; aliquota: number; base: number };
+    valor_iss: number;
+    valor_ir: number;
+    valor_csll: number;
+    valor_inss: number;
   };
 
   // Frete detalhado
@@ -112,6 +116,10 @@ export interface VendaPlana {
     valorIpi: number;
     valorPis: number;
     valorCofins: number;
+    valorIss: number;
+    valorIr: number;
+    valorCsll: number;
+    valorInss: number;
   };
 
   // Todas as parcelas
@@ -348,6 +356,10 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
                   aliquota: cbs.aliquota_cbs || 0,
                   base: item.imposto?.ibs_cbs?.base_ibs_cbs || 0,
                 },
+                valor_iss: totalPedido.valor_iss || 0,
+                valor_ir: totalPedido.valor_ir || 0,
+                valor_csll: totalPedido.valor_csll || 0,
+                valor_inss: totalPedido.valor_inss || 0,
               },
 
               // Frete detalhado
@@ -385,6 +397,10 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
                 valorIpi: totalPedido.valor_IPI || 0,
                 valorPis: totalPedido.valor_pis || 0,
                 valorCofins: totalPedido.valor_cofins || 0,
+                valorIss: totalPedido.valor_iss || 0,
+                valorIr: totalPedido.valor_ir || 0,
+                valorCsll: totalPedido.valor_csll || 0,
+                valorInss: totalPedido.valor_inss || 0,
               },
 
             // Todas as parcelas

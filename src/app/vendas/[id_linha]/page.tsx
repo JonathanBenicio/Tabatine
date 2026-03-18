@@ -331,6 +331,31 @@ export default function VendaDetailsPage() {
               <TaxRow name="PIS" color="bg-sky-500/5 border-sky-500/10" data={venda.impostos.pis} />
               <TaxRow name="COFINS" color="bg-teal-500/5 border-teal-500/10" data={venda.impostos.cofins} />
             </div>
+
+            {/* Impostos Retidos na Fonte */}
+            {(venda.impostos.valor_iss > 0 || venda.impostos.valor_ir > 0 || venda.impostos.valor_csll > 0 || venda.impostos.valor_inss > 0) && (
+              <div className="mt-6 space-y-3">
+                <h3 className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider mb-2">Retenções na Fonte</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
+                    <span className="text-[10px] text-zinc-500 block">ISS Retido</span>
+                    <span className="text-sm font-bold text-amber-400">{fmt(venda.impostos.valor_iss)}</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-rose-500/5 border border-rose-500/10">
+                    <span className="text-[10px] text-zinc-500 block">IR Retido</span>
+                    <span className="text-sm font-bold text-rose-400">{fmt(venda.impostos.valor_ir)}</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-orange-500/5 border border-orange-500/10">
+                    <span className="text-[10px] text-zinc-500 block">CSLL Retida</span>
+                    <span className="text-sm font-bold text-orange-400">{fmt(venda.impostos.valor_csll)}</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-blue-500/5 border border-blue-500/10">
+                    <span className="text-[10px] text-zinc-500 block">INSS Retido</span>
+                    <span className="text-sm font-bold text-blue-400">{fmt(venda.impostos.valor_inss)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
             {venda.totalPedido.baseIcms > 0 && (
               <div className="mt-4 p-3 rounded-xl bg-zinc-900/50 border border-zinc-800/50 flex items-center justify-between">
                 <span className="text-xs text-zinc-500">Total ICMS do Pedido</span>

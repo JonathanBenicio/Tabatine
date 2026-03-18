@@ -328,16 +328,16 @@ export default function NfDetailsPage() {
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <DataField label="Base de Cálculo" value={fmt(icmsTot.vBC)} className="text-zinc-300" />
                     <DataField label="Valor ICMS" value={fmt(icmsTot.vICMS)} className="text-violet-400" />
-                    <DataField label="Valor NF" value={fmt(icmsTot.vNF)} className="text-white" />
+                    <DataField label="Valor NF" value={fmt(icmsTot.vNF || nf.valor_total_nf)} className="text-white" />
                     <DataField label="Valor Produtos" value={fmt(icmsTot.vProd)} className="text-zinc-300" />
+                    <DataField label="Valor IPI" value={fmt(icmsTot.vIPI)} className="text-orange-400" />
+                    <DataField label="PIS" value={fmt(icmsTot.vPIS)} className="text-sky-400" />
+                    <DataField label="COFINS" value={fmt(icmsTot.vCOFINS)} className="text-teal-400" />
                     <DataField label="Valor Frete" value={fmt(icmsTot.vFrete)} className="text-zinc-300" />
                     <DataField label="Valor Desconto" value={fmt(icmsTot.vDesc)} className="text-amber-400" />
                     <DataField label="Valor Seguro" value={fmt(icmsTot.vSeg)} className="text-zinc-300" />
                     <DataField label="Outras Despesas" value={fmt(icmsTot.vOutro)} className="text-zinc-300" />
-                    <DataField label="PIS" value={fmt(icmsTot.vPIS)} className="text-sky-400" />
-                    <DataField label="COFINS" value={fmt(icmsTot.vCOFINS)} className="text-teal-400" />
                     <DataField label="ICMS Desonerado" value={fmt(icmsTot.vICMSDeson)} className="text-zinc-400" />
-                    <DataField label="FCP" value={fmt(icmsTot.vFCP)} className="text-zinc-400" />
                   </div>
                 </div>
               )}

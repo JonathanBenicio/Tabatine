@@ -129,7 +129,11 @@ export async function GET(req: Request) {
           valor_IPI: order.ValorIpi,
           valor_pis: order.ValorPis,
           valor_cofins: order.ValorCofins,
-          base_calculo_icms: order.BaseCalculoIcms
+          base_calculo_icms: order.BaseCalculoIcms,
+          valor_iss: order.ValorIss || 0,
+          valor_ir: order.ValorIr || 0,
+          valor_csll: order.ValorCsll || 0,
+          valor_inss: order.ValorInss || 0,
         },
         frete: {
           valor_frete: order.ValorFrete,
@@ -137,7 +141,8 @@ export async function GET(req: Request) {
           codigo_transportadora: order.Transportadora,
           peso_bruto: order.PesoBruto,
           peso_liquido: order.PesoLiquido,
-          previsao_entrega: order.PrevisaoEntrega || ''
+          previsao_entrega: order.PrevisaoEntrega || '',
+          modalidade: order.FreteModalidade || ''
         },
         observacoes: {
           obs_venda: order.ObservacoesVenda
