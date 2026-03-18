@@ -29,5 +29,5 @@ export async function updatePassword(formData: FormData) {
   }
 
   // Se tudo correr bem, redireciona para o login com sucesso
-  redirect('/auth/login?msg=Senha+redefinida+com+sucesso')
+  redirect(nextParam.startsWith('/') ? nextParam : `/${nextParam}`)
 }
