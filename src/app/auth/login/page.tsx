@@ -1,6 +1,7 @@
 import { Building2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { login } from '../actions';
 import Link from 'next/link';
+import { SubmitButton } from '@/components/SubmitButton';
 
 export default function LoginPage({
   searchParams,
@@ -9,6 +10,7 @@ export default function LoginPage({
 }) {
   const errorMessage = searchParams?.error as string | undefined;
   const successMessage = searchParams?.msg as string | undefined;
+  const nextUrl = searchParams?.next as string | undefined;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-4">
@@ -43,6 +45,8 @@ export default function LoginPage({
 
         {/* Login Form */}
         <form action={login} className="space-y-4">
+          {nextUrl && <input type="hidden" name="next" value={nextUrl} />}
+
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-zinc-400 mb-1.5">
               Email
@@ -76,12 +80,12 @@ export default function LoginPage({
             />
           </div>
 
-          <button
-            type="submit"
-            className="w-full mt-6 bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
+          <SubmitButton
+            loadingText="Entrando..."
+            className="w-full mt-6 bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
           >
             Entrar
-          </button>
+          </SubmitButton>
         </form>
 
       </div>

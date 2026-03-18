@@ -1,6 +1,7 @@
 import { Building2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { requestPasswordReset } from '../actions';
 import Link from 'next/link';
+import { SubmitButton } from '@/components/SubmitButton';
 
 export default function ForgotPasswordPage({
   searchParams,
@@ -56,12 +57,12 @@ export default function ForgotPasswordPage({
               />
             </div>
 
-            <button
-              type="submit"
-              className="w-full mt-6 bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
+            <SubmitButton
+              loadingText="Enviando..."
+              className="w-full mt-6 bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
             >
               Enviar Email de Recuperação
-            </button>
+            </SubmitButton>
           </form>
         )}
 

@@ -9,6 +9,7 @@ export async function login(formData: FormData) {
 
   const email = formData.get('email') as string
   const password = formData.get('password') as string
+  const nextUrl = formData.get('next') as string || '/dashboard'
 
   const { error } = await supabase.auth.signInWithPassword({
     email,
@@ -16,11 +17,20 @@ export async function login(formData: FormData) {
   })
 
   if (error) {
-    redirect(`/auth/login?error=${encodeURIComponent('Credenciais inválidas')}`)
+    let message = 'Credenciais inválidas'
+    if (error.message.includes('Invalid login credentials')) {
+      message = 'E-mail ou senha incorretos. Tente novamente.'
+    } else if (error.message.includes('Email not confirmed')) {
+      message = 'E-mail não confirmado. Verifique sua caixa de entrada.'
+    } else {
+      message = 'Ocorreu um erro ao fazer login: ' + error.message
+    }
+
+    redirect(`/auth/login?error=${encodeURIComponent(message)}&next=${encodeURIComponent(nextUrl)}`)
   }
 
   revalidatePath('/', 'layout')
-  redirect('/dashboard')
+  redirect(nextUrl.startsWith('/') ? nextUrl : `/${nextUrl}`)
 }
 
 export async function requestPasswordReset(formData: FormData) {

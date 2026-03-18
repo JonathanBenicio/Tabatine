@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { KeyRound, AlertCircle } from 'lucide-react'
 import { updatePassword } from './actions'
+import { SubmitButton } from '@/components/SubmitButton'
 
 export default async function ResetPasswordPage({
   searchParams,
@@ -73,12 +74,12 @@ export default async function ResetPasswordPage({
             />
           </div>
 
-          <button
-            type="submit"
-            className="w-full mt-6 bg-emerald-600 text-white font-semibold py-3 px-4 rounded-xl hover:bg-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
+          <SubmitButton
+            loadingText="Salvando..."
+            className="w-full mt-6 bg-emerald-600 text-white font-semibold py-3 px-4 rounded-xl hover:bg-emerald-700 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
           >
             Salvar e Entrar
-          </button>
+          </SubmitButton>
         </form>
       </div>
     </div>
