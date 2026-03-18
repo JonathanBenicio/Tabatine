@@ -290,7 +290,7 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
               percComissao: infoAdicional.perc_comissao || 0,
               valorTotal: prod.valor_total || 0,
               formaPg: cabecalho.meio_pagamento || '',
-              banco: infoAdicional.codigo_conta_corrente?.toString() || '',
+              banco: infoAdicional.conta_corrente_nome || infoAdicional.codigo_conta_corrente?.toString() || '',
               codContaCorrente: infoAdicional.codigo_conta_corrente || 0,
               parcela1: p1,
               parcela2: p2,

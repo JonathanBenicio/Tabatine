@@ -28,7 +28,7 @@ export default function Pagination({
       }
     } else {
       let start = Math.max(1, currentPage - 2);
-      let end = Math.min(totalPaginas, start + maxVisiblePages - 1);
+      const end = Math.min(totalPaginas, start + maxVisiblePages - 1);
 
       if (end === totalPaginas) {
         start = Math.max(1, end - maxVisiblePages + 1);
