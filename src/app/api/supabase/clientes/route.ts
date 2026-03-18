@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server';
+import { escapeFilterValue } from '@/utils/supabase/filter-utils';
 import { NextResponse } from 'next/server';
 
 export async function GET(req: Request) {
@@ -17,7 +18,8 @@ export async function GET(req: Request) {
       .select('*', { count: 'exact' });
 
     if (search) {
-      query = query.or(`RazaoSocial.ilike.%${search}%,NomeFantasia.ilike.%${search}%,CnpjCpf.ilike.%${search}%`);
+      const escapedSearch = escapeFilterValue(`%${search}%`);
+      query = query.or(`RazaoSocial.ilike.${escapedSearch},NomeFantasia.ilike.${escapedSearch},CnpjCpf.ilike.${escapedSearch}`);
     }
 
     const { data, error, count } = await query

@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server';
+import { escapeFilterValue } from '@/utils/supabase/filter-utils';
 import { NextResponse } from 'next/server';
 
 export async function GET(req: Request) {
@@ -32,19 +33,21 @@ export async function GET(req: Request) {
 
     // 1. Search Logic (100% SDK) - Workaround for cross-table OR limitation
     if (search) {
+      const escapedSearch = escapeFilterValue(`%${search}%`);
+
       // Step A: Find IDs of clients matching the search term
       const { data: clientesMatch } = await supabase
         .from('Clientes')
         .select('Id')
-        .or(`RazaoSocial.ilike.%${search}%,NomeFantasia.ilike.%${search}%`);
+        .or(`RazaoSocial.ilike.${escapedSearch},NomeFantasia.ilike.${escapedSearch}`);
 
       const clienteIds = (clientesMatch || []).map(c => c.Id);
 
       // Step B: Apply OR filter on main table (Order Number OR matching ClientId)
       if (clienteIds.length > 0) {
-        query = query.or(`NumeroPedido.ilike.%${search}%,ClienteId.in.(${clienteIds.join(',')})`);
+        query = query.or(`NumeroPedido.ilike.${escapedSearch},ClienteId.in.(${clienteIds.join(',')})`);
       } else {
-        query = query.or(`NumeroPedido.ilike.%${search}%`);
+        query = query.or(`NumeroPedido.ilike.${escapedSearch}`);
       }
     }
 
