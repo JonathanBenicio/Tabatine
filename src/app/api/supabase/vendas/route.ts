@@ -15,11 +15,15 @@ export async function GET(req: Request) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
+    // Use !inner on Clientes ONLY when searching to avoid logic tree parsing errors
+    // and to allow filtering by joined table fields.
+    const clientesSelect = search ? 'Clientes!inner (*)' : 'Clientes (*)';
+
     let query = supabase
       .from('PedidosVenda')
       .select(`
         *,
-        Clientes (*),
+        ${clientesSelect},
         Vendedores (*),
         ContasCorrente (*),
         ItensPedido (
@@ -30,7 +34,7 @@ export async function GET(req: Request) {
         NotasFiscais (*)
       `, { count: 'exact' });
 
-    // Search filter
+    // Search filter across parent and joined tables
     if (search) {
       query = query.or(`NumeroPedido.ilike.%${search}%,Clientes.RazaoSocial.ilike.%${search}%,Clientes.NomeFantasia.ilike.%${search}%`);
     }
@@ -39,7 +43,7 @@ export async function GET(req: Request) {
       const yearInt = parseInt(year);
       const startOfYear = `${yearInt}-01-01T00:00:00Z`;
       const endOfYear = `${yearInt}-12-31T23:59:59Z`;
-      query = query.gte('DataPrevisao', startOfYear).lte('DataPrevisao', endOfYear);
+      query = query.gte('DataInclusao', startOfYear).lte('DataInclusao', endOfYear);
     }
 
     const { data, error, count } = await query
@@ -71,7 +75,7 @@ export async function GET(req: Request) {
           produto: {
             codigo: item.Produtos?.CodigoProduto,
             descricao: item.Produtos?.Descricao,
-            unidade: item.Produtos?.UnidadeMedida || 'UN',
+            unidade: item.UnidadeMedida || item.Produtos?.UnidadeMedida || 'UN',
             valor_unitario: item.ValorUnitario,
             quantidade: item.Quantidade,
             valor_total: item.ValorTotal,
@@ -100,7 +104,7 @@ export async function GET(req: Request) {
         informacoes_adicionais: {
           codVend: order.Vendedores?.OmieId,
           vendedor_nome: order.Vendedores?.Nome,
-          perc_comissao: order.Vendedores?.Comissao || 0,
+          perc_comissao: order.ComissaoVendedor,
           codigo_conta_corrente: order.ContasCorrente?.OmieId,
           conta_corrente_nome: order.ContasCorrente?.Descricao,
           contato: order.Contato
@@ -120,19 +124,19 @@ export async function GET(req: Request) {
         },
         total_pedido: {
           valor_total_pedido: order.ValorTotal,
-          valor_mercadorias: order.ValorMercadorias || order.ValorTotal,
-          valor_icms: order.ValorIcms || 0,
-          valor_IPI: order.ValorIpi || 0,
-          valor_pis: order.ValorPis || 0,
-          valor_cofins: order.ValorCofins || 0,
-          base_calculo_icms: order.BaseCalculoIcms || order.ValorTotal
+          valor_mercadorias: order.ValorMercadorias,
+          valor_icms: order.ValorIcms,
+          valor_IPI: order.ValorIpi,
+          valor_pis: order.ValorPis,
+          valor_cofins: order.ValorCofins,
+          base_calculo_icms: order.BaseCalculoIcms
         },
         frete: {
           valor_frete: order.ValorFrete,
           quantidade_volumes: order.QuantidadeVolumes,
           codigo_transportadora: order.Transportadora,
-          peso_bruto: order.PesoBruto || 0,
-          peso_liquido: order.PesoLiquido || 0,
+          peso_bruto: order.PesoBruto,
+          peso_liquido: order.PesoLiquido,
           previsao_entrega: order.PrevisaoEntrega || ''
         },
         observacoes: {

@@ -170,8 +170,14 @@ export const useNfStore = create<NfStoreState>((set) => ({
         const vICMS = icmsTot.vICMS || 0;
         const vBC = icmsTot.vBC || 0;
         const vIPI = icmsTot.vIPI || 0;
-        const vPIS = icmsTot.vPIS || 0;
-        const vCOFINS = icmsTot.vCOFINS || 0;
+        
+        // Retenções / Outros
+        const retencoes = total.Retencoes || {};
+        const vPIS = icmsTot.vPIS || retencoes.vPIS || retencoes.vPISRetido || 0;
+        const vCOFINS = icmsTot.vCOFINS || retencoes.vCOFINS || retencoes.vCOFINSRetido || 0;
+        const vIR = retencoes.vIR || retencoes.vIRRF || 0;
+        const vCSLL = retencoes.vCSLL || 0;
+
         const vFrete = icmsTot.vFrete || 0;
         const vSeg = icmsTot.vSeg || 0;
         const vDesc = icmsTot.vDesc || 0;
@@ -193,6 +199,7 @@ export const useNfStore = create<NfStoreState>((set) => ({
         const nIdPedido = compl.nIdPedido || 0;
         const nIdReceb = compl.nIdReceb || 0;
         const nIdTransp = compl.nIdTransp || 0;
+        const xNatureza = compl.xNatureza || '---';
 
         // Info (auditoria)
         const cImpAPI = info.cImpAPI || 'N';
@@ -282,7 +289,7 @@ export const useNfStore = create<NfStoreState>((set) => ({
           valor_ii: vII,
           valor_servicos: vServ,
           valor_iss: vISS,
-          natureza_operacao: compl.xNatureza || '---',
+          natureza_operacao: xNatureza,
           chave_nfe: chaveNfe,
           cod_categoria: cCodCateg,
           modalidade_frete: cModFrete,

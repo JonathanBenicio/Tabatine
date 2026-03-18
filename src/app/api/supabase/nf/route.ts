@@ -20,7 +20,8 @@ export async function GET(req: Request) {
         ItensNotaFiscal (
           *,
           Produtos (*)
-        )
+        ),
+        NotaFiscalTitulos (*)
       `, { count: 'exact' });
 
     if (year !== 'all') {
@@ -37,44 +38,71 @@ export async function GET(req: Request) {
     if (error) throw error;
 
     // Map Supabase structure to something compatible with the store's logic
-    const mappedData = (data || []).map((nf: any) => ({
-      compl: {
-        nIdNF: nf.OmieId,
-        nNF: nf.NumeroNf,
-        cChaveNFe: nf.ChaveAcesso,
-        dEmi: nf.DataEmissao?.split('T')[0]?.split('-').reverse().join('/'),
-        hEmi: nf.HoraEmissao,
-      },
-      ide: {
-        dReg: nf.CreatedAt?.split('T')[0]?.split('-').reverse().join('/'),
-        hReg: nf.CreatedAt?.split('T')[1]?.substring(0, 5),
-        cStatus: nf.CodigoStatus?.toString(),
-      },
-      nfDestInt: {
-        xNome: nf.Clientes?.RazaoSocial || nf.Clientes?.NomeFantasia,
-        nCodCli: nf.Clientes?.OmieId,
-        cnpj_cpf: nf.Clientes?.CnpjCpf,
-      },
-      nfEmitInt: {},
-      info: {
-        cImpAPI: 'S'
-      },
-      total: {
-        ICMSTot: {
-          vNF: nf.ValorTotal,
-        }
-      },
-      det: (nf.ItensNotaFiscal || []).map((item: any) => ({
-        prod: {
-          cCod: item.Produtos?.CodigoProduto,
-          xProd: item.Produtos?.Descricao,
-          uCom: item.Produtos?.UnidadeMedida,
-          qCom: item.Quantidade,
-          vUnCom: item.ValorUnitario,
-          vProd: item.ValorTotal,
-        }
-      }))
-    }));
+    const mappedData = (data || []).map((nf: any) => {
+      const dataEmiFormatada = nf.DataEmissao?.split('T')[0]?.split('-').reverse().join('/');
+      
+      return {
+        compl: {
+          nIdNF: nf.OmieId,
+          nNF: nf.NumeroNf,
+          cChaveNFe: nf.ChaveAcesso,
+          dEmi: dataEmiFormatada,
+          hEmi: nf.HoraEmissao,
+          xNatureza: nf.NaturezaOperacao,
+        },
+        ide: {
+          dEmi: dataEmiFormatada, // Crucial for useNfStore
+          hEmi: nf.HoraEmissao,
+          dReg: nf.CreatedAt?.split('T')[0]?.split('-').reverse().join('/'),
+          hReg: nf.CreatedAt?.split('T')[1]?.substring(0, 5),
+          cStatus: nf.CodigoStatus?.toString(),
+          nNF: nf.NumeroNf,
+          serie: nf.Serie,
+        },
+        nfDestInt: {
+          xNome: nf.Clientes?.RazaoSocial || nf.Clientes?.NomeFantasia,
+          nCodCli: nf.Clientes?.OmieId,
+          cnpj_cpf: nf.Clientes?.CnpjCpf,
+        },
+        nfEmitInt: {},
+        info: {
+          cImpAPI: nf.ImportadoApi ? 'S' : 'N'
+        },
+        total: {
+          ICMSTot: {
+            vNF: nf.ValorTotal,
+          },
+          ISSQNtot: {
+            vISS: nf.ValorIss || 0,
+          },
+          Retencoes: {
+            vIRRF: nf.ValorIr || 0,
+            vCSLL: nf.ValorCsll || 0,
+            vPIS: nf.ValorPisRetido || 0,
+            vCOFINS: nf.ValorCofinsRetido || 0,
+          }
+        },
+        det: (nf.ItensNotaFiscal || []).map((item: any) => ({
+          prod: {
+            cProd: item.Produtos?.CodigoProduto,
+            xProd: item.Produtos?.Descricao,
+            uCom: item.Produtos?.UnidadeMedida,
+            qCom: item.Quantidade,
+            vUnCom: item.ValorUnitario,
+            vProd: item.ValorTotal,
+            vTotItem: item.ValorTotal,
+            NCM: item.Ncm || item.Produtos?.Ncm,
+            CFOP: item.Cfop,
+          }
+        })),
+        titulos: (nf.NotaFiscalTitulos || []).map((t: any) => ({
+          nParcela: t.NumeroParcela,
+          nValorTitulo: t.Valor,
+          dDtVenc: t.DataVencimento?.split('T')[0]?.split('-').reverse().join('/'),
+          nCodTitulo: t.OmieIdTitulo || 0,
+        }))
+      };
+    });
 
     return NextResponse.json({
       nf_resumo_lista: mappedData,
