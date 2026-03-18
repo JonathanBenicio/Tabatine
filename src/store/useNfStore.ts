@@ -62,6 +62,7 @@ export interface NfCadastroFlat {
 
 interface NfStoreState {
   nfs: NfCadastroFlat[];
+  nfsMap: Record<string, NfCadastroFlat>;
   loading: boolean;
   error: string | null;
   totalPaginas: number;
@@ -74,6 +75,7 @@ interface NfStoreState {
 
 export const useNfStore = create<NfStoreState>((set, get) => ({
   nfs: [],
+  nfsMap: {},
   loading: false,
   error: null,
   totalPaginas: 1,
@@ -319,8 +321,14 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
         };
       });
 
+      const nfsMap = flatNfs.reduce((acc, nf) => {
+        acc[nf.id_nf.toString()] = nf;
+        return acc;
+      }, {} as Record<string, NfCadastroFlat>);
+
       set({
         nfs: flatNfs,
+        nfsMap,
         totalPaginas: data.total_de_paginas || 1,
         totalRegistros: data.total_de_registros || 0,
         currentPage: data.pagina || page,

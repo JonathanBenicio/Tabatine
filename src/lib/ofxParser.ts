@@ -22,17 +22,17 @@ export interface OfxData {
   transactions: OfxTransaction[];
 }
 
-const CATEGORY_MAP: Record<string, string[]> = {
+export const CATEGORY_MAP: Record<string, string[]> = {
+  'Taxas e Impostos': ['IOF', 'TARIFA', 'JUROS', 'IMPOSTO', 'MANUTENCAO CONTA'],
   'Transporte': ['UBER', '99APP', 'POSTO', 'COMBUSTIVEL', 'ESTACIONAMENTO', 'PEDAGIO'],
   'Alimentação': ['IFOOD', 'RESTAURANTE', 'MERCADO', 'SUPERMERCADO', 'PADARIA', 'LANCHONETE'],
   'Serviços / Utilidades': ['LUZ', 'AGUA', 'INTERNET', 'TELEFONE', 'CELULAR', 'CONDOMINIO', 'ALUGUEL'],
-  'Taxas e Impostos': ['IOF', 'TARIFA', 'JUROS', 'IMPOSTO', 'MANUTENCAO CONTA'],
   'Lazer': ['NETFLIX', 'SPOTIFY', 'STEAM', 'CINEMA', 'SHOPPING', 'VIAGEM'],
   'Saúde': ['FARMACIA', 'DROGARIA', 'HOSPITAL', 'MEDICO', 'EXAME'],
   'Renda / Transferência': ['SALARIO', 'PIX RECEBIDO', 'TED RECEBIDO', 'DOC RECEBIDO', 'DEPOSITO'],
 };
 
-function categorize(text: string): string {
+export function categorize(text: string): string {
   const upperText = text.toUpperCase();
   for (const [category, keywords] of Object.entries(CATEGORY_MAP)) {
     if (keywords.some(k => upperText.includes(k))) {
