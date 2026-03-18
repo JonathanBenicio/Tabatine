@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useOfxStore } from "@/store/useOfxStore";
 import { 
   Upload, 
@@ -36,28 +36,46 @@ export default function ConciliacaoPage() {
     }
   };
 
-  const categories = Array.from(new Set(data?.transactions.map(t => t.category) || []));
-
-  const filteredTransactions = selectedCategory 
-    ? data?.transactions.filter(t => t.category === selectedCategory) || []
-    : data?.transactions || [];
-
-  const paginatedTransactions = filteredTransactions.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  const categories = useMemo(() =>
+    Array.from(new Set(data?.transactions.map(t => t.category) || [])),
+    [data?.transactions]
   );
 
-  const totalPaginas = Math.ceil(filteredTransactions.length / itemsPerPage);
+  const filteredTransactions = useMemo(() =>
+    selectedCategory
+      ? data?.transactions.filter(t => t.category === selectedCategory) || []
+      : data?.transactions || [],
+    [data?.transactions, selectedCategory]
+  );
 
-  const income = data?.transactions
-    .filter(t => t.type === 'CREDIT')
-    .reduce((acc, t) => acc + t.amount, 0) || 0;
+  const paginatedTransactions = useMemo(() =>
+    filteredTransactions.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    ),
+    [filteredTransactions, currentPage, itemsPerPage]
+  );
 
-  const expenses = data?.transactions
-    .filter(t => t.type === 'DEBIT')
-    .reduce((acc, t) => acc + t.amount, 0) || 0;
+  const totalPaginas = useMemo(() =>
+    Math.ceil(filteredTransactions.length / itemsPerPage),
+    [filteredTransactions.length, itemsPerPage]
+  );
 
-  const balance = income - expenses;
+  const income = useMemo(() =>
+    data?.transactions
+      .filter(t => t.type === 'CREDIT')
+      .reduce((acc, t) => acc + t.amount, 0) || 0,
+    [data?.transactions]
+  );
+
+  const expenses = useMemo(() =>
+    data?.transactions
+      .filter(t => t.type === 'DEBIT')
+      .reduce((acc, t) => acc + t.amount, 0) || 0,
+    [data?.transactions]
+  );
+
+  const balance = useMemo(() => income - expenses, [income, expenses]);
 
   const formatBRL = (val: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
