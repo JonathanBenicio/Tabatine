@@ -56,7 +56,7 @@ export async function GET(req: Request) {
           cChaveNFe: nf.ChaveAcesso,
           dEmi: dataEmiFormatada,
           hEmi: nf.HoraEmissao,
-          xNatureza: nf.NaturezaOperacao,
+          xNatureza: nf.NaturezaOperacao || 'Venda de Mercadoria', // Fallback comum
         },
         ide: {
           dEmi: dataEmiFormatada, // Crucial for useNfStore
@@ -65,7 +65,8 @@ export async function GET(req: Request) {
           hReg: nf.CreatedAt?.split('T')[1]?.substring(0, 5),
           cStatus: statusLabel,
           nNF: nf.NumeroNf,
-          serie: nf.Serie,
+          serie: nf.Serie || '1',
+          mod: nf.Modelo || '55', 
           cDeneg: nf.Denegada ? 'S' : 'N',
         },
         nfDestInt: {
@@ -106,8 +107,8 @@ export async function GET(req: Request) {
             vUnCom: item.ValorUnitario,
             vProd: item.ValorTotal,
             vTotItem: item.ValorTotal,
-            NCM: item.Ncm || item.Produtos?.Ncm,
-            CFOP: item.Cfop,
+            NCM: item.Ncm || item.Produtos?.Ncm || '---',
+            CFOP: item.Cfop || '5102', // Fallback para venda padrão
           }
         })),
         titulos: (nf.NotaFiscalTitulos || []).map((t: any) => ({
