@@ -81,29 +81,28 @@ export const useNfStore = create<NfStoreState>((set) => ({
   fetchNfs: async (page = 1) => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch('/api/omie/nf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          call: 'ListarNF',
-          param: [
-            {
-              pagina: page,
-              registros_por_pagina: 500,
-              apenas_importado_api: 'N',
-            },
-          ],
-        }),
-      });
-
+      const response = await fetch(`/api/supabase/nf?page=${page}&limit=50`);
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch NFs');
+        throw new Error(data.error || 'Failed to fetch NFs from Supabase');
       }
 
-      // Omie returns: nfCadastro (array)
-      const rawNfs = data.nfCadastro || data.nfCadastroArray || data.nf_cadastro || [];
+      const rawNfs = data.nf_resumo_lista || [];
+      
+      // --- Passive Lookup Population ---
+      const { useLookupStore } = await import('./useLookupStore');
+      const lookupStore = useLookupStore.getState();
+      const clientesMap: Record<number, string> = {};
+
+      rawNfs.forEach((nf: any) => {
+        if (nf.dest?.nCodCli && nf.dest?.xNome) {
+          clientesMap[nf.dest.nCodCli] = nf.dest.xNome;
+        }
+      });
+      lookupStore.setClientes(clientesMap);
+
+      // Map each NF from the resumidos list
       const flatNfs: NfCadastroFlat[] = rawNfs.map((nf: any) => {
         const ide = nf.ide || {};
         const dest = nf.nfDestInt || {};

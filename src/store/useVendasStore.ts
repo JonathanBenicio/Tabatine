@@ -151,24 +151,8 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
 
     set({ loading: true, error: null, hasFetchedInitial: true });
     try {
-      // --- Lookups Population ---
       const lookupStore = useLookupStore.getState();
-      const nfStore = useNfStore.getState();
       
-      // Pre-populate client names from NF data if available
-      if (nfStore.nfs.length > 0) {
-        const clientMap: Record<number, string> = {};
-        nfStore.nfs.forEach(nf => {
-          if (nf.cod_cliente && nf.razao_social) {
-            clientMap[nf.cod_cliente] = nf.razao_social;
-          }
-        });
-        lookupStore.setClientesLookup(clientMap);
-      }
-
-      // Removed background lookups for all vendors and accounts,
-      // as they will now be fetched by ID strictly on the details page.
-
       const targetOmiePage = page;
       const registrosPorPagina = 500;
       const currentYear = get().anoSelecionado;
@@ -181,6 +165,27 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
       }
 
       const rawPedidos = data.pedido_venda_produto || [];
+
+      // --- Passive Lookup Population ---
+      const clientesMap: Record<number, string> = {};
+      const vendedoresMap: Record<number, string> = {};
+      const contasMap: Record<number, string> = {};
+
+      rawPedidos.forEach((ped: any) => {
+        if (ped.cabecalho?.codigo_cliente && ped.infoCadastro?.cliente_nome) {
+          clientesMap[ped.cabecalho.codigo_cliente] = ped.infoCadastro.cliente_nome;
+        }
+        if (ped.informacoes_adicionais?.codVend && ped.informacoes_adicionais?.vendedor_nome) {
+          vendedoresMap[ped.informacoes_adicionais.codVend] = ped.informacoes_adicionais.vendedor_nome;
+        }
+        if (ped.informacoes_adicionais?.codigo_conta_corrente && ped.informacoes_adicionais?.conta_corrente_nome) {
+          contasMap[ped.informacoes_adicionais.codigo_conta_corrente] = ped.informacoes_adicionais.conta_corrente_nome;
+        }
+      });
+
+      lookupStore.setClientes(clientesMap);
+      lookupStore.setVendedores(vendedoresMap);
+      lookupStore.setContas(contasMap);
 
       let pedidosToProcess = rawPedidos;
       // Strict client-side filter: Omie returns by inclusion date, which might bleed old dates.

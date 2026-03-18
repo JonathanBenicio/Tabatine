@@ -86,7 +86,9 @@ export async function GET(req: Request) {
       },
       informacoes_adicionais: {
         codVend: order.Vendedores?.OmieId,
+        vendedor_nome: order.Vendedores?.Nome,
         codigo_conta_corrente: order.ContasCorrente?.OmieId,
+        conta_corrente_nome: order.ContasCorrente?.Descricao,
         contato: order.Contato
       },
       infoCadastro: {
@@ -96,7 +98,8 @@ export async function GET(req: Request) {
         uAlt: order.UsuarioAlteracao,
         cancelado: order.Cancelado ? 'S' : 'N',
         autorizado: order.Autorizado ? 'S' : 'N',
-        denegado: order.Denegado ? 'S' : 'N'
+        denegado: order.Denegado ? 'S' : 'N',
+        cliente_nome: order.Clientes?.RazaoSocial || order.Clientes?.NomeFantasia
       },
       total_pedido: {
         valor_total_pedido: order.ValorTotal
