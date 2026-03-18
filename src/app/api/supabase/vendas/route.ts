@@ -8,8 +8,9 @@ export async function GET(req: Request) {
     // Get query params for pagination
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '500');
+    const limit = parseInt(searchParams.get('limit') || '10');
     const year = searchParams.get('year') || 'all';
+    const search = searchParams.get('search') || '';
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -25,8 +26,14 @@ export async function GET(req: Request) {
           *,
           Produtos (*)
         ),
-        PedidoParcelas (*)
+        PedidoParcelas (*),
+        NotasFiscais (*)
       `, { count: 'exact' });
+
+    // Search filter
+    if (search) {
+      query = query.or(`NumeroPedido.ilike.%${search}%,Clientes.RazaoSocial.ilike.%${search}%,Clientes.NomeFantasia.ilike.%${search}%`);
+    }
 
     if (year !== 'all') {
       const yearInt = parseInt(year);
@@ -36,7 +43,7 @@ export async function GET(req: Request) {
     }
 
     const { data, error, count } = await query
-      .order('DataPrevisao', { ascending: false })
+      .order('DataInclusao', { ascending: false })
       .range(from, to);
 
     if (error) {

@@ -127,6 +127,8 @@ interface VendasStoreState {
   totalRegistros: number;
   currentPage: number;
   anoSelecionado: number | 'all';
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
   setAnoSelecionado: (ano: number | 'all') => void;
   fetchVendas: (page?: number, forceRefresh?: boolean) => Promise<void>;
 }
@@ -140,6 +142,12 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
   totalRegistros: 0,
   currentPage: 1,
   anoSelecionado: new Date().getFullYear(),
+  searchTerm: '',
+
+  setSearchTerm: (term) => {
+    set({ searchTerm: term, totalRegistros: 0, totalPaginas: 1, hasFetchedInitial: false, vendas: [], currentPage: 1 });
+    // This will be called via useEffect with debounce in the component
+  },
 
   setAnoSelecionado: (ano) => {
     set({ anoSelecionado: ano, totalRegistros: 0, totalPaginas: 1, hasFetchedInitial: false, vendas: [], currentPage: 1 });
@@ -155,10 +163,11 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
       const lookupStore = useLookupStore.getState();
       
       const targetOmiePage = page;
-      const registrosPorPagina = 500;
+      const registrosPorPagina = 10;
       const currentYear = get().anoSelecionado;
+      const currentSearch = get().searchTerm;
 
-      const response = await fetch(`/api/supabase/vendas?page=${targetOmiePage}&limit=${registrosPorPagina}&year=${currentYear}`);
+      const response = await fetch(`/api/supabase/vendas?page=${targetOmiePage}&limit=${registrosPorPagina}&year=${currentYear}&search=${encodeURIComponent(currentSearch)}`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -192,7 +201,7 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
       // Strict client-side filter: Omie returns by inclusion date, which might bleed old dates.
       if (currentYear !== 'all') {
          pedidosToProcess = rawPedidos.filter((ped: any) => {
-            const dateStr = ped.infoCadastro?.dFat || ped.cabecalho?.data_previsao || ped.cabecalho?.data_pedido || '';
+           const dateStr = ped.infoCadastro?.dFat || ped.cabecalho?.data_pedido || ped.cabecalho?.data_previsao || '';
             return dateStr.includes(currentYear.toString());
          });
       }
@@ -257,7 +266,7 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
 
             flatVendas.push({
               id_linha: `${cabecalho.codigo_pedido}-${idx}`,
-              data: info.dFat || cabecalho.data_previsao || cabecalho.data_pedido || '--',
+              data: info.dFat || cabecalho.data_pedido || cabecalho.data_previsao || '--',
               cliente: cabecalho.codigo_cliente?.toString() || '--',
               vendedor: infoAdicional.codVend?.toString() || '--',
               codVendedor: infoAdicional.codVend || 0,

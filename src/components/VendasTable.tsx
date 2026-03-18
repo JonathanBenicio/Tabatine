@@ -10,13 +10,28 @@ import Pagination from './Pagination';
 
 export default function VendasTable() {
   const router = useRouter();
-  const { vendas, loading, error, currentPage, totalPaginas, totalRegistros, fetchVendas, anoSelecionado, setAnoSelecionado } = useVendasStore();
+  const { 
+    vendas, loading, error, currentPage, totalPaginas, totalRegistros, 
+    fetchVendas, anoSelecionado, setAnoSelecionado, searchTerm, setSearchTerm 
+  } = useVendasStore();
   const { getClienteNome, getVendedorNome, getContaNome } = useLookupStore();
 
   useEffect(() => {
     fetchVendas(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Debounce search
+  useEffect(() => {
+    if (!searchTerm) {
+       // Only fetch if it's not the initial load (already handled above)
+       // but here we want to refresh when cleared
+    }
+    const timer = setTimeout(() => {
+      fetchVendas(1, true);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm, fetchVendas]);
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
@@ -58,16 +73,7 @@ export default function VendasTable() {
     "💰 Parcela 2", "📅 Venc. 2", "💰 Parcela 3", "📅 Venc. 3", "🎗️ Status Comissão", "⚡ AÇÕES"
   ];
 
-  const sortedVendas = [...vendas].sort((a, b) => {
-    const parseCustomDate = (d: string) => {
-      if (!d || d === '--') return 0;
-      const parts = d.split('/');
-      if (parts.length === 3) return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0])).getTime();
-      const iso = parseISO(d).getTime();
-      return isNaN(iso) ? 0 : iso;
-    };
-    return parseCustomDate(b.data) - parseCustomDate(a.data);
-  });
+  const displayVendas = vendas;
 
   return (
     <div className="w-full space-y-6">
@@ -90,7 +96,9 @@ export default function VendasTable() {
             <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:text-orange-400 transition-colors" />
             <input 
               type="text" 
-              placeholder="Pesquisar vendas..." 
+              placeholder="Número do pedido ou cliente..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-2.5 bg-zinc-900/40 border border-zinc-800 focus:border-orange-500/40 rounded-xl text-sm placeholder:text-zinc-600 outline-none w-full lg:w-72 transition-all focus:ring-4 focus:ring-orange-500/5 backdrop-blur-sm"
             />
           </div>
@@ -186,7 +194,7 @@ export default function VendasTable() {
                   </td>
                 </tr>
               ) : (
-                sortedVendas.map((v, idx) => (
+                displayVendas.map((v, idx) => (
                   <tr 
                     key={v.id_linha || idx} 
                     className="group/row hover:bg-orange-500/[0.03] transition-all duration-300"
