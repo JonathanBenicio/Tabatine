@@ -310,7 +310,7 @@ export default function DashboardCharts() {
                   cursor={{ fill: '#27272a', opacity: 0.4 }}
                   contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '12px', color: '#fff' }}
                   itemStyle={{ color: '#e4e4e7' }}
-                  formatter={(value: number) => [formatCurrency(value), 'Faturamento']}
+                  formatter={(value: number | string | (number | string)[] | undefined) => [formatCurrency(Number(value ?? 0)), 'Faturamento']}
                 />
                 <Bar dataKey="valor" fill="url(#barGradient)" radius={[6, 6, 0, 0]} maxBarSize={48} />
               </BarChart>
@@ -369,7 +369,7 @@ export default function DashboardCharts() {
               <Tooltip 
                 contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '12px', color: '#fff' }}
                 itemStyle={{ color: '#e4e4e7' }}
-                formatter={(value: number) => [value, 'Pedidos']}
+                formatter={(value: number | string | (number | string)[] | undefined) => [value ?? 0, 'Pedidos']}
               />
               <Area type="monotone" dataKey="qtd" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorQtd)" />
             </AreaChart>
