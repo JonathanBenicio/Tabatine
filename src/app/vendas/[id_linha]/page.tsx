@@ -383,7 +383,7 @@ export default function VendaDetailsPage() {
           </SectionCard>
 
           {/* ── OBSERVAÇÕES ── */}
-          {(venda.observacao || venda.observacaoInterna) && (
+          {(venda.observacao || venda.observacaoInterna || venda.observacaoNf || venda.observacaoNfFisco || venda.dadosAdicionaisNf) && (
             <SectionCard icon={ClipboardList} iconColor="text-zinc-400" title="Observações">
               <div className="space-y-4">
                 {venda.observacao && (
@@ -396,6 +396,18 @@ export default function VendaDetailsPage() {
                   <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/10">
                     <span className="text-[10px] uppercase font-bold text-amber-500/70 tracking-wider block mb-2">Observação Interna</span>
                     <p className="text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed">{venda.observacaoInterna}</p>
+                  </div>
+                )}
+                {(venda.observacaoNf || venda.dadosAdicionaisNf) && (
+                  <div className="p-4 rounded-xl bg-cyan-500/5 border border-cyan-500/10">
+                    <span className="text-[10px] uppercase font-bold text-cyan-500/70 tracking-wider block mb-2">Observação da NF</span>
+                    <p className="text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed">{venda.observacaoNf || venda.dadosAdicionaisNf}</p>
+                  </div>
+                )}
+                {venda.observacaoNfFisco && (
+                  <div className="p-4 rounded-xl bg-rose-500/5 border border-rose-500/10">
+                    <span className="text-[10px] uppercase font-bold text-rose-500/70 tracking-wider block mb-2">Observação Fiscal da NF</span>
+                    <p className="text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed">{venda.observacaoNfFisco}</p>
                   </div>
                 )}
               </div>

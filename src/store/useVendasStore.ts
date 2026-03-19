@@ -53,6 +53,8 @@ export interface VendaPlana {
   qtdItens: number;
   observacao: string;
   observacaoInterna: string;
+  observacaoNf: string;
+  observacaoNfFisco: string;
 
   // Informações adicionais
   contato: string;
@@ -306,6 +308,8 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
               qtdItens: det.length,
               observacao: observacoes.obs_venda || '',
               observacaoInterna: observacoes.obs_interna || '',
+              observacaoNf: observacoes.obs_nf || '',
+              observacaoNfFisco: observacoes.obs_nf_fisco || '',
 
               // Informações adicionais
               contato: infoAdicional.contato || '',

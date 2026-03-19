@@ -145,7 +145,9 @@ export async function GET(req: Request) {
           // RECUPERANDO A DESCRIÇÃO DO BANCO/CONTA CORRENTE
           conta_corrente_nome: order.ContasCorrente?.Descricao || '',
           perc_comissao: order.ComissaoVendedor,
-          contato: order.Contato
+          contato: order.Contato,
+          numero_pedido_cliente: order.NumeroPedidoCliente || '',
+          consumidor_final: order.ConsumidorFinal || ''
         },
         infoCadastro: {
           dFat: nf?.DataEmissao || '',
@@ -164,6 +166,7 @@ export async function GET(req: Request) {
         total_pedido: {
           valor_total_pedido: order.ValorTotal,
           valor_mercadorias: order.ValorMercadorias,
+          valor_descontos: order.ValorDesconto || 0,
           valor_icms: order.ValorIcms,
           valor_IPI: order.ValorIpi,
           valor_pis: order.ValorPis,
@@ -173,6 +176,8 @@ export async function GET(req: Request) {
           valor_ir: order.ValorIr || 0,
           valor_csll: order.ValorCsll || 0,
           valor_inss: order.ValorInss || 0,
+          valor_ibs: order.ValorIbs || 0,
+          valor_cbs: order.ValorCbs || 0,
         },
         frete: {
           valor_frete: order.ValorFrete,
@@ -181,11 +186,19 @@ export async function GET(req: Request) {
           peso_bruto: order.PesoBruto,
           peso_liquido: order.PesoLiquido,
           previsao_entrega: order.PrevisaoEntrega || '',
-          modalidade: order.FreteModalidade || ''
+          modalidade: order.FreteModalidade || '',
+          codigo_rastreio: order.CodigoRastreio || '',
+          link_rastreio: order.LinkRastreio || '',
+          veiculo_proprio: order.VeiculoProprio || '',
+          placa: order.Placa || '',
+          valor_seguro: order.ValorSeguro || 0,
+          outras_despesas: order.ValorOutrasDespesas || 0
         },
         observacoes: {
           obs_venda: order.ObservacoesVenda,
-          obs_interna: order.ObservacoesInternas
+          obs_interna: order.ObservacoesInternas,
+          obs_nf: order.DadosAdicionaisNf || nf?.InformacoesComplementares,
+          obs_nf_fisco: nf?.InformacoesFisco
         }
       };
     });
