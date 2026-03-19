@@ -1,3 +1,7 @@
+---
+trigger: manual
+---
+
 # Tabatine — Regras do Workspace
 
 ## Visão Geral do Projeto

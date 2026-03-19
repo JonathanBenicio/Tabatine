@@ -106,6 +106,8 @@ export interface VendaPlana {
   usuarioAlteracao: string;
   chaveNfe: string;
   statusNfe: string;
+  serieNfe: string;
+  valorTotalNfe: number;
   cancelado: string;
   denegado: string;
   autorizado: string;
@@ -392,6 +394,8 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
               usuarioAlteracao: info.uAlt || '',
               chaveNfe: info.chave_nfe || '',
               statusNfe: info.cancelado === 'S' ? 'CANCELADA' : info.denegado === 'S' ? 'DENEGADA' : info.autorizado === 'S' ? 'AUTORIZADA' : info.numero_nfe ? 'EMITIDA' : 'PENDENTE',
+              serieNfe: info.serie_nfe || '',
+              valorTotalNfe: info.valor_total_nfe || 0,
               cancelado: info.cancelado || 'N',
               denegado: info.denegado || 'N',
               autorizado: info.autorizado || 'N',

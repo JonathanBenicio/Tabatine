@@ -159,7 +159,8 @@ export default function VendaDetailsPage() {
   const [venda, setVenda] = useState<VendaPlana | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
-  const [nfeInfo, setNfeInfo] = useState<any>(null);
+  const [danfeUrl, setDanfeUrl] = useState<string | null>(null);
+  const [loadingDanfe, setLoadingDanfe] = useState(false);
 
   useEffect(() => {
     if (vendas.length === 0 && !loading) {
@@ -178,40 +179,46 @@ export default function VendaDetailsPage() {
     }
   }, [vendas, id_linha]);
 
-  useEffect(() => {
-    if (venda) {
-      // Lookups are now handled passively by the store during listing fetch
-
-      const fetchStatusPedido = async () => {
-        try {
-          const res = await fetch('/api/omie/vendas', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              call: 'StatusPedido',
-              param: [{ codigo_pedido: venda.omieData?.cabecalho?.codigo_pedido }]
-            })
-          });
-          const data = await res.json();
-          if (data.ListaNfe && data.ListaNfe.length > 0) {
-            setNfeInfo(data.ListaNfe[0]);
-          }
-        } catch (e) {
-          console.error('Failed to fetch StatusPedido', e);
-        }
-      };
-      
-      if (venda.omieData?.cabecalho?.codigo_pedido) {
-        fetchStatusPedido();
-      }
-    }
-  }, [venda]);
 
   const handleCopyKey = () => {
     if (venda?.chaveNfe) {
       navigator.clipboard.writeText(venda.chaveNfe);
       setCopiedKey(true);
       setTimeout(() => setCopiedKey(false), 2000);
+    }
+  };
+
+  const handleFetchDanfe = async () => {
+    if (danfeUrl) {
+      window.open(danfeUrl, '_blank');
+      return;
+    }
+    
+    if (!venda?.omieData?.cabecalho?.codigo_pedido) return;
+
+    setLoadingDanfe(true);
+    try {
+      const res = await fetch('/api/omie/vendas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          call: 'StatusPedido',
+          param: [{ codigo_pedido: venda.omieData.cabecalho.codigo_pedido }]
+        })
+      });
+      const data = await res.json();
+      if (data.ListaNfe && data.ListaNfe.length > 0 && data.ListaNfe[0].danfe) {
+        const url = data.ListaNfe[0].danfe;
+        setDanfeUrl(url);
+        window.open(url, '_blank');
+      } else {
+        alert('DANFE não disponível para este pedido.');
+      }
+    } catch (e) {
+      console.error('Failed to fetch DANFE', e);
+      alert('Erro ao buscar DANFE na Omie.');
+    } finally {
+      setLoadingDanfe(false);
     }
   };
 
@@ -493,26 +500,42 @@ export default function VendaDetailsPage() {
             <div className="space-y-0">
               <InfoRow 
                 label="Número NF" 
-                value={nfeInfo ? `${nfeInfo.numero_nfe} (Série ${nfeInfo.serie})` : (venda.nf || 'Aguardando Emissão')} 
-                className={(nfeInfo || venda.nf) ? 'text-white font-bold' : 'text-zinc-500 italic'} 
+                value={venda.nf ? `${venda.nf} (Série ${venda.serieNfe})` : 'Aguardando Emissão'} 
+                className={venda.nf ? 'text-white font-bold' : 'text-zinc-500 italic'} 
               />
-              <InfoRow label="Status" value={<StatusBadge status={nfeInfo?.status_nfe || venda.statusNfe} />} />
-              <InfoRow label="Data Emissão" value={fmtDate(nfeInfo?.data_emissao || venda.dataFaturamento)} />
+              <InfoRow label="Status" value={<StatusBadge status={venda.statusNfe} />} />
+              <InfoRow 
+                label="Data Emissão" value={fmtDate(venda.dataFaturamento)} />
               <InfoRow label="Data Inclusão" value={fmtDate(venda.dataInclusao)} />
             </div>
-            {(nfeInfo?.chave_nfe || venda.chaveNfe) && (
+
+            {venda.nf && (
+              <button
+                onClick={handleFetchDanfe}
+                disabled={loadingDanfe}
+                className="mt-4 w-full p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center gap-2 hover:bg-blue-500/20 disabled:opacity-50 transition-all font-bold text-sm"
+              >
+                {loadingDanfe ? (
+                  <RefreshCw size={16} className="animate-spin" />
+                ) : (
+                  <FileText size={16} />
+                )}
+                {loadingDanfe ? 'Buscando...' : 'Visualizar DANFE'}
+              </button>
+            )}
+            {venda.chaveNfe && (
               <div className="mt-4">
                 <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block mb-2">Chave de Acesso NFe</span>
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(nfeInfo?.chave_nfe || venda.chaveNfe);
+                    navigator.clipboard.writeText(venda.chaveNfe);
                     setCopiedKey(true);
                     setTimeout(() => setCopiedKey(false), 2000);
                   }}
                   className="w-full p-3 rounded-xl bg-zinc-950/80 border border-zinc-800/50 text-left flex items-center gap-2 hover:border-cyan-500/30 transition-colors group"
                 >
                   <code className="text-[10px] text-cyan-400/80 font-mono break-all flex-1">
-                    {nfeInfo?.chave_nfe || venda.chaveNfe}
+                    {venda.chaveNfe}
                   </code>
                   {copiedKey ? (
                     <Check size={14} className="text-emerald-400 shrink-0" />
@@ -521,17 +544,6 @@ export default function VendaDetailsPage() {
                   )}
                 </button>
               </div>
-            )}
-            {nfeInfo?.danfe && (
-              <a
-                href={nfeInfo.danfe}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-4 w-full p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center gap-2 hover:bg-blue-500/20 transition-colors font-bold text-sm"
-              >
-                <FileText size={16} />
-                Visualizar DANFE
-              </a>
             )}
           </SectionCard>
           

@@ -179,6 +179,8 @@ export async function GET(req: Request) {
           uAlt: order.UsuarioAlteracao,
           // RECUPERANDO O NÚMERO DA NOTA FISCAL
           numero_nfe: nf?.NumeroNf || '',
+          serie_nfe: nf?.Serie || '',
+          valor_total_nfe: num(nf?.ValorTotal),
           chave_nfe: nf?.ChaveAcesso || '',
           cancelado: order.Cancelado ? 'S' : 'N',
           autorizado: order.Autorizado ? 'S' : 'N',
