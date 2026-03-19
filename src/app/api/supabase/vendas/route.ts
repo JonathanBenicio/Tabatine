@@ -73,6 +73,8 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    const num = (v: any) => v === null || v === undefined ? 0 : Number(v);
+
     const mappedData = (data || []).map((order: any) => {
       const itens = order.ItensPedido || [];
       const nf = (order.NotasFiscais || [])[0];
@@ -88,42 +90,58 @@ export async function GET(req: Request) {
           codigo_parcela: order.CodigoParcela,
           // RECUPERANDO A DESCRIÇÃO DA FORMA DE PAGAMENTO
           meio_pagamento: order.FormasPagamento?.Descricao || order.MeioPagamento || '',
-          quantidade_itens: itens.length
+          quantidade_itens: itens.length,
+          qtde_parcelas: order.QuantidadeParcelas || 0,
+          faturado: order.Faturado ? 'S' : 'N',
+          devolvido: order.Devolvido ? 'S' : 'N'
         },
         det: itens.map((item: any) => ({
           produto: {
             codigo: item.Produtos?.CodigoProduto,
             descricao: item.Produtos?.Descricao,
             unidade: item.UnidadeMedida || item.Produtos?.UnidadeMedida || 'UN',
-            valor_unitario: item.ValorUnitario,
-            quantidade: item.Quantidade,
-            valor_total: item.ValorTotal,
-            percentual_desconto: item.PercentualDesconto,
-            valor_desconto: item.ValorDesconto,
+            valor_unitario: num(item.ValorUnitario),
+            quantidade: num(item.Quantidade),
+            valor_total: num(item.ValorTotal),
+            percentual_desconto: num(item.PercentualDesconto),
+            valor_desconto: num(item.ValorDesconto),
             ncm: item.Produtos?.Ncm,
+            cfop: item.Cfop || '--',
           },
           imposto: {
             icms: {
-              valor_icms: item.ValorIcms,
-              base_calculo: item.BaseIcms,
-              aliquota: item.AliqIcms,
+              valor_icms: num(item.ValorIcms),
+              base_calculo: num(item.BaseIcms),
+              aliquota: num(item.AliqIcms),
               cst: item.CstIcms
             },
             ipi: {
-              valor_ipi: item.ValorIpi,
-              base_calculo: item.BaseIpi,
-              aliquota: item.AliqIpi,
+              valor_ipi: num(item.ValorIpi),
+              base_calculo: num(item.BaseIpi),
+              aliquota: num(item.AliqIpi),
               cst: item.CstIpi
             },
             pis_padrao: {
-              valor_pis: item.ValorPis,
-              base_calculo: item.BasePis,
-              aliquota: item.AliqPis
+              valor_pis: num(item.ValorPis),
+              base_calculo: num(item.BasePis),
+              aliquota: num(item.AliqPis),
+              cst: item.CstPis
             },
             cofins_padrao: {
-              valor_cofins: item.ValorCofins,
-              base_calculo: item.BaseCofins,
-              aliquota: item.AliqCofins
+              valor_cofins: num(item.ValorCofins),
+              base_calculo: num(item.BaseCofins),
+              aliquota: num(item.AliqCofins),
+              cst: item.CstCofins
+            },
+            ibs: {
+              valor_ibs: num(item.ValorIbs),
+              aliquota_ibs_uf: num(item.AliqIbs),
+              base_ibs_cbs: num(item.BaseIbsCbs)
+            },
+            cbs: {
+              valor_cbs: num(item.ValorCbs),
+              aliquota_cbs: num(item.AliqCbs),
+              base_ibs_cbs: num(item.BaseIbsCbs)
             }
           },
           ide: {
@@ -133,9 +151,12 @@ export async function GET(req: Request) {
         lista_parcelas: {
           parcela: (order.PedidoParcelas || []).map((p: any) => ({
             numero_parcela: p.NumeroParcela,
-            valor: p.Valor,
+            valor: num(p.Valor),
             data_vencimento: p.DataVencimento,
-            percentual: p.Percentual
+            percentual: num(p.Percentual),
+            categoria: p.Categoria || '',
+            nsu: p.Nsu || '',
+            meio_pagamento: p.MeiosPagamento?.Descricao || ''
           }))
         },
         informacoes_adicionais: {
@@ -144,10 +165,11 @@ export async function GET(req: Request) {
           codigo_conta_corrente: order.ContasCorrente?.OmieId,
           // RECUPERANDO A DESCRIÇÃO DO BANCO/CONTA CORRENTE
           conta_corrente_nome: order.ContasCorrente?.Descricao || '',
-          perc_comissao: order.ComissaoVendedor,
+          perc_comissao: num(order.ComissaoVendedor),
           contato: order.Contato,
           numero_pedido_cliente: order.NumeroPedidoCliente || '',
-          consumidor_final: order.ConsumidorFinal || ''
+          consumidor_final: order.ConsumidorFinal || '',
+          codProj: order.CodigoProjeto || 0
         },
         infoCadastro: {
           dFat: nf?.DataEmissao || '',
@@ -164,35 +186,35 @@ export async function GET(req: Request) {
           cliente_nome: order.Clientes?.RazaoSocial || order.Clientes?.NomeFantasia
         },
         total_pedido: {
-          valor_total_pedido: order.ValorTotal,
-          valor_mercadorias: order.ValorMercadorias,
-          valor_descontos: order.ValorDesconto || 0,
-          valor_icms: order.ValorIcms,
-          valor_IPI: order.ValorIpi,
-          valor_pis: order.ValorPis,
-          valor_cofins: order.ValorCofins,
-          base_calculo_icms: order.BaseCalculoIcms,
-          valor_iss: order.ValorIss || 0,
-          valor_ir: order.ValorIr || 0,
-          valor_csll: order.ValorCsll || 0,
-          valor_inss: order.ValorInss || 0,
-          valor_ibs: order.ValorIbs || 0,
-          valor_cbs: order.ValorCbs || 0,
+          valor_total_pedido: num(order.ValorTotal),
+          valor_mercadorias: num(order.ValorMercadorias),
+          valor_descontos: num(order.ValorDesconto || 0),
+          valor_icms: num(order.ValorIcms),
+          valor_IPI: num(order.ValorIpi),
+          valor_pis: num(order.ValorPis),
+          valor_cofins: num(order.ValorCofins),
+          base_calculo_icms: num(order.BaseCalculoIcms),
+          valor_iss: num(order.ValorIss || 0),
+          valor_ir: num(order.ValorIr || 0),
+          valor_csll: num(order.ValorCsll || 0),
+          valor_inss: num(order.ValorInss || 0),
+          valor_ibs: num(order.ValorIbs || 0),
+          valor_cbs: num(order.ValorCbs || 0),
         },
         frete: {
-          valor_frete: order.ValorFrete,
-          quantidade_volumes: order.QuantidadeVolumes,
+          valor_frete: num(order.ValorFrete),
+          quantidade_volumes: num(order.QuantidadeVolumes),
           codigo_transportadora: order.Transportadora,
-          peso_bruto: order.PesoBruto,
-          peso_liquido: order.PesoLiquido,
+          peso_bruto: num(order.PesoBruto),
+          peso_liquido: num(order.PesoLiquido),
           previsao_entrega: order.PrevisaoEntrega || '',
           modalidade: order.FreteModalidade || '',
           codigo_rastreio: order.CodigoRastreio || '',
           link_rastreio: order.LinkRastreio || '',
           veiculo_proprio: order.VeiculoProprio || '',
           placa: order.Placa || '',
-          valor_seguro: order.ValorSeguro || 0,
-          outras_despesas: order.ValorOutrasDespesas || 0
+          valor_seguro: num(order.ValorSeguro || 0),
+          outras_despesas: num(order.ValorOutrasDespesas || 0)
         },
         observacoes: {
           obs_venda: order.ObservacoesVenda,
@@ -201,7 +223,7 @@ export async function GET(req: Request) {
           obs_nf_fisco: nf?.InformacoesFisco
         }
       };
-    });
+    });    
 
     return NextResponse.json({
       pedido_venda_produto: mappedData,

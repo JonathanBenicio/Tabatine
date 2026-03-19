@@ -51,6 +51,7 @@ export interface VendaPlana {
   dataPrevisao: string;
   etapa: string;
   qtdItens: number;
+  qtdParcelas: number;
   observacao: string;
   observacaoInterna: string;
   observacaoNf: string;
@@ -75,8 +76,8 @@ export interface VendaPlana {
     pis: ImpostoDetalhe;
     cofins: ImpostoDetalhe;
     ipi?: ImpostoDetalhe;
-    ibs: { valor: number; aliquota: number; base: number };
-    cbs: { valor: number; aliquota: number; base: number };
+    ibs: { valor: number; aliquota: number; base: number; cst: string };
+    cbs: { valor: number; aliquota: number; base: number; cst: string };
     valor_iss: number;
     valor_ir: number;
     valor_csll: number;
@@ -306,6 +307,7 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
               dataPrevisao: cabecalho.data_previsao || '--',
               etapa: cabecalho.etapa || '--',
               qtdItens: det.length,
+              qtdParcelas: cabecalho.qtde_parcelas || 0,
               observacao: observacoes.obs_venda || '',
               observacaoInterna: observacoes.obs_interna || '',
               observacaoNf: observacoes.obs_nf || '',
@@ -327,43 +329,45 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
               // Impostos
               impostos: {
                 icms: {
-                  aliquota: icms.aliquota || icms.pICMS || icms.aliq_icms || 0,
-                  base: icms.base_calculo || icms.vBC || icms.base_icms || 0,
-                  valor: icms.valor_icms || icms.vICMS || 0,
-                  cst: icms.cst || icms.CST || icms.cst_icms || '--',
+                  aliquota: icms.aliquota ?? icms.pICMS ?? icms.aliq_icms ?? 0,
+                  base: icms.base_calculo ?? icms.vBC ?? icms.base_icms ?? 0,
+                  valor: icms.valor_icms ?? icms.vICMS ?? 0,
+                  cst: icms.cst ?? icms.CST ?? icms.cst_icms ?? '--',
                 },
                 pis: {
-                  aliquota: pis.aliquota || pis.pPIS || pis.aliq_pis || 0,
-                  base: pis.base_calculo || pis.vBC || pis.base_pis || 0,
-                  valor: pis.valor_pis || pis.vPIS || 0,
-                  cst: pis.cst || pis.CST || pis.cod_sit_trib_pis || '--',
+                  aliquota: pis.aliquota ?? pis.pPIS ?? pis.aliq_pis ?? 0,
+                  base: pis.base_calculo ?? pis.vBC ?? pis.base_pis ?? 0,
+                  valor: pis.valor_pis ?? pis.vPIS ?? 0,
+                  cst: pis.cst ?? pis.CST ?? pis.cod_sit_trib_pis ?? '--',
                 },
                 cofins: {
-                  aliquota: cofins.aliquota || cofins.pCOFINS || cofins.aliq_cofins || 0,
-                  base: cofins.base_calculo || cofins.vBC || cofins.base_cofins || 0,
-                  valor: cofins.valor_cofins || cofins.vCOFINS || 0,
-                  cst: cofins.cst || cofins.CST || cofins.cod_sit_trib_cofins || '--',
+                  aliquota: cofins.aliquota ?? cofins.pCOFINS ?? cofins.aliq_cofins ?? 0,
+                  base: cofins.base_calculo ?? cofins.vBC ?? cofins.base_cofins ?? 0,
+                  valor: cofins.valor_cofins ?? cofins.vCOFINS ?? 0,
+                  cst: cofins.cst ?? cofins.CST ?? cofins.cod_sit_trib_cofins ?? '--',
                 },
                 ipi: {
-                  aliquota: imp.ipi?.aliquota || imp.ipi?.pIPI || imp.ipi?.aliq_ipi || 0,
-                  base: imp.ipi?.base_calculo || imp.ipi?.vBC || imp.ipi?.base_ipi || 0,
-                  valor: imp.ipi?.valor_ipi || imp.ipi?.vIPI || 0,
-                  cst: imp.ipi?.cst || imp.ipi?.CST || imp.ipi?.cst_ipi || '--',
+                  aliquota: imp.ipi?.aliquota ?? imp.ipi?.pIPI ?? imp.ipi?.aliq_ipi ?? 0,
+                  base: imp.ipi?.base_calculo ?? imp.ipi?.vBC ?? imp.ipi?.base_ipi ?? 0,
+                  valor: imp.ipi?.valor_ipi ?? imp.ipi?.vIPI ?? 0,
+                  cst: imp.ipi?.cst ?? imp.ipi?.CST ?? imp.ipi?.cst_ipi ?? '--',
                 },
                 ibs: {
-                  valor: ibs.valor_ibs || 0,
-                  aliquota: ibs.aliquota_ibs_uf || 0,
-                  base: item.imposto?.ibs_cbs?.base_ibs_cbs || 0,
+                  valor: ibs.valor_ibs ?? 0,
+                  aliquota: ibs.aliquota_ibs_uf ?? 0,
+                  base: ibs.base_ibs_cbs ?? 0,
+                  cst: '--',
                 },
                 cbs: {
-                  valor: cbs.valor_cbs || 0,
-                  aliquota: cbs.aliquota_cbs || 0,
-                  base: item.imposto?.ibs_cbs?.base_ibs_cbs || 0,
+                  valor: cbs.valor_cbs ?? 0,
+                  aliquota: cbs.aliquota_cbs ?? 0,
+                  base: cbs.base_ibs_cbs ?? 0,
+                  cst: '--',
                 },
-                valor_iss: totalPedido.valor_iss || 0,
-                valor_ir: totalPedido.valor_ir || 0,
-                valor_csll: totalPedido.valor_csll || 0,
-                valor_inss: totalPedido.valor_inss || 0,
+                valor_iss: totalPedido.valor_iss ?? 0,
+                valor_ir: totalPedido.valor_ir ?? 0,
+                valor_csll: totalPedido.valor_csll ?? 0,
+                valor_inss: totalPedido.valor_inss ?? 0,
               },
 
               // Frete detalhado
@@ -394,17 +398,17 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
 
               // Totais do pedido
               totalPedido: {
-                valorTotal: totalPedido.valor_total_pedido || 0,
-                baseIcms: totalPedido.base_calculo_icms || 0,
-                valorIcms: totalPedido.valor_icms || 0,
-                valorMercadorias: totalPedido.valor_mercadorias || 0,
-                valorIpi: totalPedido.valor_IPI || 0,
-                valorPis: totalPedido.valor_pis || 0,
-                valorCofins: totalPedido.valor_cofins || 0,
-                valorIss: totalPedido.valor_iss || 0,
-                valorIr: totalPedido.valor_ir || 0,
-                valorCsll: totalPedido.valor_csll || 0,
-                valorInss: totalPedido.valor_inss || 0,
+                valorTotal: totalPedido.valor_total_pedido ?? 0,
+                baseIcms: totalPedido.base_calculo_icms ?? 0,
+                valorIcms: totalPedido.valor_icms ?? 0,
+                valorMercadorias: totalPedido.valor_mercadorias ?? 0,
+                valorIpi: totalPedido.valor_IPI ?? 0,
+                valorPis: totalPedido.valor_pis ?? 0,
+                valorCofins: totalPedido.valor_cofins ?? 0,
+                valorIss: totalPedido.valor_iss ?? 0,
+                valorIr: totalPedido.valor_ir ?? 0,
+                valorCsll: totalPedido.valor_csll ?? 0,
+                valorInss: totalPedido.valor_inss ?? 0,
               },
 
             // Todas as parcelas

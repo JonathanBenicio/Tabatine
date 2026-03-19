@@ -330,6 +330,9 @@ export default function VendaDetailsPage() {
               <TaxRow name="ICMS" color="bg-violet-500/5 border-violet-500/10" data={venda.impostos.icms} />
               <TaxRow name="PIS" color="bg-sky-500/5 border-sky-500/10" data={venda.impostos.pis} />
               <TaxRow name="COFINS" color="bg-teal-500/5 border-teal-500/10" data={venda.impostos.cofins} />
+              {venda.impostos.ipi && venda.impostos.ipi.valor > 0 && <TaxRow name="IPI" color="bg-rose-500/5 border-rose-500/10" data={venda.impostos.ipi} />}
+              {venda.impostos.ibs.valor > 0 && <TaxRow name="IBS" color="bg-indigo-500/5 border-indigo-500/10" data={venda.impostos.ibs} />}
+              {venda.impostos.cbs.valor > 0 && <TaxRow name="CBS" color="bg-cyan-500/5 border-cyan-500/10" data={venda.impostos.cbs} />}
             </div>
 
             {/* Impostos Retidos na Fonte */}
@@ -444,6 +447,7 @@ export default function VendaDetailsPage() {
           <SectionCard icon={CreditCard} iconColor="text-emerald-500" title="Financeiro">
             <div className="space-y-0">
               <InfoRow label="Condição" value={venda.condPagto} className="text-white" />
+              <InfoRow label="Parcelas" value={`${venda.qtdParcelas}x`} className="text-white" />
               <InfoRow label="Forma" value={<span className="uppercase">{venda.formaPg}</span>} className="text-white" />
               <InfoRow label="Banco / Conta" value={
                 <span className="max-w-[150px] truncate block text-right">
@@ -529,6 +533,20 @@ export default function VendaDetailsPage() {
                 Visualizar DANFE
               </a>
             )}
+          </SectionCard>
+          
+          {/* ── AUDITORIA ── */}
+          <SectionCard icon={ShieldCheck} iconColor="text-zinc-500" title="Auditoria">
+            <div className="space-y-0">
+              <InfoRow label="Criado por" value={venda.usuarioInclusao || '--'} />
+              <InfoRow label="Data Criação" value={`${venda.dataInclusao} ${venda.horaInclusao}`} />
+              {venda.usuarioAlteracao && (
+                <>
+                  <InfoRow label="Alterado por" value={venda.usuarioAlteracao} />
+                  <InfoRow label="Data Alteração" value={`${venda.dataAlteracao} ${venda.horaAlteracao}`} />
+                </>
+              )}
+            </div>
           </SectionCard>
 
         </div>
