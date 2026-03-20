@@ -8,6 +8,10 @@ export interface Produto {
   unidade: string
   valor_unitario: number
   ncm: string
+  ean?: string
+  peso_bruto?: number
+  peso_liquido?: number
+  familia_produto?: string
   excluido: 'S' | 'N'
 }
 
@@ -61,7 +65,11 @@ export const useProdutosStore = create<ProdutosStoreState>((set, get) => ({
         unidade: p.UnidadeMedida,
         valor_unitario: p.ValorUnitario,
         ncm: p.Ncm,
-        excluido: 'N'
+        ean: p.Ean,
+        peso_bruto: Number(p.PesoBruto || 0),
+        peso_liquido: Number(p.PesoLiquido || 0),
+        familia_produto: p.FamiliaProduto,
+        excluido: p.Ativo === false ? 'S' : 'N'
       }))
 
       set({

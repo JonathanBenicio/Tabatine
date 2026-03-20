@@ -18,17 +18,35 @@ export async function GET(req: Request) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const year = searchParams.get('year') || 'all';
     const search = searchParams.get('search') || '';
+    const clienteOmieId = searchParams.get('clienteOmieId');
+    const vendedorOmieId = searchParams.get('vendedorOmieId');
+    const contaCorrenteId = searchParams.get('contaCorrenteId');
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
-    // INCLUSÃO DO 'FormasPagamento (*)' PARA TRAZER A FORMA DE PAGAMENTO
-    let query = supabase
-      .from('PedidosVenda')
-      .select(`
+    // Base query using !inner for Clientes since it's a required relationship (nullable: false)
+    // Vendedores is nullable, so we'll use a normal join unless filtering by it
+    let selectQuery = `
+      *,
+      Clientes!inner (*),
+      Vendedores (*),
+      ContasCorrente (*),
+      FormasPagamento (*),
+      ItensPedido (
         *,
-        Clientes (*),
-        Vendedores (*),
+        Produtos (*)
+      ),
+      PedidoParcelas (*),
+      NotasFiscais (*)
+    `;
+
+    // If filtering by vendor, we need !inner to filter on the related table
+    if (vendedorOmieId) {
+      selectQuery = `
+        *,
+        Clientes!inner (*),
+        Vendedores!inner (*),
         ContasCorrente (*),
         FormasPagamento (*),
         ItensPedido (
@@ -37,7 +55,24 @@ export async function GET(req: Request) {
         ),
         PedidoParcelas (*),
         NotasFiscais (*)
-      `, { count: 'exact' });
+      `;
+    }
+
+    let query = supabase
+      .from('PedidosVenda')
+      .select(selectQuery, { count: 'exact' });
+
+    if (clienteOmieId) {
+      query = query.eq('Clientes.OmieId', parseInt(clienteOmieId));
+    }
+
+    if (vendedorOmieId) {
+      query = query.eq('Vendedores.OmieId', parseInt(vendedorOmieId));
+    }
+
+    if (contaCorrenteId) {
+      query = query.eq('ContasCorrente.OmieId', parseInt(contaCorrenteId));
+    }
 
     if (search) {
       const escapedSearch = escapeFilterValue(`%${search}%`);

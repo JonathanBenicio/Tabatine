@@ -8,15 +8,21 @@ interface FetchNfsResponse {
   currentPage: number
 }
 
-export const useNfQuery = (page: number, search: string) => {
+export const useNfQuery = (page: number, search: string, filters?: { 
+  clienteOmieId?: number,
+  enabled?: boolean
+}) => {
   return useQuery<FetchNfsResponse>({
-    queryKey: ['nfs', page, search],
+    queryKey: ['nfs', page, search, filters],
+    enabled: filters?.enabled ?? true,
     queryFn: async () => {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '10',
         search: search
       })
+      if (filters?.clienteOmieId) params.append('clienteOmieId', filters.clienteOmieId.toString());
+
       const response = await fetch(`/api/supabase/nf?${params}`)
       const data = await response.json()
 

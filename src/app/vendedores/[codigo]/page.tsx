@@ -3,12 +3,13 @@
 import React, { useEffect, useState } from 'react';
 import { useVendedoresStore, Vendedor } from '@/store/useVendedoresStore';
 import { useParams, useRouter } from 'next/navigation';
+import { useVendasQuery } from '@/hooks/useVendasQuery';
 import {
   ArrowLeft, UserCheck, Mail, Percent, 
   AlertCircle, RefreshCw, Database, 
   Info, ShieldCheck, User,
   Ban, CheckCircle2, History, TrendingUp,
-  DollarSign, Briefcase, Hash
+  DollarSign, Briefcase, Hash, ShoppingCart
 } from 'lucide-react';
 
 // ── Reusable Components ────────────────────────────────────
@@ -64,6 +65,51 @@ function StatCard({ icon: Icon, iconBg, label, value, subValue }: {
   );
 }
 
+function RecentOrdersSection({ vendedorOmieId }: { vendedorOmieId: number }) {
+  const { data, isLoading } = useVendasQuery(1, 'all', '', { vendedorOmieId });
+  const router = useRouter();
+  const orders = data?.vendas?.slice(0, 5) || [];
+
+  return (
+    <div className="p-6 rounded-2xl bg-zinc-900/30 border border-zinc-800/50 backdrop-blur-xl h-full">
+      <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+        <ShoppingCart className="text-indigo-500" size={16} />
+        Últimos Pedidos Vinculados
+      </h3>
+      {isLoading ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => <div key={i} className="h-12 bg-zinc-800/50 rounded-lg animate-pulse" />)}
+        </div>
+      ) : orders.length > 0 ? (
+        <div className="space-y-2">
+          {orders.map((order: any) => (
+            <div 
+              key={order.id_linha}
+              onClick={() => router.push(`/vendas?search=${order.numeroPedido}`)}
+              className="p-3 rounded-xl bg-zinc-900/50 border border-zinc-800/50 hover:bg-zinc-800 transition-colors cursor-pointer flex justify-between items-center group"
+            >
+              <div>
+                <p className="text-xs font-bold text-white flex items-center gap-2">
+                  #{order.numeroPedido}
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-500 group-hover:text-zinc-300">{order.etapa}</span>
+                </p>
+                <p className="text-[10px] text-zinc-500">{order.data}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs font-bold text-indigo-400">
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(order.valorTotal)}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-zinc-500 italic py-4">Nenhum pedido vinculado encontrado.</p>
+      )}
+    </div>
+  );
+}
+
 // ── Main Page ──────────────────────────────────────────────
 
 export default function VendedorDetailsPage() {
@@ -91,11 +137,15 @@ export default function VendedorDetailsPage() {
     }
   }, [vendedores, codigo]);
 
-  // ── Loading / Not Found ──
+  // Hook must be called at the top level
+  const { data: vendasData } = useVendasQuery(1, 'all', '', { 
+    vendedorOmieId: vendedor?.codigo,
+    enabled: !!vendedor 
+  });
 
   if (loading && !vendedor) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center min-vh-[50vh]">
+      <div className="flex-1 flex flex-col items-center justify-center min-h-[50vh]">
         <RefreshCw className="w-10 h-10 text-blue-500 animate-spin mb-4" />
         <p className="text-zinc-500 font-mono animate-pulse">Buscando detalhes do vendedor...</p>
       </div>
@@ -122,6 +172,10 @@ export default function VendedorDetailsPage() {
   }
 
   if (!vendedor) return null;
+
+  const totalVendasCount = vendasData?.totalRegistros || 0;
+  const totalVolume = (vendasData?.vendas || []).reduce((acc: number, curr: any) => acc + curr.valorTotal, 0);
+  const ticketMedio = totalVendasCount > 0 ? totalVolume / totalVendasCount : 0;
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-8 animate-in fade-in zoom-in duration-500 pb-20">
@@ -160,28 +214,32 @@ export default function VendedorDetailsPage() {
        {/* ═══ STAT CARDS ═══ */}
        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          icon={Percent}
+          icon={TrendingUp}
           iconBg="bg-blue-600"
-          label="Taxa de Comissão"
-          value={`${vendedor.comissao}%`}
+          label="Total de Vendas"
+          value={totalVendasCount.toString()}
+          subValue="Registros no sistema"
         />
         <StatCard
-          icon={ShieldCheck}
-          iconBg={vendedor.inativo === 'S' ? 'bg-rose-600' : 'bg-emerald-600'}
-          label="Status"
-          value={vendedor.inativo === 'S' ? 'Inativo' : 'Ativo'}
-        />
-        <StatCard
-          icon={Hash}
-          iconBg="bg-indigo-600"
-          label="Código Omie"
-          value={vendedor.codigo.toString()}
+          icon={DollarSign}
+          iconBg="bg-emerald-600"
+          label="Volume Total"
+          value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVolume)}
+          subValue="Soma dos pedidos"
         />
         <StatCard
           icon={Briefcase}
+          iconBg="bg-indigo-600"
+          label="Ticket Médio"
+          value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(ticketMedio)}
+          subValue="Média por pedido"
+        />
+        <StatCard
+          icon={Percent}
           iconBg="bg-zinc-600"
-          label="Vendedor"
-          value="Equipe"
+          label="Taxa Comissão"
+          value={`${vendedor.comissao}%`}
+          subValue="Configurada no ERP"
         />
       </div>
 
@@ -201,14 +259,8 @@ export default function VendedorDetailsPage() {
             </div>
           </SectionCard>
 
-          {/* ── CONFIGURAÇÕES COMERCIAIS ── */}
-          <SectionCard icon={TrendingUp} iconColor="text-emerald-500" title="Configurações Comerciais">
-             <div className="space-y-0">
-                <InfoRow label="Comissão (%)" value={`${vendedor.comissao}%`} className="text-white font-bold" />
-                <InfoRow label="Fatura Pedido" value={vendedor.fatura_pedido === 'S' ? 'Sim' : 'Não'} />
-                <InfoRow label="Visualiza Pedido" value={vendedor.visualiza_pedido === 'S' ? 'Sim' : 'Não'} />
-             </div>
-          </SectionCard>
+          {/* ── ATIVIDADE RECENTE ── */}
+          <RecentOrdersSection vendedorOmieId={vendedor.codigo} />
         </div>
 
         {/* ── Right Column (1/3) ── */}

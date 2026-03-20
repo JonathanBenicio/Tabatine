@@ -17,6 +17,7 @@ export async function GET(req: Request) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const year = searchParams.get('year') || 'all';
     const search = searchParams.get('search') || '';
+    const clienteOmieId = searchParams.get('clienteOmieId');
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -25,13 +26,17 @@ export async function GET(req: Request) {
       .from('NotasFiscais')
       .select(`
         *,
-        Clientes (*),
+        Clientes!inner (*),
         ItensNotaFiscal (
           *,
           Produtos (*)
         ),
         NotaFiscalTitulos (*)
       `, { count: 'exact' });
+
+    if (clienteOmieId) {
+      query = query.eq('Clientes.OmieId', parseInt(clienteOmieId));
+    }
 
     // 1. Search Logic (100% SDK)
     if (search) {

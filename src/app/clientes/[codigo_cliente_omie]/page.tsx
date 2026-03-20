@@ -2,12 +2,15 @@
 
 import React, { useEffect, useState } from 'react';
 import { useClienteStore, ClienteCadastro } from '@/store/useClienteStore';
+import { useVendasQuery } from '@/hooks/useVendasQuery';
+import { useNfQuery } from '@/hooks/useNfQuery';
 import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft, User, MapPin, Mail, Phone,
   AlertCircle, RefreshCw, Database, 
   Info, Building2, Tag, Calendar,
-  ShieldCheck, Globe, Hash, Clock
+  ShieldCheck, Globe, Hash, Clock,
+  ShoppingCart, Receipt
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 
@@ -47,6 +50,102 @@ function DataField({ label, value, className = 'text-zinc-300', large = false }:
   );
 }
 
+function RecentOrdersSection({ clienteOmieId }: { clienteOmieId: number }) {
+  const { data, isLoading } = useVendasQuery(1, 'all', '', { clienteOmieId });
+  const router = useRouter();
+  const orders = data?.vendas?.slice(0, 5) || [];
+
+  return (
+    <div className="p-6 rounded-2xl bg-zinc-900/30 border border-zinc-800/50 backdrop-blur-xl h-full">
+      <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+        <ShoppingCart className="text-emerald-500" size={16} />
+        Últimos Pedidos
+      </h3>
+      {isLoading ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => <div key={i} className="h-12 bg-zinc-800/50 rounded-lg animate-pulse" />)}
+        </div>
+      ) : orders.length > 0 ? (
+        <div className="space-y-2">
+          {orders.map((order: any) => (
+            <div 
+              key={order.id_linha}
+              onClick={() => router.push(`/vendas?search=${order.numeroPedido}`)}
+              className="p-3 rounded-xl bg-zinc-900/50 border border-zinc-800/50 hover:bg-zinc-800 transition-colors cursor-pointer flex justify-between items-center group"
+            >
+              <div>
+                <p className="text-xs font-bold text-white flex items-center gap-2">
+                  #{order.numeroPedido}
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-500 group-hover:text-zinc-300">{order.etapa}</span>
+                </p>
+                <p className="text-[10px] text-zinc-500">{order.data}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs font-bold text-emerald-400">
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(order.valorTotal)}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-zinc-500 italic py-4">Nenhum pedido encontrado.</p>
+      )}
+    </div>
+  );
+}
+
+function RecentInvoicesSection({ clienteOmieId }: { clienteOmieId: number }) {
+  const { data, isLoading } = useNfQuery(1, '', { clienteOmieId });
+  const router = useRouter();
+  const nfs = data?.nfs?.slice(0, 5) || [];
+
+  return (
+    <div className="p-6 rounded-2xl bg-zinc-900/30 border border-zinc-800/50 backdrop-blur-xl h-full">
+      <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+        <Receipt className="text-blue-500" size={16} />
+        Últimas Notas Fiscais
+      </h3>
+      {isLoading ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => <div key={i} className="h-12 bg-zinc-800/50 rounded-lg animate-pulse" />)}
+        </div>
+      ) : nfs.length > 0 ? (
+        <div className="space-y-2">
+          {nfs.map((nf: any) => (
+            <div 
+              key={nf.id_nf}
+              onClick={() => router.push(`/nf?search=${nf.numero_nf}`)}
+              className="p-3 rounded-xl bg-zinc-900/50 border border-zinc-800/50 hover:bg-zinc-800 transition-colors cursor-pointer flex justify-between items-center group"
+            >
+              <div>
+                <p className="text-xs font-bold text-white flex items-center gap-2">
+                  NF {nf.numero_nf}
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                    nf.status_nf === 'Autorizado' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 
+                    nf.status_nf === 'Cancelado' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : 
+                    'bg-zinc-800 text-zinc-500 border-zinc-700'
+                  }`}>
+                    {nf.status_nf}
+                  </span>
+                </p>
+                <p className="text-[10px] text-zinc-500">{nf.data_emissao}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs font-bold text-blue-400">
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(nf.valor_total_nf)}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-zinc-500 italic py-4">Nenhuma nota fiscal encontrada.</p>
+      )}
+    </div>
+  );
+}
+
 // ── Main Page ──────────────────────────────────────────────
 
 export default function ClienteDetailsPage() {
@@ -73,8 +172,6 @@ export default function ClienteDetailsPage() {
       }
     }
   }, [clientes, codigo_cliente_omie]);
-
-  // ── Loading / Not Found ──
 
   if (loading && !cliente) {
     return (
@@ -150,38 +247,42 @@ export default function ClienteDetailsPage() {
             </div>
           </SectionCard>
 
-          {/* ── ENDEREÇO ── */}
+          {/* ── LOCALIZAÇÃO ── */}
           <SectionCard icon={MapPin} iconColor="text-blue-500" title="Localização">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <DataField label="Logradouro" value={cliente.endereco} />
               <DataField label="Número" value={cliente.endereco_numero} />
-              <DataField label="Complemento" value={cliente.complemento} />
+              <DataField label="Complemento" value={cliente.endereco_complemento} />
               <DataField label="Bairro" value={cliente.bairro} />
               <DataField label="Cidade" value={cliente.cidade} />
               <DataField label="Estado" value={cliente.estado} />
-              <DataField label="CEP" value={cliente.cep} />
             </div>
           </SectionCard>
 
           {/* ── CONTATO ── */}
           <SectionCard icon={Phone} iconColor="text-emerald-500" title="Contato">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <DataField label="E-mail" value={cliente.email} className="text-indigo-400" />
-              <DataField label="Site" value={cliente.homepage} />
-              <DataField label="Telefone" value={`(${cliente.telefone1_ddd}) ${cliente.telefone1_numero}`} />
-              <DataField label="Celular" value={`(${cliente.telefone2_ddd}) ${cliente.telefone2_numero}`} />
+              <DataField label="E-mail" value={cliente.email} className="text-indigo-400 font-medium" />
+              <DataField label="Telefone" value={cliente.telefone1_ddd && cliente.telefone1_numero ? `(${cliente.telefone1_ddd}) ${cliente.telefone1_numero}` : '--'} />
+              <DataField label="WhatsApp / Celular" value={cliente.telefone2_ddd && cliente.telefone2_numero ? `(${cliente.telefone2_ddd}) ${cliente.telefone2_numero}` : '--'} />
+              <DataField label="Website" value={cliente.homepage} />
             </div>
           </SectionCard>
 
           {/* ── FISCAL ── */}
-          <SectionCard icon={ShieldCheck} iconColor="text-rose-500" title="Dados Fiscais">
+          <SectionCard icon={ShieldCheck} iconColor="text-rose-500" title="Identificação Fiscal">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <DataField label="Inscrição Estadual" value={cliente.inscricao_estadual} />
               <DataField label="Inscrição Municipal" value={cliente.inscricao_municipal} />
-              <DataField label="Suframa" value={cliente.inscricao_suframa} />
-              <DataField label="Optante Simples" value={cliente.optante_simples === 'S' ? 'Sim' : 'Não'} />
+              <DataField label="Optante Simples Nacional" value={cliente.optante_simples_nacional ? 'Sim' : 'Não'} />
             </div>
           </SectionCard>
+
+          {/* ── ATIVIDADE RECENTE ── */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+             <RecentOrdersSection clienteOmieId={cliente.codigo_cliente_omie} />
+             <RecentInvoicesSection clienteOmieId={cliente.codigo_cliente_omie} />
+          </div>
         </div>
 
         {/* ── Right Column (1/3) ── */}
@@ -203,24 +304,20 @@ export default function ClienteDetailsPage() {
           </SectionCard>
 
           {/* ── AUDITORIA ── */}
-          <SectionCard icon={ShieldCheck} iconColor="text-zinc-500" title="Auditoria">
+          <SectionCard icon={Clock} iconColor="text-zinc-500" title="Auditoria">
             <div className="space-y-0">
-              <InfoRow label="Criado em" value={cliente.info?.dInclusao ? `${cliente.info.dInclusao} ${cliente.info.hInclusao}` : '--'} />
-              <InfoRow label="Alterado em" value={cliente.info?.dAlteracao ? `${cliente.info.dAlteracao} ${cliente.info.hAlteracao}` : '--'} />
-              <InfoRow label="Importado" value={cliente.info?.cImportado === 'S' ? 'Sim' : 'Não'} />
+              <InfoRow label="ID Interno Omie" value={cliente.codigo_cliente_omie} className="font-mono text-indigo-400" />
+              <InfoRow label="Integrado em" value={cliente.info?.dInclusao ? `${cliente.info.dInclusao} ${cliente.info.hInclusao}` : '--'} />
+              <InfoRow label="Última Alteração" value={cliente.info?.dAlteracao ? `${cliente.info.dAlteracao} ${cliente.info.hAlteracao}` : '--'} />
             </div>
           </SectionCard>
 
-          {/* ── DADOS BRUTOS ── */}
-          <SectionCard icon={Database} iconColor="text-zinc-600" title="Informações Técnicas">
+          {/* ── DADOS TÉCNICOS ── */}
+          <SectionCard icon={Database} iconColor="text-zinc-600" title="Sistema">
              <div className="space-y-4">
                 <div className="p-3 rounded-xl bg-zinc-950/50 border border-zinc-800/50">
-                  <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block mb-1">ID Omie</span>
-                  <code className="text-xs text-indigo-400">{cliente.codigo_cliente_omie}</code>
-                </div>
-                <div className="p-3 rounded-xl bg-zinc-950/50 border border-zinc-800/50">
-                  <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block mb-1">ID Integração</span>
-                  <code className="text-xs text-zinc-400">{cliente.codigo_cliente_integracao}</code>
+                  <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block mb-1">Código Integração</span>
+                  <code className="text-xs text-zinc-400">{cliente.codigo_cliente_integracao || 'N/A'}</code>
                 </div>
              </div>
           </SectionCard>

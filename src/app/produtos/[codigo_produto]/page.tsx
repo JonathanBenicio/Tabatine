@@ -192,10 +192,19 @@ export default function ProdutoDetailsPage() {
           <SectionCard icon={Package} iconColor="text-blue-500" title="Identificação do Produto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <DataField label="Descrição" value={produto.descricao} className="text-white font-bold" large />
-              <DataField label="Código SKU / Interno" value={produto.codigo} />
+              <DataField label="EAN / Código de Barras" value={produto.ean} className="font-mono text-zinc-400" />
+              <DataField label="Família de Produto" value={produto.familia_produto} />
+              <DataField label="Código SKU / Interno" value={produto.codigo} className="font-mono text-zinc-400" />
               <DataField label="Unidade de Medida" value={produto.unidade} />
-              <DataField label="Omie ID" value={produto.codigo_produto.toString()} />
-              <DataField label="Código Integração" value={produto.codigo_produto_integracao} />
+              <DataField label="NCM" value={produto.ncm} />
+            </div>
+          </SectionCard>
+
+          {/* ── LOGÍSTICA ── */}
+          <SectionCard icon={Box} iconColor="text-orange-500" title="Informações Logísticas">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <DataField label="Peso Bruto" value={produto.peso_bruto ? `${produto.peso_bruto} kg` : '--'} />
+              <DataField label="Peso Líquido" value={produto.peso_liquido ? `${produto.peso_liquido} kg` : '--'} />
             </div>
           </SectionCard>
 

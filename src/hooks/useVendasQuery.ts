@@ -9,11 +9,27 @@ interface FetchVendasResponse {
   currentPage: number;
 }
 
-export const useVendasQuery = (page: number, year: number | 'all', search: string) => {
+export const useVendasQuery = (page: number, year: number | 'all', search: string, filters?: { 
+  clienteOmieId?: number, 
+  vendedorOmieId?: number, 
+  contaCorrenteId?: number,
+  enabled?: boolean
+}) => {
   return useQuery<FetchVendasResponse>({
-    queryKey: ['vendas', page, year, search],
+    queryKey: ['vendas', page, year, search, filters],
+    enabled: filters?.enabled ?? true,
     queryFn: async () => {
-      const response = await fetch(`/api/supabase/vendas?page=${page}&limit=10&year=${year}&search=${encodeURIComponent(search)}`);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '10',
+        year: year.toString(),
+        search
+      });
+      if (filters?.clienteOmieId) params.append('clienteOmieId', filters.clienteOmieId.toString());
+      if (filters?.vendedorOmieId) params.append('vendedorOmieId', filters.vendedorOmieId.toString());
+      if (filters?.contaCorrenteId) params.append('contaCorrenteId', filters.contaCorrenteId.toString());
+
+      const response = await fetch(`/api/supabase/vendas?${params}`);
       const data = await response.json();
 
       if (!response.ok) {

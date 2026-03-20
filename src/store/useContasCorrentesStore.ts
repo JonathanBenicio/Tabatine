@@ -11,6 +11,8 @@ export interface ContaCorrente {
   inativo: string
   saldo_inicial: number
   pdv_enviar: string
+  codigo_integracao?: string
+  omie_updated_at?: string
 }
 
 interface ContasCorrentesStoreState {
@@ -61,7 +63,9 @@ export const useContasCorrentesStore = create<ContasCorrentesStoreState>((set, g
         numero_conta_corrente: c.NumeroContaCorrente,
         tipo: c.Tipo,
         tipo_conta_corrente: c.TipoContaCorrente,
-        inativo: c.Inativo ? 'S' : 'N'
+        inativo: c.Inativa ? 'S' : 'N',
+        codigo_integracao: c.CodigoIntegracao,
+        omie_updated_at: c.OmieUpdatedAt
       }))
 
       set({

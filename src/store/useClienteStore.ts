@@ -11,6 +11,13 @@ export interface ClienteCadastro {
   email: string
   cidade: string
   estado: string
+  bairro?: string
+  endereco?: string
+  endereco_numero?: string
+  endereco_complemento?: string
+  inscricao_estadual?: string
+  inscricao_municipal?: string
+  optante_simples_nacional?: boolean
   tags: { tag: string }[]
   [key: string]: any
 }
@@ -65,6 +72,13 @@ export const useClienteStore = create<ClienteStoreState>((set, get) => ({
         email: c.Email,
         cidade: c.Cidade,
         estado: c.Estado,
+        bairro: c.Bairro,
+        endereco: c.Endereco,
+        endereco_numero: c.EnderecoNumero,
+        endereco_complemento: c.EnderecoComplemento,
+        inscricao_estadual: c.InscricaoEstadual,
+        inscricao_municipal: c.InscricaoMunicipal,
+        optante_simples_nacional: c.OptanteSimplesNacional,
         tags: [] // Tags are not yet synced to Supabase in this version
       }))
 
