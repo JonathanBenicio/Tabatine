@@ -1,30 +1,27 @@
 'use client';
 
-import React, { useEffect, useMemo } from 'react';
-import { useNfStore } from '@/store/useNfStore';
+import React, { useMemo } from 'react';
+import { useNfStore, NfCadastroFlat } from '@/store/useNfStore';
 import { Search, FileText, AlertCircle, RefreshCw, Eye, CheckCircle2, XCircle, Clock, Hash, User, ShieldCheck, DollarSign, Ban } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import Pagination from './Pagination';
 import Link from 'next/link';
+import { useNfQuery } from '@/hooks/useNfQuery';
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+  createColumnHelper,
+} from '@tanstack/react-table';
+
+const columnHelper = createColumnHelper<NfCadastroFlat>();
 
 export default function NfTable() {
   const { 
-    nfs, loading, error, currentPage, totalPaginas, totalRegistros, 
-    fetchNfs, searchTerm, setSearchTerm 
+    currentPage, searchTerm, setSearchTerm, setCurrentPage 
   } = useNfStore();
 
-  useEffect(() => {
-    fetchNfs(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchNfs(1, searchTerm);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm, fetchNfs]);
+  const { data, isLoading, error, refetch } = useNfQuery(currentPage, searchTerm);
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
@@ -74,14 +71,79 @@ export default function NfTable() {
     );
   };
 
-  // Summary stats
   const stats = useMemo(() => {
+    const nfs = data?.nfs || [];
     const faturados = nfs.filter(n => ['faturado', 'autorizado'].includes(n.status_nf.toLowerCase()));
     const cancelados = nfs.filter(n => n.status_nf.toLowerCase() === 'cancelado');
     const totalFaturado = faturados.reduce((sum, n) => sum + (n.valor_total_nf || 0), 0);
     const totalCancelado = cancelados.reduce((sum, n) => sum + (n.valor_total_nf || 0), 0);
     return { faturados: faturados.length, cancelados: cancelados.length, totalFaturado, totalCancelado };
-  }, [nfs]);
+  }, [data?.nfs]);
+
+  const columns = useMemo(() => [
+    columnHelper.accessor('data_emissao', {
+      header: 'Emissão',
+      cell: info => <span className="text-xs font-medium text-zinc-400 font-mono">{formatDate(info.getValue())}</span>,
+    }),
+    columnHelper.accessor('numero_nf', {
+      header: 'NF-e No.',
+      cell: info => <span className="text-sm font-bold text-white tracking-tight">#{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('serie', {
+      header: 'Série',
+      cell: info => <span className="text-xs font-mono text-zinc-400">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('razao_social', {
+      header: 'Destinatário / Cliente',
+      cell: info => (
+        <div className="flex items-center gap-2">
+          <User size={12} className="text-zinc-600" />
+          <span className="text-sm font-medium text-zinc-300 group-hover/row:text-white transition-colors">
+            {info.getValue()}
+          </span>
+        </div>
+      ),
+    }),
+    columnHelper.accessor('cnpj_cpf', {
+      header: 'Doc. Cliente',
+      cell: info => <span className="text-[10px] font-bold text-zinc-500 font-mono">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('natureza_operacao', {
+      header: 'Nat. Operação',
+      cell: info => <span className="text-xs text-zinc-400 max-w-[150px] truncate block">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('valor_total_nf', {
+      header: 'Valor Líquido',
+      cell: info => <span className="text-sm font-black text-white group-hover/row:text-blue-400 transition-colors">{formatCurrency(info.getValue())}</span>,
+      meta: { align: 'right' }
+    }),
+    columnHelper.accessor('status_nf', {
+      header: 'Status',
+      cell: info => getStatusBadge(info.getValue()),
+    }),
+    columnHelper.display({
+      id: 'actions',
+      header: 'Ações',
+      cell: info => (
+        <div className="flex justify-center opacity-0 group-hover/row:opacity-100 transition-all translate-x-1 group-hover/row:translate-x-0">
+          <Link 
+            href={`/nf/${info.row.original.id_nf}`}
+            className="p-2 bg-blue-500 hover:bg-blue-400 text-white rounded-lg transition-colors shadow-lg shadow-blue-500/20" 
+            title="Abrir Detalhes"
+          >
+            <Eye size={14} />
+          </Link>
+        </div>
+      ),
+      meta: { align: 'center' }
+    }),
+  ], []);
+
+  const table = useReactTable({
+    data: data?.nfs || [],
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
 
   return (
     <div className="w-full space-y-6">
@@ -111,11 +173,11 @@ export default function NfTable() {
             />
           </div>
           <button 
-            onClick={() => fetchNfs(1)} 
-            disabled={loading}
+            onClick={() => refetch()} 
+            disabled={isLoading}
             className="p-2.5 bg-zinc-900/40 border border-zinc-800 hover:border-zinc-700 rounded-xl text-zinc-400 hover:text-white transition-all active:scale-95 disabled:opacity-50 group backdrop-blur-sm"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-400' : 'group-hover:rotate-180 transition-transform duration-700'}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-blue-400' : 'group-hover:rotate-180 transition-transform duration-700'}`} />
           </button>
         </div>
       </div>
@@ -130,7 +192,7 @@ export default function NfTable() {
             </div>
           </div>
           <div>
-            <p className="text-3xl font-bold text-white tracking-tighter">{totalRegistros}</p>
+            <p className="text-3xl font-bold text-white tracking-tighter">{data?.totalRegistros || 0}</p>
             <div className="flex items-center gap-1 mt-1">
               <span className="text-[10px] text-zinc-500">Sincronização em Tempo Real</span>
             </div>
@@ -183,7 +245,7 @@ export default function NfTable() {
           <AlertCircle className="w-5 h-5 shrink-0" />
           <div className="text-sm">
             <p className="font-bold tracking-tight">Falha na consulta</p>
-            <p className="opacity-70 mt-0.5">{error}</p>
+            <p className="opacity-70 mt-0.5">{(error as Error).message}</p>
           </div>
         </div>
       )}
@@ -193,20 +255,21 @@ export default function NfTable() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-zinc-800/50 bg-zinc-900/20">
-                <th className="py-5 px-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] font-sans">Emissão</th>
-                <th className="py-5 px-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] font-sans">NF-e No.</th>
-                <th className="py-5 px-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] font-sans">Série</th>
-                <th className="py-5 px-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] font-sans">Destinatário / Cliente</th>
-                <th className="py-5 px-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] font-sans">Doc. Cliente</th>
-                <th className="py-5 px-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] font-sans">Nat. Operação</th>
-                <th className="py-5 px-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] font-sans text-right">Valor Líquido</th>
-                <th className="py-5 px-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] font-sans">Status</th>
-                <th className="py-5 px-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] font-sans text-center">Ações</th>
-              </tr>
+              {table.getHeaderGroups().map(headerGroup => (
+                <tr key={headerGroup.id} className="border-b border-zinc-800/50 bg-zinc-900/20">
+                  {headerGroup.headers.map(header => (
+                    <th 
+                      key={header.id} 
+                      className={`py-5 px-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] font-sans ${header.column.columnDef.meta?.align === 'right' ? 'text-right' : header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''}`}
+                    >
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                    </th>
+                  ))}
+                </tr>
+              ))}
             </thead>
             <tbody className="divide-y divide-zinc-800/30">
-              {loading && nfs.length === 0 ? (
+              {isLoading && !data ? (
                 [...Array(6)].map((_, i) => (
                   <tr key={i} className="animate-pulse">
                     <td className="py-5 px-6"><div className="h-4 bg-zinc-800/50 rounded-md w-16"></div></td>
@@ -220,9 +283,9 @@ export default function NfTable() {
                     <td className="py-5 px-6"><div className="h-4 bg-zinc-800/50 rounded-md w-10 mx-auto"></div></td>
                   </tr>
                 ))
-              ) : nfs.length === 0 ? (
+              ) : table.getRowModel().rows.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-24 px-6 text-center">
+                  <td colSpan={columns.length} className="py-24 px-6 text-center">
                     <div className="flex flex-col items-center justify-center gap-4">
                       <div className="w-16 h-16 rounded-full bg-zinc-900/50 border border-zinc-800 flex items-center justify-center text-zinc-700">
                         <FileText size={32} />
@@ -232,57 +295,16 @@ export default function NfTable() {
                   </td>
                 </tr>
               ) : (
-                nfs.map((nf) => (
+                table.getRowModel().rows.map(row => (
                   <tr 
-                    key={nf.id_nf} 
+                    key={row.id} 
                     className="group/row hover:bg-blue-500/[0.02] transition-all duration-300"
                   >
-                    <td className="py-5 px-6 text-xs font-medium text-zinc-400 font-mono">
-                      {formatDate(nf.data_emissao)}
-                    </td>
-                    <td className="py-5 px-6">
-                      <span className="text-sm font-bold text-white tracking-tight">#{nf.numero_nf}</span>
-                    </td>
-                    <td className="py-5 px-6">
-                      <span className="text-xs font-mono text-zinc-400">{nf.serie}</span>
-                    </td>
-                    <td className="py-5 px-6">
-                      <div className="flex items-center gap-2">
-                        <User size={12} className="text-zinc-600" />
-                        <span className="text-sm font-medium text-zinc-300 group-hover/row:text-white transition-colors">
-                          {nf.razao_social}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-5 px-6">
-                       <span className="text-[10px] font-bold text-zinc-500 font-mono">
-                         {nf.cnpj_cpf}
-                       </span>
-                    </td>
-                    <td className="py-5 px-6">
-                      <span className="text-xs text-zinc-400 max-w-[150px] truncate block">
-                        {nf.natureza_operacao}
-                      </span>
-                    </td>
-                    <td className="py-5 px-6 text-right">
-                      <span className="text-sm font-black text-white group-hover/row:text-blue-400 transition-colors">
-                        {formatCurrency(nf.valor_total_nf)}
-                      </span>
-                    </td>
-                    <td className="py-5 px-6">
-                      {getStatusBadge(nf.status_nf)}
-                    </td>
-                    <td className="py-5 px-6">
-                      <div className="flex justify-center opacity-0 group-hover/row:opacity-100 transition-all translate-x-1 group-hover/row:translate-x-0">
-                        <Link 
-                          href={`/nf/${nf.id_nf}`}
-                          className="p-2 bg-blue-500 hover:bg-blue-400 text-white rounded-lg transition-colors shadow-lg shadow-blue-500/20" 
-                          title="Abrir Detalhes"
-                        >
-                          <Eye size={14} />
-                        </Link>
-                      </div>
-                    </td>
+                    {row.getVisibleCells().map(cell => (
+                      <td key={cell.id} className="py-5 px-6 text-xs font-medium text-zinc-400 font-mono">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
                   </tr>
                 ))
               )}
@@ -292,13 +314,13 @@ export default function NfTable() {
 
         <Pagination 
           currentPage={currentPage}
-          totalPaginas={totalPaginas}
-          onPageChange={fetchNfs}
-          loading={loading}
+          totalPaginas={data?.totalPaginas || 1}
+          onPageChange={setCurrentPage}
+          loading={isLoading}
         />
 
         {/* Floating Loading Overlay */}
-        {loading && nfs.length > 0 && (
+        {isLoading && data && (
           <div className="absolute inset-0 bg-zinc-950/40 backdrop-blur-[2px] flex flex-col justify-center items-center z-20">
             <RefreshCw className="w-10 h-10 text-blue-500 animate-spin" />
             <p className="text-[10px] font-bold text-blue-400 uppercase tracking-[0.2em] mt-4">Sincronizando...</p>

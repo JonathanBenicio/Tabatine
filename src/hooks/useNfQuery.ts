@@ -1,111 +1,33 @@
-import { create } from 'zustand'
+import { useQuery } from '@tanstack/react-query'
+import { NfCadastroFlat } from '@/store/useNfStore'
 
-export interface NfCadastroFlat {
-  id_nf: number
-  numero_nf: string
-  serie: string
-  modelo: string
-  data_emissao: string
-  hora_emissao: string
-  data_registro: string
-  data_saida_entrada: string
-  hora_saida_entrada: string
-  status_nf: string
-  tipo_nf: string
-  finalidade_nfe: string
-  tipo_ambiente: string
-  indicador_pagamento: string
-  denegado: string
-  data_cancelamento: string
-  data_inutilizacao: string
-  razao_social: string
-  cnpj_cpf: string
-  cod_cliente: number
-  cod_empresa: number
-  valor_total_nf: number
-  valor_produtos: number
-  valor_icms: number
-  valor_bc_icms: number
-  valor_ipi: number
-  valor_pis: number
-  valor_cofins: number
-  valor_frete: number
-  valor_seguro: number
-  valor_desconto: number
-  valor_outras: number
-  valor_total_tributos: number
-  valor_bc_st: number
-  valor_st: number
-  valor_icms_desonerado: number
-  valor_ii: number
-  valor_servicos: number
-  valor_iss: number
-  natureza_operacao: string
-  chave_nfe: string
-  cod_categoria: string
-  modalidade_frete: string
-  id_pedido: number
-  id_recebimento: number
-  id_transportador: number
-  importado_api: string
-  data_alteracao: string
-  hora_alteracao: string
-  data_inclusao: string
-  hora_inclusao: string
-  usuario_alteracao: string
-  usuario_inclusao: string
-  itens: any[]
-  titulos: any[]
-  omieData?: any
-  [key: string]: any
-}
-
-interface NfStoreState {
+interface FetchNfsResponse {
   nfs: NfCadastroFlat[]
-  nfsMap: Record<string, NfCadastroFlat>
-  loading: boolean
-  error: string | null
   totalPaginas: number
   totalRegistros: number
   currentPage: number
-  searchTerm: string
-  setSearchTerm: (term: string) => void
-  setCurrentPage: (page: number) => void
-  fetchNfs: (page?: number, search?: string) => Promise<void>
 }
 
-export const useNfStore = create<NfStoreState>((set, get) => ({
-  nfs: [],
-  nfsMap: {},
-  loading: false,
-  error: null,
-  totalPaginas: 1,
-  totalRegistros: 0,
-  currentPage: 1,
-  searchTerm: '',
-  setSearchTerm: (term: string) => set({ searchTerm: term }),
-  setCurrentPage: (page: number) => set({ currentPage: page }),
-
-  fetchNfs: async (page = 1, search) => {
-    const currentSearch = search !== undefined ? search : get().searchTerm
-    set({ loading: true, error: null })
-    try {
+export const useNfQuery = (page: number, search: string) => {
+  return useQuery<FetchNfsResponse>({
+    queryKey: ['nfs', page, search],
+    queryFn: async () => {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '10',
-        search: currentSearch
+        search: search
       })
       const response = await fetch(`/api/supabase/nf?${params}`)
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch NFs from Supabase')
+        throw new Error(data.error || 'Failed to fetch NFs')
       }
 
       const rawNfs = data.nf_resumo_lista || []
 
       // --- Passive Lookup Population ---
-      const { useLookupStore } = await import('./useLookupStore')
+      const { useLookupStore } = await import('@/store/useLookupStore')
       const lookupStore = useLookupStore.getState()
       const clientesMap: Record<number, string> = {}
 
@@ -116,7 +38,6 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
       })
       lookupStore.setClientes(clientesMap)
 
-      // Map each NF from the resumidos list
       const flatNfs: NfCadastroFlat[] = rawNfs.map((nf: any) => {
         const ide = nf.ide || {}
         const dest = nf.nfDestInt || {}
@@ -129,19 +50,10 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
         const det = nf.det || []
         const titulos = nf.titulos || []
 
-        // ID
         const idNf = compl.nIdNF || nf.id_nf || Math.random()
-
-        // Número
         const nNF = ide.nNF || '---'
-
-        // Série
         const serie = ide.serie || '---'
-
-        // Modelo
         const modelo = ide.mod || '---'
-
-        // Datas e horários (ide)
         const dEmi = ide.dEmi || ''
         const hEmi = ide.hEmi || ''
         const dReg = ide.dReg || ''
@@ -149,15 +61,12 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
         const hSaiEnt = ide.hSaiEnt || ''
         const dCan = ide.dCan || ''
         const dInut = ide.dInut || ''
-
-        // Tipo e finalidade
         const tpNF = ide.tpNF || ''
         const finNFe = ide.finNFe || ''
         const tpAmb = ide.tpAmb || ''
         const indPag = ide.indPag || ''
         const cDeneg = ide.cDeneg || 'N'
 
-        // Status
         let statusLabel = ''
         if (cDeneg === 'S') statusLabel = 'Denegado'
         else if (dCan) statusLabel = 'Cancelado'
@@ -170,22 +79,16 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
           else statusLabel = rawStatus || 'Pendente'
         }
 
-        // Destinatário
         const razao = dest.xNome || 'Desconhecido'
         const cnpjCpf = dest.cnpj_cpf || '---'
         const nCodCli = dest.nCodCli || 0
-
-        // Emitente
         const nCodEmp = emit.nCodEmp || 0
-
-        // Totais ICMS
         const vNF = icmsTot.vNF || 0
         const vProd = icmsTot.vProd || 0
         const vICMS = icmsTot.vICMS || 0
         const vBC = icmsTot.vBC || 0
         const vIPI = icmsTot.vIPI || 0
 
-        // Retenções / Outros
         const retencoes = total.Retencoes || {}
         const vPIS = icmsTot.vPIS || retencoes.vPIS || retencoes.vPISRetido || 0
         const vCOFINS = icmsTot.vCOFINS || retencoes.vCOFINS || retencoes.vCOFINSRetido || 0
@@ -201,12 +104,8 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
         const vST = icmsTot.vST || 0
         const vICMSDesonerado = icmsTot.vICMSDesonerado || 0
         const vII = icmsTot.vII || 0
-
-        // Totais ISSQN
         const vServ = issqnTot.vServ || 0
         const vISS = issqnTot.vISS || 0
-
-        // Complementar
         const chaveNfe = compl.cChaveNFe || ''
         const cCodCateg = compl.cCodCateg || ''
         const cModFrete = compl.cModFrete || ''
@@ -214,8 +113,6 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
         const nIdReceb = compl.nIdReceb || 0
         const nIdTransp = compl.nIdTransp || 0
         const xNatureza = compl.xNatureza || '---'
-
-        // Info (auditoria)
         const cImpAPI = info.cImpAPI || 'N'
         const dAlt = info.dAlt || ''
         const hAlt = info.hAlt || ''
@@ -224,7 +121,6 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
         const uAlt = info.uAlt || ''
         const uInc = info.uInc || ''
 
-        // Itens mapeados
         const itensMapped = det.map((item: any) => {
           const prod = item.prod || {}
           const nfProdInt = item.nfProdInt || {}
@@ -249,7 +145,6 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
           }
         })
 
-        // Títulos mapeados
         const titulosMapped = titulos.map((t: any) => ({
           numero_titulo: t.cNumTitulo || '',
           documento: t.cDoc || '',
@@ -323,21 +218,13 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
         }
       })
 
-      const nfsMap = flatNfs.reduce((acc, nf) => {
-        acc[nf.id_nf.toString()] = nf
-        return acc
-      }, {} as Record<string, NfCadastroFlat>)
-
-      set({
+      return {
         nfs: flatNfs,
-        nfsMap,
         totalPaginas: data.total_de_paginas || 1,
         totalRegistros: data.total_de_registros || 0,
         currentPage: data.pagina || page,
-        loading: false,
-      })
-    } catch (error: any) {
-      set({ error: error.message, loading: false })
-    }
-  },
-}))
+      }
+    },
+    placeholderData: (previousData) => previousData,
+  })
+}

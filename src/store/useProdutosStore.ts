@@ -1,27 +1,28 @@
-import { create } from 'zustand';
+import { create } from 'zustand'
 
 export interface Produto {
-  codigo_produto: number;
-  codigo_produto_integracao: string;
-  codigo: string;
-  descricao: string;
-  unidade: string;
-  valor_unitario: number;
-  ncm: string;
-  excluido: 'S' | 'N';
+  codigo_produto: number
+  codigo_produto_integracao: string
+  codigo: string
+  descricao: string
+  unidade: string
+  valor_unitario: number
+  ncm: string
+  excluido: 'S' | 'N'
 }
 
 interface ProdutosStoreState {
-  produtos: Produto[];
-  loading: boolean;
-  error: string | null;
-  hasFetchedInitial: boolean;
-  totalPaginas: number;
-  totalRegistros: number;
-  currentPage: number;
-  searchTerm: string;
-  setSearchTerm: (term: string) => void;
-  fetchProdutos: (page?: number, search?: string) => Promise<void>;
+  produtos: Produto[]
+  loading: boolean
+  error: string | null
+  hasFetchedInitial: boolean
+  totalPaginas: number
+  totalRegistros: number
+  currentPage: number
+  searchTerm: string
+  setSearchTerm: (term: string) => void
+  setCurrentPage: (page: number) => void
+  fetchProdutos: (page?: number, search?: string) => Promise<void>
 }
 
 export const useProdutosStore = create<ProdutosStoreState>((set, get) => ({
@@ -34,22 +35,23 @@ export const useProdutosStore = create<ProdutosStoreState>((set, get) => ({
   currentPage: 1,
   searchTerm: '',
   setSearchTerm: (term: string) => set({ searchTerm: term }),
+  setCurrentPage: (page: number) => set({ currentPage: page }),
 
   fetchProdutos: async (page = 1, search) => {
-    const currentSearch = search !== undefined ? search : get().searchTerm;
-    set({ loading: true, error: null, hasFetchedInitial: true });
-    
+    const currentSearch = search !== undefined ? search : get().searchTerm
+    set({ loading: true, error: null, hasFetchedInitial: true })
+
     try {
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: '50',
+        limit: '10',
         search: currentSearch
-      });
-      const response = await fetch(`/api/supabase/produtos?${params}`);
-      const data = await response.json();
+      })
+      const response = await fetch(`/api/supabase/produtos?${params}`)
+      const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch produtos from Supabase');
+        throw new Error(data.error || 'Failed to fetch produtos from Supabase')
       }
 
       const mappedProdutos = (data.produtos || []).map((p: any) => ({
@@ -60,17 +62,17 @@ export const useProdutosStore = create<ProdutosStoreState>((set, get) => ({
         valor_unitario: p.ValorUnitario,
         ncm: p.Ncm,
         excluido: 'N'
-      }));
-      
+      }))
+
       set({
         produtos: mappedProdutos,
         totalPaginas: data.total_de_paginas || 1,
         totalRegistros: data.total_de_registros || 0,
         currentPage: data.pagina || page,
         loading: false,
-      });
+      })
     } catch (error: any) {
-      set({ error: error.message, loading: false });
+      set({ error: error.message, loading: false })
     }
   },
-}));
+}))

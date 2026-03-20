@@ -143,6 +143,7 @@ interface VendasStoreState {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   setAnoSelecionado: (ano: number | 'all') => void;
+  setCurrentPage: (page: number) => void;
   fetchVendas: (page?: number, forceRefresh?: boolean) => Promise<void>;
 }
 
@@ -156,6 +157,8 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
   currentPage: 1,
   anoSelecionado: new Date().getFullYear(),
   searchTerm: '',
+
+  setCurrentPage: (page) => set({ currentPage: page }),
 
   setSearchTerm: (term) => {
     set({ searchTerm: term, totalRegistros: 0, totalPaginas: 1, hasFetchedInitial: false, vendas: [], currentPage: 1 });

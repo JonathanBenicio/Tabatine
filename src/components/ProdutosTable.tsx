@@ -1,41 +1,37 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { useProdutosStore } from '@/store/useProdutosStore';
+import React, { useMemo } from 'react';
+import { useProdutosStore, Produto } from '@/store/useProdutosStore';
 import { 
   Search, 
   Package, 
   Filter, 
-  MoreVertical, 
   ArrowUpDown,
   FileDown,
   RefreshCcw,
   Tag,
-  Hash
+  Hash,
+  Eye
 } from 'lucide-react';
 import Pagination from './Pagination';
+import { useRouter } from 'next/navigation';
+import { useProdutosQuery } from '@/hooks/useProdutosQuery';
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+  createColumnHelper,
+} from '@tanstack/react-table';
+
+const columnHelper = createColumnHelper<Produto>();
 
 export default function ProdutosTable() {
+  const router = useRouter();
   const { 
-    produtos, loading, error, currentPage, totalPaginas, totalRegistros, 
-    fetchProdutos, searchTerm, setSearchTerm 
+    currentPage, searchTerm, setSearchTerm, setCurrentPage 
   } = useProdutosStore();
 
-  const handlePageChange = (page: number) => {
-    fetchProdutos(page);
-  };
-
-  const handleRefresh = () => {
-    fetchProdutos(currentPage, searchTerm);
-  };
-
-  // Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchProdutos(1, searchTerm);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm, fetchProdutos]);
+  const { data, isLoading, error, refetch } = useProdutosQuery(currentPage, searchTerm);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -43,6 +39,93 @@ export default function ProdutosTable() {
       currency: 'BRL',
     }).format(value);
   };
+
+  const columns = useMemo(() => [
+    columnHelper.accessor('descricao', {
+      header: 'Produto',
+      cell: info => (
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-zinc-800/50 flex items-center justify-center text-zinc-400 group-hover:bg-blue-500/10 group-hover:text-blue-400 transition-all border border-zinc-800/50">
+            <Package className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-zinc-200 group-hover:text-white transition-colors">{info.getValue()}</p>
+            <div className="flex items-center gap-2 mt-1">
+               <Tag className="w-3 h-3 text-zinc-600" />
+               <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-tight">Omie Ref: {info.row.original.codigo_produto}</span>
+            </div>
+          </div>
+        </div>
+      ),
+    }),
+    columnHelper.accessor('codigo', {
+      header: 'SKU / Cód.',
+      cell: info => (
+        <div className="flex items-center gap-2">
+           <Hash className="w-3.5 h-3.5 text-zinc-600" />
+           <span className="text-sm font-mono text-zinc-400 whitespace-nowrap">{info.getValue() || '--'}</span>
+        </div>
+      ),
+    }),
+    columnHelper.accessor('unidade', {
+      header: 'Unidade',
+      cell: info => (
+        <span className="px-2.5 py-1 rounded-md bg-zinc-800/50 border border-zinc-800 text-xs font-medium text-zinc-400">
+          {info.getValue()}
+        </span>
+      ),
+    }),
+    columnHelper.accessor('valor_unitario', {
+      header: 'Preço Unitário',
+      cell: info => (
+        <span className="text-sm font-bold text-emerald-400">
+          {formatCurrency(info.getValue())}
+        </span>
+      ),
+      meta: { align: 'right' }
+    }),
+    columnHelper.accessor('ncm', {
+      header: 'NCM',
+      cell: info => (
+        <span className="text-sm text-zinc-500 font-medium">
+          {info.getValue() || '--'}
+        </span>
+      ),
+    }),
+    columnHelper.accessor('excluido', {
+      header: 'Status',
+      cell: info => (
+        <div className="flex items-center justify-center">
+          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${info.getValue() === 'N' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
+            {info.getValue() === 'N' ? 'Ativo' : 'Excluído'}
+          </span>
+        </div>
+      ),
+      meta: { align: 'center' }
+    }),
+    columnHelper.display({
+      id: 'actions',
+      header: 'Ações',
+      cell: info => (
+        <div className="flex items-center justify-center">
+          <button 
+            onClick={() => router.push(`/produtos/${info.row.original.codigo_produto}`)}
+            className="p-2 text-zinc-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all"
+            title="Ver Detalhes"
+          >
+            <Eye size={16} />
+          </button>
+        </div>
+      ),
+      meta: { align: 'center' }
+    }),
+  ], [router]);
+
+  const table = useReactTable({
+    data: data?.produtos || [],
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
 
   return (
     <div className="space-y-6">
@@ -61,11 +144,11 @@ export default function ProdutosTable() {
 
         <div className="flex items-center gap-3">
           <button 
-            onClick={handleRefresh}
-            disabled={loading}
+            onClick={() => refetch()}
+            disabled={isLoading}
             className="flex items-center gap-2 px-4 py-2.5 bg-zinc-900/50 border border-zinc-800 rounded-xl text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all disabled:opacity-50"
           >
-            <RefreshCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCcw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">Atualizar</span>
           </button>
           
@@ -86,89 +169,46 @@ export default function ProdutosTable() {
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="border-b border-zinc-800/50">
-                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                  <div className="flex items-center gap-2 group cursor-pointer hover:text-zinc-300 transition-colors">
-                    Produto
-                    <ArrowUpDown className="w-3 h-3 group-hover:text-blue-400" />
-                  </div>
-                </th>
-                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider">SKU / Cód.</th>
-                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider">Unidade</th>
-                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider text-right">Preço Unitário</th>
-                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider">NCM</th>
-                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider text-center">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider text-center">Ações</th>
-              </tr>
+              {table.getHeaderGroups().map(headerGroup => (
+                <tr key={headerGroup.id} className="border-b border-zinc-800/50">
+                  {headerGroup.headers.map(header => (
+                    <th 
+                      key={header.id} 
+                      className={`px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider ${header.column.columnDef.meta?.align === 'right' ? 'text-right' : header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''}`}
+                    >
+                      <div className={`flex items-center gap-2 ${header.column.columnDef.meta?.align === 'right' ? 'justify-end' : header.column.columnDef.meta?.align === 'center' ? 'justify-center' : ''}`}>
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {header.column.id === 'descricao' && <ArrowUpDown className="w-3 h-3 group-hover:text-blue-400" />}
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              ))}
             </thead>
             <tbody className="divide-y divide-zinc-800/50">
-              {loading ? (
+              {isLoading && !data ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i}>
-                    <td colSpan={7} className="px-6 py-8">
+                    <td colSpan={columns.length} className="px-6 py-8">
                       <div className="flex items-center justify-center">
                         <div className="h-4 w-full max-w-xs bg-zinc-800 animate-pulse rounded-full"></div>
                       </div>
                     </td>
                   </tr>
                 ))
-              ) : produtos.length > 0 ? (
-                produtos.map((produto) => (
-                  <tr key={produto.codigo_produto} className="group hover:bg-white/[0.02] transition-colors">
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-zinc-800/50 flex items-center justify-center text-zinc-400 group-hover:bg-blue-500/10 group-hover:text-blue-400 transition-all border border-zinc-800/50">
-                          <Package className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-zinc-200 group-hover:text-white transition-colors">{produto.descricao}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                             <Tag className="w-3 h-3 text-zinc-600" />
-                             <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-tight">Omie Ref: {produto.codigo_produto}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-2">
-                         <Hash className="w-3.5 h-3.5 text-zinc-600" />
-                         <span className="text-sm font-mono text-zinc-400 whitespace-nowrap">{produto.codigo || '--'}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <span className="px-2.5 py-1 rounded-md bg-zinc-800/50 border border-zinc-800 text-xs font-medium text-zinc-400">
-                        {produto.unidade}
-                      </span>
-                    </td>
-                    <td className="px-6 py-5 text-right">
-                      <span className="text-sm font-bold text-emerald-400">
-                        {formatCurrency(produto.valor_unitario)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-5">
-                      <span className="text-sm text-zinc-500 font-medium">
-                        {produto.ncm || '--'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="flex items-center justify-center">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${produto.excluido === 'N' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
-                          {produto.excluido === 'N' ? 'Ativo' : 'Excluído'}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="flex items-center justify-center">
-                        <button className="p-2 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-lg transition-all">
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
+              ) : table.getRowModel().rows.length > 0 ? (
+                table.getRowModel().rows.map(row => (
+                  <tr key={row.id} className="group hover:bg-white/[0.02] transition-colors">
+                    {row.getVisibleCells().map(cell => (
+                      <td key={cell.id} className="px-6 py-5">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-zinc-500">
+                  <td colSpan={columns.length} className="px-6 py-12 text-center text-zinc-500">
                     Nenhum produto encontrado.
                   </td>
                 </tr>
@@ -180,12 +220,13 @@ export default function ProdutosTable() {
         {/* Footer */}
         <div className="px-6 py-4 border-t border-zinc-800/50 bg-zinc-900/10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-zinc-500 font-medium">
-            Mostrando <span className="text-zinc-300">{produtos.length}</span> de <span className="text-zinc-300">{totalRegistros}</span> produtos
+            Mostrando <span className="text-zinc-300">{data?.produtos.length || 0}</span> de <span className="text-zinc-300">{data?.totalRegistros || 0}</span> produtos
           </p>
           <Pagination
             currentPage={currentPage}
-            totalPaginas={totalPaginas}
-            onPageChange={handlePageChange}
+            totalPaginas={data?.totalPaginas || 1}
+            onPageChange={setCurrentPage}
+            loading={isLoading}
           />
         </div>
       </div>
@@ -194,7 +235,7 @@ export default function ProdutosTable() {
         <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl">
           <p className="text-sm text-rose-400 flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-            Erro: {error}
+            Erro: {(error as Error).message}
           </p>
         </div>
       )}

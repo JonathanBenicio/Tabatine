@@ -1,26 +1,27 @@
-import { create } from 'zustand';
+import { create } from 'zustand'
 
 export interface Vendedor {
-  codigo: number;
-  codInt: string;
-  nome: string;
-  email: string;
-  comissao: number;
-  inativo: string;
-  fatura_pedido: string;
-  visualiza_pedido: string;
+  codigo: number
+  codInt: string
+  nome: string
+  email: string
+  comissao: number
+  inativo: string
+  fatura_pedido: string
+  visualiza_pedido: string
 }
 
 interface VendedoresStoreState {
-  vendedores: Vendedor[];
-  loading: boolean;
-  error: string | null;
-  totalPaginas: number;
-  totalRegistros: number;
-  currentPage: number;
-  searchTerm: string;
-  setSearchTerm: (term: string) => void;
-  fetchVendedores: (page?: number, search?: string) => Promise<void>;
+  vendedores: Vendedor[]
+  loading: boolean
+  error: string | null
+  totalPaginas: number
+  totalRegistros: number
+  currentPage: number
+  searchTerm: string
+  setSearchTerm: (term: string) => void
+  setCurrentPage: (page: number) => void
+  fetchVendedores: (page?: number, search?: string) => Promise<void>
 }
 
 export const useVendedoresStore = create<VendedoresStoreState>((set, get) => ({
@@ -32,21 +33,22 @@ export const useVendedoresStore = create<VendedoresStoreState>((set, get) => ({
   currentPage: 1,
   searchTerm: '',
   setSearchTerm: (term: string) => set({ searchTerm: term }),
+  setCurrentPage: (page: number) => set({ currentPage: page }),
 
   fetchVendedores: async (page = 1, search) => {
-    const currentSearch = search !== undefined ? search : get().searchTerm;
-    set({ loading: true, error: null });
+    const currentSearch = search !== undefined ? search : get().searchTerm
+    set({ loading: true, error: null })
     try {
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: '50',
+        limit: '10',
         search: currentSearch
-      });
-      const response = await fetch(`/api/supabase/vendedores?${params}`);
-      const data = await response.json();
+      })
+      const response = await fetch(`/api/supabase/vendedores?${params}`)
+      const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch Vendedores from Supabase');
+        throw new Error(data.error || 'Failed to fetch Vendedores from Supabase')
       }
 
       const mappedVendedores = (data.vendedores || []).map((v: any) => ({
@@ -55,7 +57,7 @@ export const useVendedoresStore = create<VendedoresStoreState>((set, get) => ({
         email: v.Email,
         comissao: v.Comissao,
         inativo: v.Inativo ? 'S' : 'N'
-      }));
+      }))
 
       set({
         vendedores: mappedVendedores,
@@ -63,9 +65,9 @@ export const useVendedoresStore = create<VendedoresStoreState>((set, get) => ({
         totalRegistros: data.total_de_registros || 0,
         currentPage: data.pagina || page,
         loading: false,
-      });
+      })
     } catch (error: any) {
-      set({ error: error.message, loading: false });
+      set({ error: error.message, loading: false })
     }
   },
-}));
+}))

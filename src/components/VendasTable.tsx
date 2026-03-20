@@ -1,43 +1,35 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { useVendasStore } from '@/store/useVendasStore';
+import React, { useMemo, useState } from 'react';
+import { useVendasStore, VendaPlana } from '@/store/useVendasStore';
 import { useLookupStore } from '@/store/useLookupStore';
-import { Search, TrendingUp, AlertCircle, RefreshCw, Eye, Package, User, Wallet, Calendar } from 'lucide-react';
+import { Search, TrendingUp, AlertCircle, RefreshCw, Eye, Package, User, Calendar } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import Pagination from './Pagination';
+import { useVendasQuery } from '@/hooks/useVendasQuery';
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+  createColumnHelper,
+} from '@tanstack/react-table';
+
+const columnHelper = createColumnHelper<VendaPlana>();
 
 export default function VendasTable() {
   const router = useRouter();
   const { 
-    vendas, loading, error, currentPage, totalPaginas, totalRegistros, 
-    fetchVendas, anoSelecionado, setAnoSelecionado, searchTerm, setSearchTerm 
+    currentPage, totalPaginas, totalRegistros, 
+    anoSelecionado, setAnoSelecionado, searchTerm, setSearchTerm 
   } = useVendasStore();
   const { getClienteNome, getVendedorNome, getContaNome } = useLookupStore();
 
-  useEffect(() => {
-    fetchVendas(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Debounce search
-  useEffect(() => {
-    if (!searchTerm) {
-       // Only fetch if it's not the initial load (already handled above)
-       // but here we want to refresh when cleared
-    }
-    const timer = setTimeout(() => {
-      fetchVendas(1, true);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm, fetchVendas]);
+  const { data, isLoading, error, refetch } = useVendasQuery(currentPage, anoSelecionado, searchTerm);
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
   };
-
-  const yearOptions = [2023, 2024, 2025, 2026, 2027];
 
   const formatDate = (dateStr: string) => {
     if (!dateStr || dateStr === '--') return '--';
@@ -65,15 +57,147 @@ export default function VendasTable() {
     return { label: etapa || 'Pendente', color: 'text-zinc-400 bg-zinc-800 border-zinc-700' };
   };
 
-  const headers = [
-    "📅 DATA", "👥 CLIENTE", "👤 VENDEDOR", "📦 PEDIDO", "📄 NF",
-    "🛒 PRODUTO", "📦 UND", "💰 VALOR VENDA", "💳 COND. PAGTO.",
-    "🚚 FRETE", "📈 COMS. %", "🎯 VALOR TOTAL", "🏦 FORMA PG",
-    "🏛️ BANCO", "💰 Parcela 1", "📅 Venc. 1", "🚦 Status Venc.",
-    "💰 Parcela 2", "📅 Venc. 2", "💰 Parcela 3", "📅 Venc. 3", "🎗️ Status Comissão", "⚡ AÇÕES"
-  ];
+  const columns = useMemo(() => [
+    columnHelper.accessor('data', {
+      header: '📅 DATA',
+      cell: info => <span className="text-xs font-mono text-zinc-400">{formatDate(info.getValue())}</span>,
+    }),
+    columnHelper.accessor('cliente', {
+      header: '👥 CLIENTE',
+      cell: info => (
+        <div className="flex items-center gap-2 group-hover/row:translate-x-1 transition-transform">
+          <User size={12} className="text-zinc-600" />
+          <span className="text-xs font-bold text-white group-hover/row:text-orange-400 transition-colors">
+            {getClienteNome(info.getValue())}
+          </span>
+        </div>
+      ),
+      minSize: 220,
+    }),
+    columnHelper.accessor('vendedor', {
+      header: '👤 VENDEDOR',
+      cell: info => <span className="text-[11px] text-zinc-400 font-medium">{getVendedorNome(info.getValue())}</span>,
+      minSize: 150,
+    }),
+    columnHelper.accessor('pedido', {
+      header: '📦 PEDIDO',
+      cell: info => <span className="text-[11px] font-black text-orange-500/80 bg-orange-500/5 px-2 py-0.5 rounded-lg border border-orange-500/10">#{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('nf', {
+      header: '📄 NF',
+      cell: info => <span className="text-[11px] text-zinc-500 font-mono">{info.getValue() || '---'}</span>,
+    }),
+    columnHelper.accessor('produto', {
+      header: '🛒 PRODUTO',
+      cell: info => (
+        <div className="flex items-center gap-2">
+          <Package size={12} className="text-zinc-600" />
+          <span className="text-xs font-medium text-zinc-300 truncate max-w-[180px]">{info.getValue()}</span>
+        </div>
+      ),
+      minSize: 200,
+    }),
+    columnHelper.accessor('und', {
+      header: '📦 UND',
+      cell: info => <span className="text-[11px] font-bold text-zinc-500 uppercase">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('valorVenda', {
+      header: '💰 VALOR VENDA',
+      cell: info => <span className="text-xs font-bold text-emerald-400">{formatCurrency(info.getValue())}</span>,
+    }),
+    columnHelper.accessor('condPagto', {
+      header: '💳 COND. PAGTO.',
+      cell: info => <span className="text-[11px] text-zinc-400 font-medium italic">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('frete', {
+      header: '🚚 FRETE',
+      cell: info => <span className="text-[11px] text-zinc-500">{formatCurrency(info.getValue())}</span>,
+    }),
+    columnHelper.accessor('percComissao', {
+      header: '📈 COMS. %',
+      cell: info => <span className="text-[11px] font-bold text-indigo-400">{info.getValue()}%</span>,
+    }),
+    columnHelper.accessor('valorTotal', {
+      header: '🎯 VALOR TOTAL',
+      cell: info => <span className="text-xs font-black text-white">{formatCurrency(info.getValue())}</span>,
+    }),
+    columnHelper.accessor('formaPg', {
+      header: '🏦 FORMA PG',
+      cell: info => <span className="text-[11px] text-zinc-400 uppercase tracking-tighter">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('banco', {
+      header: '🏛️ BANCO',
+      cell: info => <span className="text-[10px] text-zinc-500 font-medium">{getContaNome(info.getValue())}</span>,
+    }),
+    columnHelper.accessor('parcela1', {
+      header: '💰 Parcela 1',
+      cell: info => <span className="text-[11px] font-bold text-amber-500/80">{info.getValue() ? formatCurrency(info.getValue()!.valor) : '---'}</span>,
+    }),
+    columnHelper.accessor('parcela1.vencimento', {
+        id: 'venc1',
+        header: '📅 Venc. 1',
+        cell: info => <span className="text-[10px] font-mono text-zinc-500">{info.row.original.parcela1 ? formatDate(info.row.original.parcela1.vencimento) : '---'}</span>,
+    }),
+    columnHelper.accessor('vencimentoStatus', {
+      header: '🚦 Status Venc.',
+      cell: info => {
+        const status = formatEtapa(info.getValue());
+        return (
+          <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-tighter border ${status.color}`}>
+            {status.label}
+          </span>
+        );
+      },
+    }),
+    columnHelper.accessor('parcela2', {
+      header: '💰 Parcela 2',
+      cell: info => <span className="text-[11px] font-bold text-amber-500/80">{info.getValue() ? formatCurrency(info.getValue()!.valor) : '---'}</span>,
+    }),
+    columnHelper.accessor('parcela2.vencimento', {
+        id: 'venc2',
+        header: '📅 Venc. 2',
+        cell: info => <span className="text-[10px] font-mono text-zinc-500">{info.row.original.parcela2 ? formatDate(info.row.original.parcela2.vencimento) : '---'}</span>,
+    }),
+    columnHelper.accessor('parcela3', {
+      header: '💰 Parcela 3',
+      cell: info => <span className="text-[11px] font-bold text-amber-500/80">{info.getValue() ? formatCurrency(info.getValue()!.valor) : '---'}</span>,
+    }),
+    columnHelper.accessor('parcela3.vencimento', {
+        id: 'venc3',
+        header: '📅 Venc. 3',
+        cell: info => <span className="text-[10px] font-mono text-zinc-500">{info.row.original.parcela3 ? formatDate(info.row.original.parcela3.vencimento) : '---'}</span>,
+    }),
+    columnHelper.accessor('statusComissao', {
+      header: '🎗️ Status Comissão',
+      cell: info => (
+        <span className="px-2 py-1 rounded-lg bg-orange-500/10 text-orange-400 text-[9px] font-black uppercase border border-orange-500/20">
+          {info.getValue()}
+        </span>
+      ),
+    }),
+    columnHelper.display({
+      id: 'actions',
+      header: '⚡ AÇÕES',
+      cell: info => (
+        <button 
+          onClick={() => router.push(`/vendas/${info.row.original.id_linha}`)}
+          className="p-2 rounded-lg bg-zinc-800/50 hover:bg-orange-500/20 text-zinc-400 hover:text-orange-400 transition-colors border border-zinc-700/50 hover:border-orange-500/30 group"
+          title="Ver Detalhes"
+        >
+          <Eye size={16} className="group-hover:scale-110 transition-transform" />
+        </button>
+      ),
+      meta: { align: 'right' }
+    }),
+  ], [getClienteNome, getVendedorNome, getContaNome, router]);
 
-  const displayVendas = vendas;
+  const table = useReactTable({
+    data: data?.vendas || [],
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  const yearOptions = [2023, 2024, 2025, 2026, 2027];
 
   return (
     <div className="w-full space-y-6">
@@ -107,7 +231,7 @@ export default function VendasTable() {
             <select
               value={anoSelecionado}
               onChange={(e) => setAnoSelecionado(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-              disabled={loading}
+              disabled={isLoading}
               className="appearance-none pl-4 pr-10 py-2.5 bg-zinc-900/40 border border-zinc-800 focus:border-orange-500/40 rounded-xl text-sm text-zinc-300 outline-none w-32 transition-all cursor-pointer backdrop-blur-sm"
             >
               <option value="all">Todos os Anos</option>
@@ -119,11 +243,11 @@ export default function VendasTable() {
           </div>
 
           <button  
-            onClick={() => fetchVendas(1)} 
-            disabled={loading}
+            onClick={() => refetch()} 
+            disabled={isLoading}
             className="p-2.5 bg-zinc-900/40 border border-zinc-800 hover:border-zinc-700 rounded-xl text-zinc-400 hover:text-white transition-all active:scale-95 disabled:opacity-50 group backdrop-blur-sm"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-orange-400' : 'group-hover:rotate-180 transition-transform duration-700'}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-orange-400' : 'group-hover:rotate-180 transition-transform duration-700'}`} />
           </button>
         </div>
       </div>
@@ -138,7 +262,7 @@ export default function VendasTable() {
             </div>
           </div>
           <div>
-            <p className="text-3xl font-bold text-white tracking-tighter">{totalRegistros}</p>
+            <p className="text-3xl font-bold text-white tracking-tighter">{data?.totalRegistros || 0}</p>
             <div className="flex items-center gap-1 mt-1">
               <span className="text-[10px] text-zinc-500">Fluxo Analítico</span>
             </div>
@@ -152,7 +276,7 @@ export default function VendasTable() {
           <AlertCircle className="w-5 h-5 shrink-0" />
           <div className="text-sm">
             <p className="font-bold tracking-tight">Erro no relatório de vendas</p>
-            <p className="opacity-70 mt-0.5">{error}</p>
+            <p className="opacity-70 mt-0.5">{(error as Error).message}</p>
           </div>
         </div>
       )}
@@ -162,29 +286,40 @@ export default function VendasTable() {
         <div className="overflow-x-auto">
           <table className="w-max min-w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-zinc-800/50 bg-zinc-900/20">
-                {headers.map((h, i) => (
-                    <th key={i} className="py-5 px-5 text-[9px] font-black text-zinc-500 uppercase tracking-widest font-sans whitespace-nowrap">
-                        {h}
+              {table.getHeaderGroups().map(headerGroup => (
+                <tr key={headerGroup.id} className="border-b border-zinc-800/50 bg-zinc-900/20">
+                  {headerGroup.headers.map(header => (
+                    <th 
+                      key={header.id} 
+                      className="py-5 px-5 text-[9px] font-black text-zinc-500 uppercase tracking-widest font-sans whitespace-nowrap"
+                      style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                     </th>
-                ))}
-              </tr>
+                  ))}
+                </tr>
+              ))}
             </thead>
             <tbody className="divide-y divide-zinc-800/30">
-              {loading && vendas.length === 0 ? (
+              {isLoading && !data ? (
                 /* Skeleton rows */
                 [...Array(6)].map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                     {headers.map((_, col) => (
+                     {columns.map((_, col) => (
                         <td key={col} className="py-5 px-5">
                           <div className="h-4 bg-zinc-800/50 rounded-md w-full min-w-[70px]"></div>
                         </td>
                      ))}
                   </tr>
                 ))
-              ) : vendas.length === 0 ? (
+              ) : table.getRowModel().rows.length === 0 ? (
                 <tr>
-                  <td colSpan={headers.length} className="py-24 px-6 text-center">
+                  <td colSpan={columns.length} className="py-24 px-6 text-center">
                     <div className="flex flex-col items-center justify-center gap-4 group/icon">
                       <div className="w-16 h-16 rounded-full bg-zinc-900/50 border border-zinc-800 flex items-center justify-center text-zinc-700 group-hover/icon:text-zinc-500 transition-colors">
                         <Package size={32} />
@@ -194,78 +329,16 @@ export default function VendasTable() {
                   </td>
                 </tr>
               ) : (
-                displayVendas.map((v, idx) => (
+                table.getRowModel().rows.map(row => (
                   <tr 
-                    key={v.id_linha || idx} 
+                    key={row.id} 
                     className="group/row hover:bg-orange-500/[0.03] transition-all duration-300"
                   >
-                    <td className="py-4 px-5 whitespace-nowrap text-xs font-mono text-zinc-400">{formatDate(v.data)}</td>
-                    <td className="py-4 px-5 min-w-[220px]">
-                      <div className="flex items-center gap-2 group-hover/row:translate-x-1 transition-transform">
-                        <User size={12} className="text-zinc-600" />
-                        <span className="text-xs font-bold text-white group-hover/row:text-orange-400 transition-colors">
-                          {getClienteNome(v.cliente)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-4 px-5 min-w-[150px] text-[11px] text-zinc-400 font-medium">
-                      {getVendedorNome(v.vendedor)}
-                    </td>
-                    <td className="py-4 px-5 whitespace-nowrap">
-                      <span className="text-[11px] font-black text-orange-500/80 bg-orange-500/5 px-2 py-0.5 rounded-lg border border-orange-500/10">#{v.pedido}</span>
-                    </td>
-                    <td className="py-4 px-5 text-[11px] text-zinc-500 font-mono">
-                      {v.nf || '---'}
-                    </td>
-                    
-                    <td className="py-4 px-5 min-w-[200px]">
-                      <div className="flex items-center gap-2">
-                        <Package size={12} className="text-zinc-600" />
-                        <span className="text-xs font-medium text-zinc-300 truncate max-w-[180px]">{v.produto}</span>
-                      </div>
-                    </td>
-                    <td className="py-4 px-5 text-[11px] font-bold text-zinc-500 uppercase">{v.und}</td>
-                    <td className="py-4 px-5 text-xs font-bold text-emerald-400">{formatCurrency(v.valorVenda)}</td>
-                    
-                    <td className="py-4 px-5 text-[11px] text-zinc-400 font-medium italic">{v.condPagto}</td>
-                    <td className="py-4 px-5 text-[11px] text-zinc-500">{formatCurrency(v.frete)}</td>
-                    <td className="py-4 px-5">
-                      <span className="text-[11px] font-bold text-indigo-400">{v.percComissao}%</span>
-                    </td>
-                    <td className="py-4 px-5 text-xs font-black text-white">{formatCurrency(v.valorTotal)}</td>
-                    <td className="py-4 px-5 text-[11px] text-zinc-400 uppercase tracking-tighter">{v.formaPg}</td>
-                    <td className="py-4 px-5 text-[10px] text-zinc-500 font-medium">
-                      {getContaNome(v.banco)}
-                    </td>
-
-                    <td className="py-4 px-5 text-[11px] font-bold text-amber-500/80">{v.parcela1 ? formatCurrency(v.parcela1.valor) : '---'}</td>
-                    <td className="py-4 px-5 text-[10px] font-mono text-zinc-500">{v.parcela1 ? formatDate(v.parcela1.vencimento) : '---'}</td>
-                    <td className="py-4 px-5">
-                        <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-tighter border ${formatEtapa(v.vencimentoStatus).color}`}>
-                          {formatEtapa(v.vencimentoStatus).label}
-                        </span>
-                    </td>
-
-                    <td className="py-4 px-5 text-[11px] font-bold text-amber-500/80">{v.parcela2 ? formatCurrency(v.parcela2.valor) : '---'}</td>
-                    <td className="py-4 px-5 text-[10px] font-mono text-zinc-500">{v.parcela2 ? formatDate(v.parcela2.vencimento) : '---'}</td>
-
-                    <td className="py-4 px-5 text-[11px] font-bold text-amber-500/80">{v.parcela3 ? formatCurrency(v.parcela3.valor) : '---'}</td>
-                    <td className="py-4 px-5 text-[10px] font-mono text-zinc-500">{v.parcela3 ? formatDate(v.parcela3.vencimento) : '---'}</td>
-
-                    <td className="py-4 px-5">
-                        <span className="px-2 py-1 rounded-lg bg-orange-500/10 text-orange-400 text-[9px] font-black uppercase border border-orange-500/20">
-                            {v.statusComissao}
-                        </span>
-                    </td>
-                    <td className="py-4 px-5 text-right">
-                      <button 
-                        onClick={() => router.push(`/vendas/${v.id_linha}`)}
-                        className="p-2 rounded-lg bg-zinc-800/50 hover:bg-orange-500/20 text-zinc-400 hover:text-orange-400 transition-colors border border-zinc-700/50 hover:border-orange-500/30 group"
-                        title="Ver Detalhes"
-                      >
-                        <Eye size={16} className="group-hover:scale-110 transition-transform" />
-                      </button>
-                    </td>
+                    {row.getVisibleCells().map(cell => (
+                      <td key={cell.id} className="py-4 px-5 whitespace-nowrap">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
                   </tr>
                 ))
               )}
@@ -275,13 +348,13 @@ export default function VendasTable() {
 
         <Pagination 
           currentPage={currentPage}
-          totalPaginas={totalPaginas}
-          onPageChange={fetchVendas}
-          loading={loading}
+          totalPaginas={data?.totalPaginas || 1}
+          onPageChange={(page) => useVendasStore.getState().setCurrentPage(page)}
+          loading={isLoading}
         />
 
         {/* Loading Overlay */}
-        {loading && vendas.length > 0 && (
+        {isLoading && data && (
           <div className="absolute inset-0 bg-zinc-950/40 backdrop-blur-[2px] flex flex-col justify-center items-center z-20">
             <RefreshCw className="w-10 h-10 text-orange-500 animate-spin" />
             <p className="text-[10px] font-bold text-orange-400 uppercase tracking-[0.2em] mt-4">Calculando Matriz...</p>

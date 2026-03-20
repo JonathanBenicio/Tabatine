@@ -1,30 +1,31 @@
-import { create } from 'zustand';
+import { create } from 'zustand'
 
 export interface ClienteCadastro {
-  codigo_cliente_omie: number;
-  codigo_cliente_integracao: string;
-  razao_social: string;
-  nome_fantasia: string;
-  cnpj_cpf: string;
-  telefone1_ddd: string;
-  telefone1_numero: string;
-  email: string;
-  cidade: string;
-  estado: string;
-  tags: { tag: string }[];
-  [key: string]: any;
+  codigo_cliente_omie: number
+  codigo_cliente_integracao: string
+  razao_social: string
+  nome_fantasia: string
+  cnpj_cpf: string
+  telefone1_ddd: string
+  telefone1_numero: string
+  email: string
+  cidade: string
+  estado: string
+  tags: { tag: string }[]
+  [key: string]: any
 }
 
 interface ClienteStoreState {
-  clientes: ClienteCadastro[];
-  loading: boolean;
-  error: string | null;
-  totalPaginas: number;
-  totalRegistros: number;
-  currentPage: number;
-  searchTerm: string;
-  setSearchTerm: (term: string) => void;
-  fetchClientes: (page?: number, search?: string) => Promise<void>;
+  clientes: ClienteCadastro[]
+  loading: boolean
+  error: string | null
+  totalPaginas: number
+  totalRegistros: number
+  currentPage: number
+  searchTerm: string
+  setSearchTerm: (term: string) => void
+  setCurrentPage: (page: number) => void
+  fetchClientes: (page?: number, search?: string) => Promise<void>
 }
 
 export const useClienteStore = create<ClienteStoreState>((set, get) => ({
@@ -36,21 +37,22 @@ export const useClienteStore = create<ClienteStoreState>((set, get) => ({
   currentPage: 1,
   searchTerm: '',
   setSearchTerm: (term: string) => set({ searchTerm: term }),
+  setCurrentPage: (page: number) => set({ currentPage: page }),
 
   fetchClientes: async (page = 1, search) => {
-    const currentSearch = search !== undefined ? search : get().searchTerm;
-    set({ loading: true, error: null });
+    const currentSearch = search !== undefined ? search : get().searchTerm
+    set({ loading: true, error: null })
     try {
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: '50',
+        limit: '10',
         search: currentSearch
-      });
-      const response = await fetch(`/api/supabase/clientes?${params}`);
-      const data = await response.json();
+      })
+      const response = await fetch(`/api/supabase/clientes?${params}`)
+      const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch Clientes from Supabase');
+        throw new Error(data.error || 'Failed to fetch Clientes from Supabase')
       }
 
       const mappedClientes = (data.clientes || []).map((c: any) => ({
@@ -64,7 +66,7 @@ export const useClienteStore = create<ClienteStoreState>((set, get) => ({
         cidade: c.Cidade,
         estado: c.Estado,
         tags: [] // Tags are not yet synced to Supabase in this version
-      }));
+      }))
 
       set({
         clientes: mappedClientes,
@@ -72,9 +74,9 @@ export const useClienteStore = create<ClienteStoreState>((set, get) => ({
         totalRegistros: data.total_de_registros || 0,
         currentPage: data.pagina || page,
         loading: false,
-      });
+      })
     } catch (error: any) {
-      set({ error: error.message, loading: false });
+      set({ error: error.message, loading: false })
     }
   },
-}));
+}))
