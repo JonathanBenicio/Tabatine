@@ -51,7 +51,7 @@ function DataField({ label, value, className = 'text-zinc-300', large = false }:
 }
 
 function RecentOrdersSection({ clienteOmieId }: { clienteOmieId: number }) {
-  const { data, isLoading } = useVendasQuery(1, 'all', '', { clienteOmieId });
+  const { data, isLoading } = useVendasQuery(1, '', [], { clienteOmieId });
   const router = useRouter();
   const orders = data?.vendas?.slice(0, 5) || [];
 
@@ -152,26 +152,28 @@ export default function ClienteDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const { codigo_cliente_omie } = params as { codigo_cliente_omie: string };
-  const { clientes, fetchClientes, loading } = useClienteStore();
+  const { fetchClienteByOmieId, loading } = useClienteStore();
   const [cliente, setCliente] = useState<ClienteCadastro | null>(null);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    if (clientes.length === 0 && !loading) {
-      fetchClientes(1);
-    }
-  }, [clientes.length, fetchClientes, loading]);
-
-  useEffect(() => {
-    if (clientes.length > 0) {
-      const found = clientes.find(c => c.codigo_cliente_omie.toString() === codigo_cliente_omie);
-      if (found) {
-        setCliente(found);
-      } else {
-        setNotFound(true);
+    async function loadCliente() {
+      if (codigo_cliente_omie) {
+        const omieId = parseInt(codigo_cliente_omie);
+        if (isNaN(omieId)) {
+          setNotFound(true);
+          return;
+        }
+        const found = await fetchClienteByOmieId(omieId);
+        if (found) {
+          setCliente(found);
+        } else {
+          setNotFound(true);
+        }
       }
     }
-  }, [clientes, codigo_cliente_omie]);
+    loadCliente();
+  }, [codigo_cliente_omie, fetchClienteByOmieId]);
 
   if (loading && !cliente) {
     return (
@@ -182,7 +184,7 @@ export default function ClienteDetailsPage() {
     );
   }
 
-  if (notFound || (!loading && !cliente && clientes.length > 0)) {
+  if (notFound || (!loading && !cliente)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
         <AlertCircle className="w-16 h-16 text-rose-500 mb-6 opacity-80" />

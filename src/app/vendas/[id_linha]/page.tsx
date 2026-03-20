@@ -152,7 +152,7 @@ export default function VendaDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const { id_linha } = params as { id_linha: string };
-  const { vendas, fetchVendas, loading } = useVendasStore();
+  const { fetchVendaByLinhaId, loading } = useVendasStore();
   const { 
     getClienteNome, getVendedorNome, getContaNome 
   } = useLookupStore();
@@ -163,21 +163,18 @@ export default function VendaDetailsPage() {
   const [loadingDanfe, setLoadingDanfe] = useState(false);
 
   useEffect(() => {
-    if (vendas.length === 0 && !loading) {
-      fetchVendas(1);
-    }
-  }, [vendas.length, fetchVendas, loading]);
-
-  useEffect(() => {
-    if (vendas.length > 0) {
-      const found = vendas.find(v => v.id_linha === id_linha);
-      if (found) {
-        setVenda(found);
-      } else {
-        setNotFound(true);
+    async function loadVenda() {
+      if (id_linha) {
+        const found = await fetchVendaByLinhaId(id_linha);
+        if (found) {
+          setVenda(found);
+        } else {
+          setNotFound(true);
+        }
       }
     }
-  }, [vendas, id_linha]);
+    loadVenda();
+  }, [id_linha, fetchVendaByLinhaId]);
 
 
   const handleCopyKey = () => {
@@ -233,7 +230,7 @@ export default function VendaDetailsPage() {
     );
   }
 
-  if (notFound || (!loading && !venda && vendas.length > 0)) {
+  if (notFound || (!loading && !venda)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
         <AlertCircle className="w-16 h-16 text-rose-500 mb-6 opacity-80" />

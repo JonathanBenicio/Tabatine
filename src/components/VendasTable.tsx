@@ -3,8 +3,25 @@
 import React, { useMemo, useState } from 'react';
 import { useVendasStore, VendaPlana } from '@/store/useVendasStore';
 import { useLookupStore } from '@/store/useLookupStore';
-import { Search, TrendingUp, AlertCircle, RefreshCw, Eye, Package, User, Calendar } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { 
+  Search, 
+  TrendingUp, 
+  AlertCircle, 
+  RefreshCw, 
+  Eye, 
+  Package, 
+  User, 
+  Calendar,
+  Filter,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  FileDown,
+  Settings2,
+  X,
+  ChevronDown
+} from 'lucide-react';
+import { format, parseISO, startOfYear, endOfYear, startOfMonth, endOfMonth, subDays, startOfDay, endOfDay } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import Pagination from './Pagination';
 import { useVendasQuery } from '@/hooks/useVendasQuery';
@@ -14,18 +31,29 @@ import {
   flexRender,
   createColumnHelper,
 } from '@tanstack/react-table';
+import { exportToCSV } from '@/utils/export-utils';
 
 const columnHelper = createColumnHelper<VendaPlana>();
 
 export default function VendasTable() {
   const router = useRouter();
   const { 
-    currentPage, totalPaginas, totalRegistros, 
-    anoSelecionado, setAnoSelecionado, searchTerm, setSearchTerm 
+    currentPage, searchTerm, setSearchTerm, setCurrentPage,
+    sorting, setSorting, columnVisibility, setColumnVisibility,
+    filters, setFilters
   } = useVendasStore();
-  const { getClienteNome, getVendedorNome, getContaNome } = useLookupStore();
 
-  const { data, isLoading, error, refetch } = useVendasQuery(currentPage, anoSelecionado, searchTerm);
+  const { getClienteNome, getVendedorNome, getContaNome, clientes, vendedores, contas } = useLookupStore();
+
+  const [showFilters, setShowFilters] = useState(false);
+  const [showVisibility, setShowVisibility] = useState(false);
+
+  const { data, isLoading, error, refetch } = useVendasQuery(
+    currentPage, 
+    searchTerm, 
+    sorting, 
+    filters
+  );
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
@@ -129,14 +157,15 @@ export default function VendasTable() {
       header: '🏛️ BANCO',
       cell: info => <span className="text-[10px] text-zinc-500 font-medium">{getContaNome(info.getValue())}</span>,
     }),
-    columnHelper.accessor('parcela1', {
+    columnHelper.accessor('parcela1.valor', {
+      id: 'parcela1',
       header: '💰 Parcela 1',
-      cell: info => <span className="text-[11px] font-bold text-amber-500/80">{info.getValue() ? formatCurrency(info.getValue()!.valor) : '---'}</span>,
+      cell: info => <span className="text-[11px] font-bold text-amber-500/80">{info.getValue() ? formatCurrency(info.getValue() as number) : '---'}</span>,
     }),
     columnHelper.accessor('parcela1.vencimento', {
         id: 'venc1',
         header: '📅 Venc. 1',
-        cell: info => <span className="text-[10px] font-mono text-zinc-500">{info.row.original.parcela1 ? formatDate(info.row.original.parcela1.vencimento) : '---'}</span>,
+        cell: info => <span className="text-[10px] font-mono text-zinc-500">{info.getValue() ? formatDate(info.getValue() as string) : '---'}</span>,
     }),
     columnHelper.accessor('vencimentoStatus', {
       header: '🚦 Status Venc.',
@@ -149,23 +178,25 @@ export default function VendasTable() {
         );
       },
     }),
-    columnHelper.accessor('parcela2', {
+    columnHelper.accessor('parcela2.valor', {
+      id: 'parcela2',
       header: '💰 Parcela 2',
-      cell: info => <span className="text-[11px] font-bold text-amber-500/80">{info.getValue() ? formatCurrency(info.getValue()!.valor) : '---'}</span>,
+      cell: info => <span className="text-[11px] font-bold text-amber-500/80">{info.getValue() ? formatCurrency(info.getValue() as number) : '---'}</span>,
     }),
     columnHelper.accessor('parcela2.vencimento', {
         id: 'venc2',
         header: '📅 Venc. 2',
-        cell: info => <span className="text-[10px] font-mono text-zinc-500">{info.row.original.parcela2 ? formatDate(info.row.original.parcela2.vencimento) : '---'}</span>,
+        cell: info => <span className="text-[10px] font-mono text-zinc-500">{info.getValue() ? formatDate(info.getValue() as string) : '---'}</span>,
     }),
-    columnHelper.accessor('parcela3', {
+    columnHelper.accessor('parcela3.valor', {
+      id: 'parcela3',
       header: '💰 Parcela 3',
-      cell: info => <span className="text-[11px] font-bold text-amber-500/80">{info.getValue() ? formatCurrency(info.getValue()!.valor) : '---'}</span>,
+      cell: info => <span className="text-[11px] font-bold text-amber-500/80">{info.getValue() ? formatCurrency(info.getValue() as number) : '---'}</span>,
     }),
     columnHelper.accessor('parcela3.vencimento', {
         id: 'venc3',
         header: '📅 Venc. 3',
-        cell: info => <span className="text-[10px] font-mono text-zinc-500">{info.row.original.parcela3 ? formatDate(info.row.original.parcela3.vencimento) : '---'}</span>,
+        cell: info => <span className="text-[10px] font-mono text-zinc-500">{info.getValue() ? formatDate(info.getValue() as string) : '---'}</span>,
     }),
     columnHelper.accessor('statusComissao', {
       header: '🎗️ Status Comissão',
@@ -194,10 +225,69 @@ export default function VendasTable() {
   const table = useReactTable({
     data: data?.vendas || [],
     columns,
+    state: {
+      sorting,
+      columnVisibility,
+    },
+    onSortingChange: (updater) => {
+      const newSorting = typeof updater === 'function' ? updater(sorting) : updater;
+      setSorting(newSorting);
+    },
+    onColumnVisibilityChange: (updater) => {
+      const newVisibility = typeof updater === 'function' ? updater(columnVisibility) : updater;
+      setColumnVisibility(newVisibility);
+    },
     getCoreRowModel: getCoreRowModel(),
+    manualSorting: true,
   });
 
-  const yearOptions = [2023, 2024, 2025, 2026, 2027];
+  const handleExport = () => {
+    if (data?.vendas) {
+      const exportData = data.vendas.map(v => ({
+        Data: v.data,
+        Pedido: v.numeroPedido,
+        Cliente: getClienteNome(v.cliente),
+        Vendedor: getVendedorNome(v.vendedor),
+        Produto: v.produto,
+        ValorTotal: v.valorTotal,
+        Etapa: v.etapa,
+        NF: v.nf
+      }));
+      exportToCSV(exportData, 'vendas_tabatine');
+    }
+  };
+
+  const setDatePreset = (preset: 'today' | 'this_month' | 'this_year' | 'last_7') => {
+    const now = new Date();
+    let start: Date, end: Date;
+
+    switch (preset) {
+      case 'today':
+        start = startOfDay(now);
+        end = endOfDay(now);
+        break;
+      case 'this_month':
+        start = startOfMonth(now);
+        end = endOfMonth(now);
+        break;
+      case 'this_year':
+        start = startOfYear(now);
+        end = endOfYear(now);
+        break;
+      case 'last_7':
+        start = subDays(now, 7);
+        end = now;
+        break;
+      default:
+        return;
+    }
+
+    setFilters({
+      ...filters,
+      startDate: format(start, 'yyyy-MM-dd'),
+      endDate: format(end, 'yyyy-MM-dd')
+    });
+  };
 
   return (
     <div className="w-full space-y-6">
@@ -220,27 +310,152 @@ export default function VendasTable() {
             <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:text-orange-400 transition-colors" />
             <input 
               type="text" 
-              placeholder="Número do pedido ou cliente..." 
+              placeholder="Pesquisar pedido ou cliente..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2.5 bg-zinc-900/40 border border-zinc-800 focus:border-orange-500/40 rounded-xl text-sm placeholder:text-zinc-600 outline-none w-full lg:w-72 transition-all focus:ring-4 focus:ring-orange-500/5 backdrop-blur-sm"
+              className="pl-10 pr-4 py-2.5 bg-zinc-900/40 border border-zinc-800 focus:border-orange-500/40 rounded-xl text-sm placeholder:text-zinc-600 outline-none w-full lg:w-64 transition-all focus:ring-4 focus:ring-orange-500/5 backdrop-blur-sm"
             />
           </div>
 
-          <div className="relative group">
-            <select
-              value={anoSelecionado}
-              onChange={(e) => setAnoSelecionado(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-              disabled={isLoading}
-              className="appearance-none pl-4 pr-10 py-2.5 bg-zinc-900/40 border border-zinc-800 focus:border-orange-500/40 rounded-xl text-sm text-zinc-300 outline-none w-32 transition-all cursor-pointer backdrop-blur-sm"
+          <div className="relative">
+            <button 
+              onClick={() => setShowVisibility(!showVisibility)}
+              className={`p-2.5 rounded-xl border transition-all ${showVisibility ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-zinc-900/40 border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 backdrop-blur-sm'}`}
+              title="Colunas"
             >
-              <option value="all">Todos os Anos</option>
-              {yearOptions.reverse().map(y => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </select>
-            <Calendar className="w-4 h-4 text-zinc-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none group-focus-within:text-orange-400 transition-colors" />
+              <Settings2 size={18} />
+            </button>
+            
+            {showVisibility && (
+              <div className="absolute right-0 mt-2 w-48 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl p-3 z-50 animate-in fade-in zoom-in-95 duration-200">
+                 <div className="flex items-center justify-between mb-2 pb-2 border-b border-zinc-800">
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Colunas</span>
+                    <button onClick={() => setShowVisibility(false)}><X size={14} className="text-zinc-500 hover:text-white" /></button>
+                 </div>
+                 <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+                    {table.getAllLeafColumns().map(column => {
+                      if (column.id === 'actions') return null;
+                      return (
+                        <label key={column.id} className="flex items-center gap-3 px-2 py-1.5 hover:bg-zinc-800/50 rounded-lg cursor-pointer transition-colors group">
+                           <input
+                             type="checkbox"
+                             checked={column.getIsVisible()}
+                             onChange={column.getToggleVisibilityHandler()}
+                             className="w-4 h-4 rounded border-zinc-700 bg-zinc-950 text-orange-500 focus:ring-offset-zinc-900 focus:ring-orange-500"
+                           />
+                           <span className="text-[11px] text-zinc-400 group-hover:text-zinc-200 capitalize">{column.id.replace(/[._]/g, ' ')}</span>
+                        </label>
+                      );
+                    })}
+                 </div>
+              </div>
+            )}
           </div>
+
+          <div className="relative">
+            <button 
+              onClick={() => {
+                setShowFilters(!showFilters);
+                setShowVisibility(false);
+              }}
+              className={`flex items-center gap-2 px-4 py-2.5 border rounded-xl text-sm font-medium transition-all ${showFilters ? 'bg-orange-500/10 border-orange-500/50 text-orange-400' : 'bg-zinc-900/40 border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 backdrop-blur-sm'}`}
+            >
+              <Filter className="w-4 h-4" />
+              <span className="hidden sm:inline">Filtros</span>
+            </button>
+
+            {showFilters && (
+              <div className="absolute right-0 mt-2 w-[340px] bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-6 z-50 animate-in fade-in zoom-in-95 duration-200">
+                 <div className="flex items-center justify-between mb-6 pb-2 border-b border-zinc-800">
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Filtros Avançados</span>
+                    <button onClick={() => setShowFilters(false)} className="text-zinc-500 hover:text-white"><X size={16} /></button>
+                 </div>
+                 
+                 <div className="space-y-6 max-h-[450px] overflow-y-auto pr-2 custom-scrollbar">
+                    <div className="space-y-3">
+                       <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest pl-1">Data (Presets)</label>
+                       <div className="grid grid-cols-2 gap-2">
+                          <button onClick={() => setDatePreset('today')} className="px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-[10px] text-zinc-400 hover:text-white hover:border-orange-500/50 transition-all">Hoje</button>
+                          <button onClick={() => setDatePreset('last_7')} className="px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-[10px] text-zinc-400 hover:text-white hover:border-orange-500/50 transition-all">Últimos 7 dias</button>
+                          <button onClick={() => setDatePreset('this_month')} className="px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-[10px] text-zinc-400 hover:text-white hover:border-orange-500/50 transition-all">Este Mês</button>
+                          <button onClick={() => setDatePreset('this_year')} className="px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-[10px] text-zinc-400 hover:text-white hover:border-orange-500/50 transition-all">Este Ano</button>
+                       </div>
+                    </div>
+
+                    <div className="space-y-3">
+                       <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest pl-1">Período Customizado</label>
+                       <div className="flex gap-2">
+                          <input 
+                            type="date" 
+                            className="bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-[11px] text-zinc-300 w-full outline-none focus:border-orange-500/50"
+                            value={filters.startDate || ''}
+                            onChange={(e) => setFilters({...filters, startDate: e.target.value})}
+                          />
+                          <input 
+                            type="date" 
+                            className="bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-[11px] text-zinc-300 w-full outline-none focus:border-orange-500/50"
+                            value={filters.endDate || ''}
+                            onChange={(e) => setFilters({...filters, endDate: e.target.value})}
+                          />
+                       </div>
+                    </div>
+
+                    <div className="space-y-3">
+                       <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest pl-1">Filtrar por ID</label>
+                       <div className="space-y-2">
+                          <input 
+                            type="number" 
+                            placeholder="ID do Cliente (Omie)"
+                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-zinc-300 outline-none focus:border-orange-500/50"
+                            value={filters.clienteOmieId || ''}
+                            onChange={(e) => setFilters({...filters, clienteOmieId: e.target.value ? Number(e.target.value) : undefined})}
+                          />
+                          <input 
+                            type="number" 
+                            placeholder="ID do Vendedor (Omie)"
+                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-zinc-300 outline-none focus:border-orange-500/50"
+                            value={filters.vendedorOmieId || ''}
+                            onChange={(e) => setFilters({...filters, vendedorOmieId: e.target.value ? Number(e.target.value) : undefined})}
+                          />
+                          <input 
+                            type="number" 
+                            placeholder="ID do Banco (Omie)"
+                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-zinc-300 outline-none focus:border-orange-500/50"
+                            value={filters.contaCorrenteId || ''}
+                            onChange={(e) => setFilters({...filters, contaCorrenteId: e.target.value ? Number(e.target.value) : undefined})}
+                          />
+                       </div>
+                    </div>
+                 </div>
+
+                 <div className="flex items-center justify-between pt-6 mt-6 border-t border-zinc-800/50">
+                    <button 
+                      onClick={() => {
+                        setFilters({});
+                        setShowFilters(false);
+                      }}
+                      className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest hover:text-white transition-colors"
+                    >
+                      Limpar Tudo
+                    </button>
+                    <button 
+                      onClick={() => setShowFilters(false)}
+                      className="bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-lg transition-all"
+                    >
+                      Aplicar
+                    </button>
+                 </div>
+              </div>
+            )}
+          </div>
+
+          <button 
+            onClick={handleExport}
+            className="flex items-center gap-2 px-4 py-2.5 bg-zinc-900/40 border border-zinc-800 rounded-xl text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all backdrop-blur-sm"
+          >
+            <FileDown className="w-4 h-4" />
+            <span className="hidden sm:inline">Exportar</span>
+          </button>
 
           <button  
             onClick={() => refetch()} 
@@ -315,7 +530,7 @@ export default function VendasTable() {
         </div>
       )}
 
-      {/* Massive Table Container */}
+      {/* Table Container */}
       <div className="group relative rounded-3xl border border-zinc-800/50 bg-zinc-950/20 backdrop-blur-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
         <div className="overflow-x-auto">
           <table className="w-max min-w-full text-left border-collapse">
@@ -325,15 +540,21 @@ export default function VendasTable() {
                   {headerGroup.headers.map(header => (
                     <th 
                       key={header.id} 
-                      className="py-5 px-5 text-[9px] font-black text-zinc-500 uppercase tracking-widest font-sans whitespace-nowrap"
+                      className={`py-5 px-5 text-[9px] font-black text-zinc-500 uppercase tracking-widest font-sans whitespace-nowrap select-none ${header.column.getCanSort() ? 'cursor-pointer hover:bg-orange-500/5 hover:text-orange-400 transition-colors' : ''}`}
                       style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
+                      onClick={header.column.getToggleSortingHandler()}
                     >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                      <div className="flex items-center gap-2">
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {header.column.getCanSort() && (
+                          <div className="text-orange-500/50 transition-colors">
+                            {{
+                              asc: <ArrowUp className="w-3 h-3 text-orange-400" />,
+                              desc: <ArrowDown className="w-3 h-3 text-orange-400" />,
+                            }[header.column.getIsSorted() as string] ?? <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100" />}
+                          </div>
+                        )}
+                      </div>
                     </th>
                   ))}
                 </tr>
@@ -359,6 +580,7 @@ export default function VendasTable() {
                         <Package size={32} />
                       </div>
                       <p className="text-zinc-400 font-medium">Nenhuma venda localizada</p>
+                      <button onClick={() => {setSearchTerm(''); setFilters({});}} className="text-xs text-orange-400 font-bold hover:underline">Limpar filtros e pesquisa</button>
                     </div>
                   </td>
                 </tr>
@@ -380,12 +602,17 @@ export default function VendasTable() {
           </table>
         </div>
 
-        <Pagination 
-          currentPage={currentPage}
-          totalPaginas={data?.totalPaginas || 1}
-          onPageChange={(page) => useVendasStore.getState().setCurrentPage(page)}
-          loading={isLoading}
-        />
+        <div className="px-6 py-4 border-t border-zinc-800/50 bg-zinc-900/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+           <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
+            Mostrando <span className="text-white">{table.getRowModel().rows.length}</span> de <span className="text-white">{data?.totalRegistros || 0}</span> pedidos
+          </p>
+          <Pagination 
+            currentPage={currentPage}
+            totalPaginas={data?.totalPaginas || 1}
+            onPageChange={setCurrentPage}
+            loading={isLoading}
+          />
+        </div>
 
         {/* Loading Overlay */}
         {isLoading && data && (

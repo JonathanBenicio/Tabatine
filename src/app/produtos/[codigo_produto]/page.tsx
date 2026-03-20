@@ -70,10 +70,9 @@ export default function ProdutoDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const { codigo_produto } = params as { codigo_produto: string };
-  const { produtos, fetchProdutos, loading } = useProdutosStore();
+  const { fetchProdutoByOmieId, loading } = useProdutosStore();
   const [produto, setProduto] = useState<Produto | null>(null);
   const [notFound, setNotFound] = useState(false);
-
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -82,21 +81,23 @@ export default function ProdutoDetailsPage() {
   };
 
   useEffect(() => {
-    if (produtos.length === 0 && !loading) {
-      fetchProdutos(1);
-    }
-  }, [produtos.length, fetchProdutos, loading]);
-
-  useEffect(() => {
-    if (produtos.length > 0) {
-      const found = produtos.find(p => p.codigo_produto.toString() === codigo_produto);
-      if (found) {
-        setProduto(found);
-      } else {
-        setNotFound(true);
+    async function loadProduto() {
+      if (codigo_produto) {
+        const omieId = parseInt(codigo_produto);
+        if (isNaN(omieId)) {
+          setNotFound(true);
+          return;
+        }
+        const found = await fetchProdutoByOmieId(omieId);
+        if (found) {
+          setProduto(found);
+        } else {
+          setNotFound(true);
+        }
       }
     }
-  }, [produtos, codigo_produto]);
+    loadProduto();
+  }, [codigo_produto, fetchProdutoByOmieId]);
 
   // ── Loading / Not Found ──
 
@@ -109,7 +110,7 @@ export default function ProdutoDetailsPage() {
     );
   }
 
-  if (notFound || (!loading && !produto && produtos.length > 0)) {
+  if (notFound || (!loading && !produto)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
         <AlertCircle className="w-16 h-16 text-rose-500 mb-6 opacity-80" />

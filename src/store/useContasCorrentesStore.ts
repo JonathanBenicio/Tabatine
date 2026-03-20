@@ -26,7 +26,11 @@ interface ContasCorrentesStoreState {
   setSearchTerm: (term: string) => void
   setCurrentPage: (page: number) => void
   fetchContas: (page?: number, search?: string) => Promise<void>
+  fetchContaByCodCC: (nCodCC: number) => Promise<ContaCorrente | null>
 }
+
+// ── Dedup Helper ──────────────────────────────────────────
+const fetchingPromises = new Map<number, Promise<ContaCorrente | null>>();
 
 export const useContasCorrentesStore = create<ContasCorrentesStoreState>((set, get) => ({
   contas: [],
@@ -58,14 +62,14 @@ export const useContasCorrentesStore = create<ContasCorrentesStoreState>((set, g
       const mappedContas = (data.contas || []).map((c: any) => ({
         nCodCC: c.OmieId,
         descricao: c.Descricao,
-        codigo_banco: c.CodigoBanco,
-        codigo_agencia: c.CodigoAgencia,
-        numero_conta_corrente: c.NumeroContaCorrente,
+        codigo_banco: c.Bancos?.CodigoBanco || '',
+        codigo_agencia: '',
+        numero_conta_corrente: '',
         tipo: c.Tipo,
-        tipo_conta_corrente: c.TipoContaCorrente,
+        tipo_conta_corrente: '',
         inativo: c.Inativa ? 'S' : 'N',
-        saldo_inicial: c.SaldoInicial || 0,
-        pdv_enviar: c.PdvEnviar, // Added pdv_enviar mapping
+        saldo_inicial: 0,
+        pdv_enviar: 'N',
         codigo_integracao: c.CodigoIntegracao,
         omie_updated_at: c.OmieUpdatedAt
       }))
@@ -80,5 +84,63 @@ export const useContasCorrentesStore = create<ContasCorrentesStoreState>((set, g
     } catch (error: any) {
       set({ error: error.message, loading: false })
     }
+  },
+
+  fetchContaByCodCC: async (nCodCC: number) => {
+    // 1. Check if we already have it in the list
+    const existing = get().contas.find(c => c.nCodCC === nCodCC)
+    if (existing) return existing
+
+    // 2. Check if already fetching
+    if (fetchingPromises.has(nCodCC)) {
+      return fetchingPromises.get(nCodCC)!;
+    }
+
+    set({ loading: true, error: null })
+    
+    const fetchPromise = (async () => {
+      try {
+        const response = await fetch(`/api/supabase/contas?omieId=${nCodCC}`)
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch Conta Corrente details')
+        }
+
+        if (data.contas && data.contas.length > 0) {
+          const c = data.contas[0]
+          const mapped: ContaCorrente = {
+            nCodCC: c.OmieId,
+            descricao: c.Descricao,
+            codigo_banco: c.Bancos?.CodigoBanco || '',
+            codigo_agencia: '',
+            numero_conta_corrente: '',
+            tipo: c.Tipo,
+            tipo_conta_corrente: '',
+            inativo: c.Inativa ? 'S' : 'N',
+            saldo_inicial: 0,
+            pdv_enviar: 'N',
+            codigo_integracao: c.CodigoIntegracao,
+            omie_updated_at: c.OmieUpdatedAt
+          }
+          
+          set(state => ({
+            contas: [...state.contas.filter(item => item.nCodCC !== mapped.nCodCC), mapped],
+            loading: false
+          }))
+          return mapped
+        }
+        set({ loading: false })
+        return null
+      } catch (error: any) {
+        set({ error: error.message, loading: false })
+        return null
+      } finally {
+        fetchingPromises.delete(nCodCC);
+      }
+    })();
+
+    fetchingPromises.set(nCodCC, fetchPromise);
+    return fetchPromise;
   },
 }))

@@ -66,7 +66,7 @@ function StatCard({ icon: Icon, iconBg, label, value, subValue }: {
 }
 
 function RecentOrdersSection({ vendedorOmieId }: { vendedorOmieId: number }) {
-  const { data, isLoading } = useVendasQuery(1, 'all', '', { vendedorOmieId });
+  const { data, isLoading } = useVendasQuery(1, '', [], { vendedorOmieId }, true);
   const router = useRouter();
   const orders = data?.vendas?.slice(0, 5) || [];
 
@@ -116,32 +116,37 @@ export default function VendedorDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const { codigo } = params as { codigo: string };
-  const { vendedores, fetchVendedores, loading } = useVendedoresStore();
+  const { fetchVendedorByCodigo, loading } = useVendedoresStore();
   const [vendedor, setVendedor] = useState<Vendedor | null>(null);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    if (vendedores.length === 0 && !loading) {
-      fetchVendedores(1);
-    }
-  }, [vendedores.length, fetchVendedores, loading]);
-
-  useEffect(() => {
-    if (vendedores.length > 0) {
-      const found = vendedores.find(v => v.codigo.toString() === codigo);
-      if (found) {
-        setVendedor(found);
-      } else {
-        setNotFound(true);
+    async function loadVendedor() {
+      if (codigo) {
+        const codInt = parseInt(codigo);
+        if (isNaN(codInt)) {
+          setNotFound(true);
+          return;
+        }
+        const found = await fetchVendedorByCodigo(codInt);
+        if (found) {
+          setVendedor(found);
+        } else {
+          setNotFound(true);
+        }
       }
     }
-  }, [vendedores, codigo]);
+    loadVendedor();
+  }, [codigo, fetchVendedorByCodigo]);
 
   // Hook must be called at the top level
-  const { data: vendasData } = useVendasQuery(1, 'all', '', { 
-    vendedorOmieId: vendedor?.codigo,
-    enabled: !!vendedor 
-  });
+  const { data: vendasData } = useVendasQuery(
+    1, 
+    '', 
+    [], 
+    { vendedorOmieId: vendedor?.codigo }, 
+    !!vendedor
+  );
 
   if (loading && !vendedor) {
     return (
@@ -152,7 +157,7 @@ export default function VendedorDetailsPage() {
     );
   }
 
-  if (notFound || (!loading && !vendedor && vendedores.length > 0)) {
+  if (notFound || (!loading && !vendedor)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
         <AlertCircle className="w-16 h-16 text-rose-500 mb-6 opacity-80" />

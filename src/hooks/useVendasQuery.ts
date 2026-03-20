@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import { useVendasStore, VendaPlana, ParcelaInfo } from '@/store/useVendasStore';
+import { useVendasStore, VendaPlana, ParcelaInfo, VendasFilters } from '@/store/useVendasStore';
 import { useLookupStore } from '@/store/useLookupStore';
+import { SortingState } from '@tanstack/react-table';
 
 interface FetchVendasResponse {
   vendas: VendaPlana[];
@@ -9,25 +10,32 @@ interface FetchVendasResponse {
   currentPage: number;
 }
 
-export const useVendasQuery = (page: number, year: number | 'all', search: string, filters?: { 
-  clienteOmieId?: number, 
-  vendedorOmieId?: number, 
-  contaCorrenteId?: number,
-  enabled?: boolean
-}) => {
+export const useVendasQuery = (
+  page: number, 
+  search: string, 
+  sorting: SortingState,
+  filters: VendasFilters,
+  enabled: boolean = true
+) => {
   return useQuery<FetchVendasResponse>({
-    queryKey: ['vendas', page, year, search, filters],
-    enabled: filters?.enabled ?? true,
+    queryKey: ['vendas', page, search, sorting, filters],
+    enabled,
     queryFn: async () => {
+      const sortField = sorting[0]?.id || 'data';
+      const sortOrder = sorting[0]?.desc ? 'desc' : 'asc';
+
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '10',
-        year: year.toString(),
-        search
+        search,
+        sortField,
+        sortOrder,
+        ...(filters.startDate && { startDate: filters.startDate }),
+        ...(filters.endDate && { endDate: filters.endDate }),
+        ...(filters.clienteOmieId && { clienteOmieId: filters.clienteOmieId.toString() }),
+        ...(filters.vendedorOmieId && { vendedorOmieId: filters.vendedorOmieId.toString() }),
+        ...(filters.contaCorrenteId && { contaCorrenteId: filters.contaCorrenteId.toString() }),
       });
-      if (filters?.clienteOmieId) params.append('clienteOmieId', filters.clienteOmieId.toString());
-      if (filters?.vendedorOmieId) params.append('vendedorOmieId', filters.vendedorOmieId.toString());
-      if (filters?.contaCorrenteId) params.append('contaCorrenteId', filters.contaCorrenteId.toString());
 
       const response = await fetch(`/api/supabase/vendas?${params}`);
       const data = await response.json();
@@ -60,12 +68,6 @@ export const useVendasQuery = (page: number, year: number | 'all', search: strin
       lookupStore.setContas(contasMap);
 
       let pedidosToProcess = rawPedidos;
-      if (year !== 'all') {
-        pedidosToProcess = rawPedidos.filter((ped: any) => {
-          const dateStr = ped.infoCadastro?.dFat || ped.cabecalho?.data_pedido || ped.cabecalho?.data_previsao || '';
-          return dateStr.includes(year.toString());
-        });
-      }
 
       const flatVendas: VendaPlana[] = [];
       pedidosToProcess.forEach((ped: any) => {
@@ -126,7 +128,7 @@ export const useVendasQuery = (page: number, year: number | 'all', search: strin
             cliente: cabecalho.codigo_cliente?.toString() || '--',
             vendedor: infoAdicional.codVend?.toString() || '--',
             codVendedor: infoAdicional.codVend || 0,
-            codProjeto: infoAdicional.codProj || 0,
+            codProjeto: 0,
             pedido: cabecalho.numero_pedido || '',
             numeroPedido: cabecalho.numero_pedido || '',
             nf: info.numero_nfe || '', 

@@ -22,7 +22,11 @@ interface VendedoresStoreState {
   setSearchTerm: (term: string) => void
   setCurrentPage: (page: number) => void
   fetchVendedores: (page?: number, search?: string) => Promise<void>
+  fetchVendedorByCodigo: (codigo: number) => Promise<Vendedor | null>
 }
+
+// ── Dedup Helper ──────────────────────────────────────────
+const fetchingPromises = new Map<number, Promise<Vendedor | null>>();
 
 export const useVendedoresStore = create<VendedoresStoreState>((set, get) => ({
   vendedores: [],
@@ -69,5 +73,59 @@ export const useVendedoresStore = create<VendedoresStoreState>((set, get) => ({
     } catch (error: any) {
       set({ error: error.message, loading: false })
     }
+  },
+
+  fetchVendedorByCodigo: async (codigo: number) => {
+    // 1. Check if we already have it in the list
+    const existing = get().vendedores.find(v => v.codigo === codigo)
+    if (existing) return existing
+
+    // 2. Check if already fetching
+    if (fetchingPromises.has(codigo)) {
+      return fetchingPromises.get(codigo)!;
+    }
+
+    set({ loading: true, error: null })
+    
+    const fetchPromise = (async () => {
+      try {
+        const response = await fetch(`/api/supabase/vendedores?codigo=${codigo}`)
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch Vendedor details')
+        }
+
+        if (data.vendedores && data.vendedores.length > 0) {
+          const v = data.vendedores[0]
+          const mapped: Vendedor = {
+            codigo: v.OmieId,
+            nome: v.Nome,
+            email: v.Email,
+            comissao: v.Comissao,
+            inativo: v.Inativo ? 'S' : 'N',
+            codInt: v.CodInt || '',
+            fatura_pedido: v.FaturaPedido || 'N',
+            visualiza_pedido: v.VisualizaPedido || 'N'
+          }
+          
+          set(state => ({
+            vendedores: [...state.vendedores.filter(item => item.codigo !== mapped.codigo), mapped],
+            loading: false
+          }))
+          return mapped
+        }
+        set({ loading: false })
+        return null
+      } catch (error: any) {
+        set({ error: error.message, loading: false })
+        return null
+      } finally {
+        fetchingPromises.delete(codigo);
+      }
+    })();
+
+    fetchingPromises.set(codigo, fetchPromise);
+    return fetchPromise;
   },
 }))

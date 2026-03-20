@@ -33,7 +33,11 @@ interface ClienteStoreState {
   setSearchTerm: (term: string) => void
   setCurrentPage: (page: number) => void
   fetchClientes: (page?: number, search?: string) => Promise<void>
+  fetchClienteByOmieId: (omieId: number) => Promise<ClienteCadastro | null>
 }
+
+// ── Dedup Helper ──────────────────────────────────────────
+const fetchingPromises = new Map<number, Promise<ClienteCadastro | null>>();
 
 export const useClienteStore = create<ClienteStoreState>((set, get) => ({
   clientes: [],
@@ -64,11 +68,12 @@ export const useClienteStore = create<ClienteStoreState>((set, get) => ({
 
       const mappedClientes = (data.clientes || []).map((c: any) => ({
         codigo_cliente_omie: c.OmieId,
+        codigo_cliente_integracao: c.CodigoClienteIntegracao,
         razao_social: c.RazaoSocial,
         nome_fantasia: c.NomeFantasia,
         cnpj_cpf: c.CnpjCpf,
-        telefone1_ddd: c.TelefoneDdd,
-        telefone1_numero: c.TelefoneNumero,
+        telefone1_ddd: '',
+        telefone1_numero: c.Telefone || '',
         email: c.Email,
         cidade: c.Cidade,
         estado: c.Estado,
@@ -92,5 +97,68 @@ export const useClienteStore = create<ClienteStoreState>((set, get) => ({
     } catch (error: any) {
       set({ error: error.message, loading: false })
     }
+  },
+
+  fetchClienteByOmieId: async (omieId: number) => {
+    // 1. Check cache
+    const existing = get().clientes.find(c => c.codigo_cliente_omie === omieId)
+    if (existing) return existing
+
+    // 2. Check if already fetching
+    if (fetchingPromises.has(omieId)) {
+      return fetchingPromises.get(omieId)!;
+    }
+
+    set({ loading: true, error: null })
+    
+    const fetchPromise = (async () => {
+      try {
+        const response = await fetch(`/api/supabase/clientes?omieId=${omieId}`)
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch Cliente by OmieId')
+        }
+
+        const c = data.clientes?.[0]
+        if (!c) return null
+
+        const mapped: ClienteCadastro = {
+          codigo_cliente_omie: c.OmieId,
+          codigo_cliente_integracao: c.CodigoClienteIntegracao,
+          razao_social: c.RazaoSocial,
+          nome_fantasia: c.NomeFantasia,
+          cnpj_cpf: c.CnpjCpf,
+          telefone1_ddd: '',
+          telefone1_numero: c.Telefone || '',
+          email: c.Email,
+          cidade: c.Cidade,
+          estado: c.Estado,
+          bairro: c.Bairro,
+          endereco: c.Endereco,
+          endereco_numero: c.EnderecoNumero,
+          endereco_complemento: c.EnderecoComplemento,
+          inscricao_estadual: c.InscricaoEstadual,
+          inscricao_municipal: c.InscricaoMunicipal,
+          optante_simples_nacional: c.OptanteSimplesNacional,
+          tags: []
+        }
+
+        set(state => ({ 
+          clientes: [...state.clientes.filter(item => item.codigo_cliente_omie !== omieId), mapped],
+          loading: false 
+        }))
+
+        return mapped
+      } catch (error: any) {
+        set({ error: error.message, loading: false })
+        return null
+      } finally {
+        fetchingPromises.delete(omieId);
+      }
+    })();
+
+    fetchingPromises.set(omieId, fetchPromise);
+    return fetchPromise;
   },
 }))

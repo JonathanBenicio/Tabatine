@@ -66,7 +66,7 @@ function StatCard({ icon: Icon, iconBg, label, value, subValue }: {
 }
 
 function RecentOrdersSection({ contaCorrenteId }: { contaCorrenteId: number }) {
-  const { data, isLoading } = useVendasQuery(1, 'all', '', { contaCorrenteId });
+  const { data, isLoading } = useVendasQuery(1, '', [], { contaCorrenteId }, true);
   const router = useRouter();
   const orders = data?.vendas?.slice(0, 5) || [];
 
@@ -116,32 +116,37 @@ export default function ContaCorrenteDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const { nCodCC } = params as { nCodCC: string };
-  const { contas, fetchContas, loading } = useContasCorrentesStore();
+  const { fetchContaByCodCC, loading } = useContasCorrentesStore();
   const [conta, setConta] = useState<ContaCorrente | null>(null);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    if (contas.length === 0 && !loading) {
-      fetchContas(1);
-    }
-  }, [contas.length, fetchContas, loading]);
-
-  useEffect(() => {
-    if (contas.length > 0) {
-      const found = contas.find(c => c.nCodCC.toString() === nCodCC);
-      if (found) {
-        setConta(found);
-      } else {
-        setNotFound(true);
+    async function loadConta() {
+      if (nCodCC) {
+        const codInt = parseInt(nCodCC);
+        if (isNaN(codInt)) {
+          setNotFound(true);
+          return;
+        }
+        const found = await fetchContaByCodCC(codInt);
+        if (found) {
+          setConta(found);
+        } else {
+          setNotFound(true);
+        }
       }
     }
-  }, [contas, nCodCC]);
+    loadConta();
+  }, [nCodCC, fetchContaByCodCC]);
 
   // Hook must be called at the top level
-  const { data: vendasData } = useVendasQuery(1, 'all', '', { 
-    contaCorrenteId: conta?.nCodCC,
-    enabled: !!conta 
-  });
+  const { data: vendasData } = useVendasQuery(
+    1, 
+    '', 
+    [], 
+    { contaCorrenteId: conta?.nCodCC }, 
+    !!conta
+  );
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -159,7 +164,7 @@ export default function ContaCorrenteDetailsPage() {
     );
   }
 
-  if (notFound || (!loading && !conta && contas.length > 0)) {
+  if (notFound || (!loading && !conta)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
         <AlertCircle className="w-16 h-16 text-rose-500 mb-6 opacity-80" />

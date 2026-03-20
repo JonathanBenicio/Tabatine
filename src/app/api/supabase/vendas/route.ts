@@ -12,21 +12,40 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    // Get query params for pagination
+    // Get query params
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
-    const year = searchParams.get('year') || 'all';
     const search = searchParams.get('search') || '';
     const clienteOmieId = searchParams.get('clienteOmieId');
     const vendedorOmieId = searchParams.get('vendedorOmieId');
     const contaCorrenteId = searchParams.get('contaCorrenteId');
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    const sortFieldFront = searchParams.get('sortField') || 'data';
+    const sortOrder = searchParams.get('sortOrder') || 'desc';
+    const omieId = searchParams.get('omieId');
+
+    // Map frontend field name to DB column name
+    const VENDA_COLUMN_MAP: Record<string, string> = {
+      data: 'DataInclusao',
+      pedido: 'NumeroPedido',
+      numeroPedido: 'NumeroPedido',
+      cliente: 'ClienteId',
+      vendedor: 'VendedorId',
+      valorTotal: 'ValorTotal',
+      etapa: 'Etapa',
+      nf: 'NotasFiscais.NumeroNf',
+      formaPg: 'MeioPagamento',
+      banco: 'ContasCorrente.Descricao',
+      vencimentoStatus: 'Etapa',
+    };
+    const sortField = VENDA_COLUMN_MAP[sortFieldFront] || sortFieldFront;
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
-    // Base query using !inner for Clientes since it's a required relationship (nullable: false)
-    // Vendedores is nullable, so we'll use a normal join unless filtering by it
+    // Base query using !inner for Clientes since it's a required relationship
     let selectQuery = `
       *,
       Clientes!inner (*),
@@ -62,46 +81,51 @@ export async function GET(req: Request) {
       .from('PedidosVenda')
       .select(selectQuery, { count: 'exact' });
 
-    if (clienteOmieId) {
-      query = query.eq('Clientes.OmieId', parseInt(clienteOmieId));
-    }
+    if (omieId) {
+      query = query.eq('OmieId', parseInt(omieId));
+    } else {
+      if (clienteOmieId) {
+        query = query.eq('Clientes.OmieId', parseInt(clienteOmieId));
+      }
 
-    if (vendedorOmieId) {
-      query = query.eq('Vendedores.OmieId', parseInt(vendedorOmieId));
-    }
+      if (vendedorOmieId) {
+        query = query.eq('Vendedores.OmieId', parseInt(vendedorOmieId));
+      }
 
-    if (contaCorrenteId) {
-      query = query.eq('ContasCorrente.OmieId', parseInt(contaCorrenteId));
-    }
+      if (contaCorrenteId) {
+        query = query.eq('ContasCorrente.OmieId', parseInt(contaCorrenteId));
+      }
 
-    if (search) {
-      const escapedSearch = escapeFilterValue(`%${search}%`);
+      if (search) {
+        const escapedSearch = escapeFilterValue(`%${search}%`);
 
-      // Step A: Find IDs of clients matching the search term
-      const { data: clientesMatch } = await supabase
-        .from('Clientes')
-        .select('Id')
-        .or(`RazaoSocial.ilike.${escapedSearch},NomeFantasia.ilike.${escapedSearch}`);
+        // Step A: Find IDs of clients matching the search term
+        const { data: clientesMatch } = await supabase
+          .from('Clientes')
+          .select('Id')
+          .or(`RazaoSocial.ilike.${escapedSearch},NomeFantasia.ilike.${escapedSearch}`);
 
-      const clienteIds = (clientesMatch || []).map(c => c.Id);
+        const clienteIds = (clientesMatch || []).map(c => c.Id);
 
-      if (clienteIds.length > 0) {
-        query = query.or(`NumeroPedido.ilike.${escapedSearch},ClienteId.in.(${clienteIds.join(',')})`);
-      } else {
-        query = query.or(`NumeroPedido.ilike.${escapedSearch}`);
+        if (clienteIds.length > 0) {
+          query = query.or(`NumeroPedido.ilike.${escapedSearch},ClienteId.in.(${clienteIds.join(',')})`);
+        } else {
+          query = query.or(`NumeroPedido.ilike.${escapedSearch}`);
+        }
+      }
+
+      if (startDate) {
+        query = query.gte('DataInclusao', startDate);
+      }
+      if (endDate) {
+        query = query.lte('DataInclusao', endDate);
       }
     }
 
-    if (year !== 'all') {
-      const yearInt = parseInt(year);
-      const startOfYear = `${yearInt}-01-01T00:00:00Z`;
-      const endOfYear = `${yearInt}-12-31T23:59:59Z`;
-      query = query.gte('DataInclusao', startOfYear).lte('DataInclusao', endOfYear);
-    }
-
-    const { data, error, count } = await query
-      .order('DataInclusao', { ascending: false })
-      .range(from, to);
+    const { data, error, count } = await (omieId 
+      ? query 
+      : query.order(sortField, { ascending: sortOrder === 'asc' }).range(from, to)
+    );
 
     if (error) {
       console.error('Supabase error:', error);
@@ -204,7 +228,7 @@ export async function GET(req: Request) {
           contato: order.Contato,
           numero_pedido_cliente: order.NumeroPedidoCliente || '',
           consumidor_final: order.ConsumidorFinal || '',
-          codProj: order.CodigoProjeto || 0
+          codProj: 0
         },
         infoCadastro: {
           dFat: nf?.DataEmissao || '',

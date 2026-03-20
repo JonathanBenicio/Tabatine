@@ -13,6 +13,7 @@ export async function GET(req: Request) {
     }
 
     const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
     const year = searchParams.get('year') || 'all';
@@ -35,45 +36,58 @@ export async function GET(req: Request) {
         NotaFiscalTitulos (*)
       `, { count: 'exact' });
 
-    if (clienteOmieId) {
-      query = query.eq('Clientes.OmieId', parseInt(clienteOmieId));
-    }
+    let dataToMap: any[] = [];
+    let finalCount = 0;
 
-    // 1. Search Logic (100% SDK)
-    if (search) {
-      const escapedSearch = escapeFilterValue(`%${search}%`);
-
-      // Step A: Find IDs of clients matching the search term
-      const { data: clientesMatch } = await supabase
-        .from('Clientes')
-        .select('Id')
-        .or(`RazaoSocial.ilike.${escapedSearch},NomeFantasia.ilike.${escapedSearch}`);
-
-      const clienteIds = (clientesMatch || []).map(c => c.Id);
-
-      // Step B: Apply OR filter on main table (NF Number, Access Key OR matching ClientId)
-      if (clienteIds.length > 0) {
-        query = query.or(`NumeroNf.ilike.${escapedSearch},ChaveAcesso.ilike.${escapedSearch},ClienteId.in.(${clienteIds.join(',')})`);
-      } else {
-        query = query.or(`NumeroNf.ilike.${escapedSearch},ChaveAcesso.ilike.${escapedSearch}`);
+    // Handle single item fetch if id is provided
+    if (id) {
+      const { data: singleData, error: singleError } = await query.eq('OmieId', parseInt(id)).single();
+      if (singleError && singleError.code !== 'PGRST116') throw singleError;
+      dataToMap = singleData ? [singleData] : [];
+      finalCount = singleData ? 1 : 0;
+    } else {
+      if (clienteOmieId) {
+        query = query.eq('Clientes.OmieId', parseInt(clienteOmieId));
       }
+
+      // 1. Search Logic (100% SDK)
+      if (search) {
+        const escapedSearch = escapeFilterValue(`%${search}%`);
+
+        // Step A: Find IDs of clients matching the search term
+        const { data: clientesMatch } = await supabase
+          .from('Clientes')
+          .select('Id')
+          .or(`RazaoSocial.ilike.${escapedSearch},NomeFantasia.ilike.${escapedSearch}`);
+
+        const clienteIds = (clientesMatch || []).map(c => c.Id);
+
+        // Step B: Apply OR filter on main table (NF Number, Access Key OR matching ClientId)
+        if (clienteIds.length > 0) {
+          query = query.or(`NumeroNf.ilike.${escapedSearch},ChaveAcesso.ilike.${escapedSearch},ClienteId.in.(${clienteIds.join(',')})`);
+        } else {
+          query = query.or(`NumeroNf.ilike.${escapedSearch},ChaveAcesso.ilike.${escapedSearch}`);
+        }
+      }
+
+      if (year !== 'all') {
+        const yearInt = parseInt(year);
+        const startOfYear = `${yearInt}-01-01T00:00:00Z`;
+        const endOfYear = `${yearInt}-12-31T23:59:59Z`;
+        query = query.gte('DataEmissao', startOfYear).lte('DataEmissao', endOfYear);
+      }
+
+      const { data: listData, error: listError, count } = await query
+        .order('DataEmissao', { ascending: false })
+        .range(from, to);
+
+      if (listError) throw listError;
+      dataToMap = listData || [];
+      finalCount = count || 0;
     }
-
-    if (year !== 'all') {
-      const yearInt = parseInt(year);
-      const startOfYear = `${yearInt}-01-01T00:00:00Z`;
-      const endOfYear = `${yearInt}-12-31T23:59:59Z`;
-      query = query.gte('DataEmissao', startOfYear).lte('DataEmissao', endOfYear);
-    }
-
-    const { data, error, count } = await query
-      .order('DataEmissao', { ascending: false })
-      .range(from, to);
-
-    if (error) throw error;
 
     // Map Supabase structure to something compatible with the store's logic
-    const mappedData = (data || []).map((nf: any) => {
+    const mappedData = dataToMap.map((nf: any) => {
       const dataEmiFormatada = nf.DataEmissao?.split('T')[0]?.split('-').reverse().join('/');
       
       // Status derivado do campo texto sincronizado do Omie (Status: AUTORIZADA/CANCELADA/DENEGADA)
@@ -98,7 +112,7 @@ export async function GET(req: Request) {
         },
         pedido: {
           nCodPedido: nf.PedidosVenda?.OmieId,
-          cNumeroPedido: nf.NumeroPedidoInterno || '', 
+          cNumeroPedido: nf.PedidosVenda?.NumeroPedidoCliente || '', 
         },
         ide: {
           dEmi: dataEmiFormatada, // Crucial for useNfStore
@@ -187,10 +201,11 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       nf_resumo_lista: mappedData,
-      total_de_paginas: Math.ceil((count || 0) / limit),
-      total_de_registros: count,
-      pagina: page
+      total_de_paginas: id ? 1 : Math.ceil(finalCount / limit),
+      total_de_registros: finalCount,
+      pagina: id ? 1 : page
     });
+
   } catch (error: any) {
     console.error('API Error (Supabase NF):', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

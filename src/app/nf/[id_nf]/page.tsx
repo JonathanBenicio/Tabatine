@@ -105,7 +105,7 @@ export default function NfDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const { id_nf } = params as { id_nf: string };
-  const { nfs, nfsMap, fetchNfs, loading } = useNfStore();
+  const { fetchNFById, loading, nfs } = useNfStore();
   const [nf, setNf] = useState<NfCadastroFlat | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
@@ -114,21 +114,23 @@ export default function NfDetailsPage() {
   const [loadingDanfe, setLoadingDanfe] = useState(false);
 
   useEffect(() => {
-    if (nfs.length === 0 && !loading) {
-      fetchNfs(1);
-    }
-  }, [nfs.length, fetchNfs, loading]);
-
-  useEffect(() => {
-    if (nfs.length > 0) {
-      const found = nfsMap[id_nf];
-      if (found) {
-        setNf(found);
-      } else {
-        setNotFound(true);
+    async function loadNf() {
+      if (id_nf) {
+        const idInt = parseInt(id_nf);
+        if (isNaN(idInt)) {
+          setNotFound(true);
+          return;
+        }
+        const found = await fetchNFById(idInt);
+        if (found) {
+          setNf(found);
+        } else {
+          setNotFound(true);
+        }
       }
     }
-  }, [nfs, nfsMap, id_nf]);
+    loadNf();
+  }, [id_nf, fetchNFById]);
 
   const handleCopyKey = () => {
     const chave = nf?.chave_nfe || raw?.compl?.cChaveNFe || raw?.info?.cChaveNFe || '';

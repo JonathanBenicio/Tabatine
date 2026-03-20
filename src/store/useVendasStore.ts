@@ -131,6 +131,16 @@ export interface VendaPlana {
   todasParcelas: ParcelaInfo[];
 }
 
+import { SortingState, VisibilityState } from '@tanstack/react-table';
+
+export interface VendasFilters {
+  clienteOmieId?: number;
+  vendedorOmieId?: number;
+  contaCorrenteId?: number;
+  startDate?: string;
+  endDate?: string;
+}
+
 interface VendasStoreState {
   vendas: VendaPlana[];
   loading: boolean;
@@ -139,13 +149,21 @@ interface VendasStoreState {
   totalPaginas: number;
   totalRegistros: number;
   currentPage: number;
-  anoSelecionado: number | 'all';
   searchTerm: string;
+  sorting: SortingState;
+  columnVisibility: VisibilityState;
+  filters: VendasFilters;
   setSearchTerm: (term: string) => void;
-  setAnoSelecionado: (ano: number | 'all') => void;
   setCurrentPage: (page: number) => void;
+  setSorting: (sorting: SortingState) => void;
+  setColumnVisibility: (visibility: VisibilityState) => void;
+  setFilters: (filters: VendasFilters) => void;
   fetchVendas: (page?: number, forceRefresh?: boolean) => Promise<void>;
+  fetchVendaByLinhaId: (id_linha: string) => Promise<VendaPlana | null>;
 }
+
+// ── Dedup Helper ──────────────────────────────────────────
+const fetchingPromises = new Map<string, Promise<VendaPlana | null>>();
 
 export const useVendasStore = create<VendasStoreState>((set, get) => ({
   vendas: [],
@@ -155,35 +173,47 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
   totalPaginas: 1,
   totalRegistros: 0,
   currentPage: 1,
-  anoSelecionado: new Date().getFullYear(),
   searchTerm: '',
+  sorting: [{ id: 'data', desc: true }],
+  columnVisibility: {},
+  filters: {},
 
   setCurrentPage: (page) => set({ currentPage: page }),
 
   setSearchTerm: (term) => {
-    set({ searchTerm: term, totalRegistros: 0, totalPaginas: 1, hasFetchedInitial: false, vendas: [], currentPage: 1 });
-    // This will be called via useEffect with debounce in the component
+    set({ searchTerm: term, currentPage: 1 });
   },
 
-  setAnoSelecionado: (ano) => {
-    set({ anoSelecionado: ano, totalRegistros: 0, totalPaginas: 1, hasFetchedInitial: false, vendas: [], currentPage: 1 });
-    get().fetchVendas(1, true);
-  },
+  setSorting: (sorting) => set({ sorting, currentPage: 1 }),
+  
+  setColumnVisibility: (columnVisibility) => set({ columnVisibility }),
+  
+  setFilters: (filters) => set({ filters, currentPage: 1 }),
 
   fetchVendas: async (page = 1, forceRefresh = false) => {
-    // Evitar fetch duplicado se já estivermos na mesma página
     if (page === get().currentPage && get().hasFetchedInitial && !forceRefresh) return;
 
     set({ loading: true, error: null, hasFetchedInitial: true });
     try {
-      const lookupStore = useLookupStore.getState();
+      const { searchTerm, sorting, filters } = get();
       
-      const targetOmiePage = page;
-      const registrosPorPagina = 10;
-      const currentYear = get().anoSelecionado;
-      const currentSearch = get().searchTerm;
+      const sortField = sorting[0]?.id || 'data';
+      const sortOrder = sorting[0]?.desc ? 'desc' : 'asc';
 
-      const response = await fetch(`/api/supabase/vendas?page=${targetOmiePage}&limit=${registrosPorPagina}&year=${currentYear}&search=${encodeURIComponent(currentSearch)}`);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '10',
+        search: searchTerm,
+        sortField,
+        sortOrder,
+        ...(filters.startDate && { startDate: filters.startDate }),
+        ...(filters.endDate && { endDate: filters.endDate }),
+        ...(filters.clienteOmieId && { clienteOmieId: filters.clienteOmieId.toString() }),
+        ...(filters.vendedorOmieId && { vendedorOmieId: filters.vendedorOmieId.toString() }),
+        ...(filters.contaCorrenteId && { contaCorrenteId: filters.contaCorrenteId.toString() }),
+      });
+
+      const response = await fetch(`/api/supabase/vendas?${params}`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -191,6 +221,7 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
       }
 
       const rawPedidos = data.pedido_venda_produto || [];
+      const lookupStore = useLookupStore.getState();
 
       // --- Passive Lookup Population ---
       const clientesMap: Record<number, string> = {};
@@ -214,13 +245,8 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
       lookupStore.setContas(contasMap);
 
       let pedidosToProcess = rawPedidos;
-      // Strict client-side filter: Omie returns by inclusion date, which might bleed old dates.
-      if (currentYear !== 'all') {
-         pedidosToProcess = rawPedidos.filter((ped: any) => {
-           const dateStr = ped.infoCadastro?.dFat || ped.cabecalho?.data_pedido || ped.cabecalho?.data_previsao || '';
-            return dateStr.includes(currentYear.toString());
-         });
-      }
+      // Note: Server-side filtering by startDate/endDate is already done in the API.
+      // We keep the mapping logic beneath.
 
       const flatVendas: VendaPlana[] = [];
 
@@ -286,7 +312,7 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
               cliente: cabecalho.codigo_cliente?.toString() || '--',
               vendedor: infoAdicional.codVend?.toString() || '--',
               codVendedor: infoAdicional.codVend || 0,
-              codProjeto: infoAdicional.codProj || 0,
+              codProjeto: 0,
               pedido: cabecalho.numero_pedido || '',
               numeroPedido: cabecalho.numero_pedido || '',
               nf: info.numero_nfe || '', 
@@ -439,8 +465,232 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
           loading: false 
         });
       } else {
-        set({ error: errorMessage, loading: false });
-      }
+        }
     }
+  },
+
+  fetchVendaByLinhaId: async (id_linha: string) => {
+    // 1. Check if already in cache
+    const existing = get().vendas.find(v => v.id_linha === id_linha);
+    if (existing) return existing;
+
+    // 2. Check if already fetching
+    if (fetchingPromises.has(id_linha)) {
+      return fetchingPromises.get(id_linha)!;
+    }
+
+    // 3. Extract OmieId
+    const omieId = id_linha.split('-')[0];
+    const itemIndex = parseInt(id_linha.split('-')[1] || '0');
+    if (!omieId) return null;
+
+    set({ loading: true, error: null });
+    
+    const fetchPromise = (async () => {
+      try {
+        const response = await fetch(`/api/supabase/vendas?omieId=${omieId}`);
+        if (!response.ok) throw new Error('Failed to fetch venda by ID');
+        
+        const data = await response.json();
+        const rawPedido = data.pedido_venda_produto?.[0];
+        if (!rawPedido) return null;
+
+        const ped = rawPedido;
+        const cabecalho = ped.cabecalho || {};
+        const det = ped.det || [];
+        const frete = ped.frete || {};
+        const info = ped.infoCadastro || {};
+        const parcelasInfo = ped.lista_parcelas?.parcela || [];
+
+        const p1 = parcelasInfo[0] ? { valor: parcelasInfo[0].valor || 0, vencimento: parcelasInfo[0].data_vencimento || '' } : undefined;
+        const p2 = parcelasInfo[1] ? { valor: parcelasInfo[1].valor || 0, vencimento: parcelasInfo[1].data_vencimento || '' } : undefined;
+        const p3 = parcelasInfo[2] ? { valor: parcelasInfo[2].valor || 0, vencimento: parcelasInfo[2].data_vencimento || '' } : undefined;
+
+        const todasParcelas: ParcelaInfo[] = parcelasInfo.map((parc: any, pIdx: number) => ({
+          numero: parc.numero_parcela || pIdx + 1,
+          valor: parc.valor || 0,
+          vencimento: parc.data_vencimento || '',
+          percentual: parc.percentual || 0,
+          meioPagamento: parc.meio_pagamento || '',
+          categoria: parc.categoria || '',
+          nsu: parc.nsu || '',
+        }));
+
+        const infoAdicional = ped.informacoes_adicionais || {};
+        const totalPedido = ped.total_pedido || {};
+        const observacoes = ped.observacoes || {};
+
+        const formatISO = (iso: string) => {
+          if (!iso || iso === '--') return { d: '--', h: '--' };
+          try {
+            const dt = new Date(iso);
+            if (isNaN(dt.getTime())) return { d: iso, h: '--' };
+            return {
+              d: dt.toLocaleDateString('pt-BR'),
+              h: dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+            };
+          } catch {
+            return { d: iso, h: '--' };
+          }
+        };
+
+        const incInfo = formatISO(info.dInc);
+        const altInfo = formatISO(info.dAlt);
+
+        const item = det[itemIndex];
+        if (!item) return null;
+
+        const prod = item.produto || {};
+        const itemIde = item.ide || {};
+        const imp = item.imposto || {};
+        const icms = imp.icms || {};
+        const pis = imp.pis_padrao || {};
+        const cofins = imp.cofins_padrao || {};
+        const ibs = imp.ibs || {};
+        const cbs = imp.cbs || {};
+
+        const venda: VendaPlana = {
+          id_linha,
+          data: info.dFat || cabecalho.data_pedido || cabecalho.data_previsao || '--',
+          cliente: cabecalho.codigo_cliente?.toString() || '--',
+          vendedor: infoAdicional.codVend?.toString() || '--',
+          codVendedor: infoAdicional.codVend || 0,
+          codProjeto: infoAdicional.codProj || 0,
+          pedido: cabecalho.numero_pedido || '',
+          numeroPedido: cabecalho.numero_pedido || '',
+          nf: info.numero_nfe || '', 
+          produto: prod.descricao || 'Produto sem nome',
+          und: prod.unidade || 'UN',
+          valorVenda: prod.valor_unitario || 0,
+          condPagto: cabecalho.codigo_parcela || '',
+          frete: frete.valor_frete || 0,
+          percComissao: infoAdicional.perc_comissao || 0,
+          valorTotal: prod.valor_total || 0,
+          formaPg: cabecalho.meio_pagamento || '',
+          banco: infoAdicional.conta_corrente_nome || infoAdicional.codigo_conta_corrente?.toString() || '',
+          codContaCorrente: infoAdicional.codigo_conta_corrente || 0,
+          parcela1: p1,
+          parcela2: p2,
+          parcela3: p3,
+          vencimentoStatus: cabecalho.etapa || 'Pendente',
+          statusComissao: 'PENDENTE',
+          omieData: ped,
+          dataPedido: cabecalho.data_pedido || '--',
+          dataPrevisao: cabecalho.data_previsao || '--',
+          etapa: cabecalho.etapa || '--',
+          qtdItens: det.length,
+          qtdParcelas: cabecalho.qtde_parcelas || 0,
+          observacao: observacoes.obs_venda || '',
+          observacaoInterna: observacoes.obs_interna || '',
+          observacaoNf: observacoes.obs_nf || '',
+          observacaoNfFisco: observacoes.obs_nf_fisco || '',
+          contato: infoAdicional.contato || '',
+          dadosAdicionaisNf: infoAdicional.observacoes?.obs_venda || '',
+          codigoProduto: prod.codigo || '',
+          nIdItem: itemIde.codigo_item || 0,
+          ncm: prod.ncm || '--',
+          cfop: prod.cfop || '--',
+          quantidade: prod.quantidade || 0,
+          percDesconto: prod.percentual_desconto || 0,
+          valorDesconto: prod.valor_desconto || 0,
+          impostos: {
+            icms: {
+              aliquota: icms.aliquota ?? icms.pICMS ?? icms.aliq_icms ?? 0,
+              base: icms.base_calculo ?? icms.vBC ?? icms.base_icms ?? 0,
+              valor: icms.valor_icms ?? icms.vICMS ?? 0,
+              cst: icms.cst ?? icms.CST ?? icms.cst_icms ?? '--',
+            },
+            pis: {
+              aliquota: pis.aliquota ?? pis.pPIS ?? pis.aliq_pis ?? 0,
+              base: pis.base_calculo ?? pis.vBC ?? pis.base_pis ?? 0,
+              valor: pis.valor_pis ?? pis.vPIS ?? 0,
+              cst: pis.cst ?? pis.CST ?? pis.cod_sit_trib_pis ?? '--',
+            },
+            cofins: {
+              aliquota: cofins.aliquota ?? cofins.pCOFINS ?? cofins.aliq_cofins ?? 0,
+              base: cofins.base_calculo ?? cofins.vBC ?? cofins.base_cofins ?? 0,
+              valor: cofins.valor_cofins ?? cofins.vCOFINS ?? 0,
+              cst: cofins.cst ?? cofins.CST ?? cofins.cod_sit_trib_cofins ?? '--',
+            },
+            ipi: {
+              aliquota: imp.ipi?.aliquota ?? imp.ipi?.pIPI ?? imp.ipi?.aliq_ipi ?? 0,
+              base: imp.ipi?.base_calculo ?? imp.ipi?.vBC ?? imp.ipi?.base_ipi ?? 0,
+              valor: imp.ipi?.valor_ipi ?? imp.ipi?.vIPI ?? 0,
+              cst: imp.ipi?.cst ?? imp.ipi?.CST ?? imp.ipi?.cst_ipi ?? '--',
+            },
+            ibs: {
+              valor: ibs.valor_ibs ?? 0,
+              aliquota: ibs.aliquota_ibs_uf ?? 0,
+              base: ibs.base_ibs_cbs ?? 0,
+              cst: '--',
+            },
+            cbs: {
+              valor: cbs.valor_cbs ?? 0,
+              aliquota: cbs.aliquota_cbs ?? 0,
+              base: cbs.base_ibs_cbs ?? 0,
+              cst: '--',
+            },
+            valor_iss: totalPedido.valor_iss ?? 0,
+            valor_ir: totalPedido.valor_ir ?? 0,
+            valor_csll: totalPedido.valor_csll ?? 0,
+            valor_inss: totalPedido.valor_inss ?? 0,
+          },
+          freteDetalhado: {
+            modalidade: frete.modalidade || '--',
+            valor: frete.valor_frete || 0,
+            pesoBruto: frete.peso_bruto || 0,
+            pesoLiq: frete.peso_liquido || 0,
+            qtdVolumes: frete.quantidade_volumes || 0,
+            previsaoEntrega: frete.previsao_entrega || '--',
+            transportadora: frete.codigo_transportadora?.toString() || '--',
+            codTransportadora: frete.codigo_transportadora || 0,
+          },
+          dataFaturamento: info.dFat || '--',
+          dataInclusao: incInfo.d,
+          horaInclusao: incInfo.h,
+          dataAlteracao: altInfo.d,
+          horaAlteracao: altInfo.h,
+          usuarioInclusao: info.uInc || '',
+          usuarioAlteracao: info.uAlt || '',
+          chaveNfe: info.chave_nfe || '',
+          statusNfe: info.cancelado === 'S' ? 'CANCELADA' : info.denegado === 'S' ? 'DENEGADA' : info.autorizado === 'S' ? 'AUTORIZADA' : info.numero_nfe ? 'EMITIDA' : 'PENDENTE',
+          serieNfe: info.serie_nfe || '',
+          valorTotalNfe: info.valor_total_nfe || 0,
+          cancelado: info.cancelado || 'N',
+          denegado: info.denegado || 'N',
+          autorizado: info.autorizado || 'N',
+          totalPedido: {
+            valorTotal: totalPedido.valor_total_pedido ?? 0,
+            baseIcms: totalPedido.base_calculo_icms ?? 0,
+            valorIcms: totalPedido.valor_icms ?? 0,
+            valorMercadorias: totalPedido.valor_mercadorias ?? 0,
+            valorIpi: totalPedido.valor_IPI ?? 0,
+            valorPis: totalPedido.valor_pis ?? 0,
+            valorCofins: totalPedido.valor_cofins ?? 0,
+            valorIss: totalPedido.valor_iss ?? 0,
+            valorIr: totalPedido.valor_ir ?? 0,
+            valorCsll: totalPedido.valor_csll ?? 0,
+            valorInss: totalPedido.valor_inss ?? 0,
+          },
+          todasParcelas,
+        };
+
+        // Cache it in the main array
+        set(state => ({ 
+          vendas: [...state.vendas.filter(v => v.id_linha !== id_linha), venda],
+          loading: false 
+        }));
+
+        return venda;
+      } catch (err: any) {
+        set({ error: err.message, loading: false });
+        return null;
+      } finally {
+        fetchingPromises.delete(id_linha);
+      }
+    })();
+
+    fetchingPromises.set(id_linha, fetchPromise);
+    return fetchPromise;
   },
 }));

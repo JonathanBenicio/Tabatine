@@ -72,7 +72,11 @@ interface NfStoreState {
   setSearchTerm: (term: string) => void
   setCurrentPage: (page: number) => void
   fetchNfs: (page?: number, search?: string) => Promise<void>
+  fetchNFById: (id: number) => Promise<NfCadastroFlat | null>
 }
+
+// ── Dedup Helper ──────────────────────────────────────────
+const fetchingPromises = new Map<number, Promise<NfCadastroFlat | null>>();
 
 export const useNfStore = create<NfStoreState>((set, get) => ({
   nfs: [],
@@ -116,8 +120,8 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
       })
       lookupStore.setClientes(clientesMap)
 
-      // Map each NF from the resumidos list
-      const flatNfs: NfCadastroFlat[] = rawNfs.map((nf: any) => {
+      // Helper for mapping
+      const mapNf = (nf: any): NfCadastroFlat => {
         const ide = nf.ide || {}
         const dest = nf.nfDestInt || {}
         const emit = nf.nfEmitInt || {}
@@ -129,19 +133,10 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
         const det = nf.det || []
         const titulos = nf.titulos || []
 
-        // ID
         const idNf = compl.nIdNF || nf.id_nf || Math.random()
-
-        // Número
         const nNF = ide.nNF || '---'
-
-        // Série
         const serie = ide.serie || '---'
-
-        // Modelo
         const modelo = ide.mod || '---'
-
-        // Datas e horários (ide)
         const dEmi = ide.dEmi || ''
         const hEmi = ide.hEmi || ''
         const dReg = ide.dReg || ''
@@ -149,15 +144,12 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
         const hSaiEnt = ide.hSaiEnt || ''
         const dCan = ide.dCan || ''
         const dInut = ide.dInut || ''
-
-        // Tipo e finalidade
         const tpNF = ide.tpNF || ''
         const finNFe = ide.finNFe || ''
         const tpAmb = ide.tpAmb || ''
         const indPag = ide.indPag || ''
         const cDeneg = ide.cDeneg || 'N'
 
-        // Status
         let statusLabel = ''
         if (cDeneg === 'S') statusLabel = 'Denegado'
         else if (dCan) statusLabel = 'Cancelado'
@@ -170,28 +162,20 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
           else statusLabel = rawStatus || 'Pendente'
         }
 
-        // Destinatário
         const razao = dest.xNome || 'Desconhecido'
         const cnpjCpf = dest.cnpj_cpf || '---'
         const nCodCli = dest.nCodCli || 0
-
-        // Emitente
         const nCodEmp = emit.nCodEmp || 0
-
-        // Totais ICMS
         const vNF = icmsTot.vNF || 0
         const vProd = icmsTot.vProd || 0
         const vICMS = icmsTot.vICMS || 0
         const vBC = icmsTot.vBC || 0
         const vIPI = icmsTot.vIPI || 0
-
-        // Retenções / Outros
         const retencoes = total.Retencoes || {}
         const vPIS = icmsTot.vPIS || retencoes.vPIS || retencoes.vPISRetido || 0
         const vCOFINS = icmsTot.vCOFINS || retencoes.vCOFINS || retencoes.vCOFINSRetido || 0
         const vIR = retencoes.vIR || retencoes.vIRRF || 0
         const vCSLL = retencoes.vCSLL || 0
-
         const vFrete = icmsTot.vFrete || 0
         const vSeg = icmsTot.vSeg || 0
         const vDesc = icmsTot.vDesc || 0
@@ -201,12 +185,8 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
         const vST = icmsTot.vST || 0
         const vICMSDesonerado = icmsTot.vICMSDesonerado || 0
         const vII = icmsTot.vII || 0
-
-        // Totais ISSQN
         const vServ = issqnTot.vServ || 0
         const vISS = issqnTot.vISS || 0
-
-        // Complementar
         const chaveNfe = compl.cChaveNFe || ''
         const cCodCateg = compl.cCodCateg || ''
         const cModFrete = compl.cModFrete || ''
@@ -214,8 +194,6 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
         const nIdReceb = compl.nIdReceb || 0
         const nIdTransp = compl.nIdTransp || 0
         const xNatureza = compl.xNatureza || '---'
-
-        // Info (auditoria)
         const cImpAPI = info.cImpAPI || 'N'
         const dAlt = info.dAlt || ''
         const hAlt = info.hAlt || ''
@@ -224,7 +202,6 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
         const uAlt = info.uAlt || ''
         const uInc = info.uInc || ''
 
-        // Itens mapeados
         const itensMapped = det.map((item: any) => {
           const prod = item.prod || {}
           const nfProdInt = item.nfProdInt || {}
@@ -249,7 +226,6 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
           }
         })
 
-        // Títulos mapeados
         const titulosMapped = titulos.map((t: any) => ({
           numero_titulo: t.cNumTitulo || '',
           documento: t.cDoc || '',
@@ -321,9 +297,11 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
           titulos: titulosMapped,
           omieData: nf,
         }
-      })
+      }
 
-      const nfsMap = flatNfs.reduce((acc, nf) => {
+      const flatNfs = rawNfs.map(mapNf)
+
+      const nfsMap = flatNfs.reduce((acc: any, nf: any) => {
         acc[nf.id_nf.toString()] = nf
         return acc
       }, {} as Record<string, NfCadastroFlat>)
@@ -339,5 +317,132 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
     } catch (error: any) {
       set({ error: error.message, loading: false })
     }
+  },
+
+  fetchNFById: async (id: number) => {
+    // 1. Check cache
+    const existing = get().nfsMap[id.toString()]
+    if (existing) return existing
+
+    // 2. Check if already fetching
+    if (fetchingPromises.has(id)) {
+      return fetchingPromises.get(id)!;
+    }
+
+    set({ loading: true, error: null })
+    
+    const fetchPromise = (async () => {
+      try {
+        const response = await fetch(`/api/supabase/nf?id=${id}`)
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch NF by ID')
+        }
+
+        const rawNf = data.nf_resumo_lista?.[0]
+        if (!rawNf) return null
+
+        // (We reuse the mapNf internal logic indirectly or just duplicate mapping here as before)
+        const ide = rawNf.ide || {}
+        const dest = rawNf.nfDestInt || {}
+        const emit = rawNf.nfEmitInt || {}
+        const compl = rawNf.compl || {}
+        const info = rawNf.info || {}
+        const total = rawNf.total || {}
+        const icmsTot = total.ICMSTot || {}
+        const issqnTot = total.ISSQNtot || {}
+        const det = rawNf.det || []
+        const titulos = rawNf.titulos || []
+
+        const statusLabel = ide.cStatus || 'Pendente'
+
+        const statusNf = ide.cDeneg === 'S' ? 'Denegado' : ide.dCan ? 'Cancelado' : (ide.cStatus === 'F' ? 'Faturado' : (ide.cStatus === 'C' ? 'Cancelado' : (ide.cStatus === 'D' ? 'Denegado' : (ide.cStatus === 'A' ? 'Autorizado' : statusLabel))));
+
+        const mapped: NfCadastroFlat = {
+          id_nf: compl.nIdNF || id,
+          numero_nf: (ide.nNF || '---').toString(),
+          serie: ide.serie || '---',
+          modelo: ide.mod || '---',
+          data_emissao: ide.dEmi || '',
+          hora_emissao: ide.hEmi || '',
+          data_registro: ide.dReg || '',
+          data_saida_entrada: ide.dSaiEnt || '',
+          hora_saida_entrada: ide.hSaiEnt || '',
+          status_nf: statusNf,
+          tipo_nf: ide.tpNF || '',
+          finalidade_nfe: ide.finNFe || '',
+          tipo_ambiente: ide.tpAmb || '',
+          indicador_pagamento: ide.indPag || '',
+          denegado: ide.cDeneg || 'N',
+          data_cancelamento: ide.dCan || '',
+          data_inutilizacao: ide.dInut || '',
+          razao_social: dest.xNome || 'Desconhecido',
+          cnpj_cpf: dest.cnpj_cpf || '---',
+          cod_cliente: dest.nCodCli || 0,
+          cod_empresa: emit.nCodEmp || 0,
+          valor_total_nf: icmsTot.vNF || 0,
+          valor_produtos: icmsTot.vProd || 0,
+          valor_icms: icmsTot.vICMS || 0,
+          valor_bc_icms: icmsTot.vBC || 0,
+          valor_ipi: icmsTot.vIPI || 0,
+          valor_pis: icmsTot.vPIS || 0,
+          valor_cofins: icmsTot.vCOFINS || 0,
+          valor_frete: icmsTot.vFrete || 0,
+          valor_seguro: icmsTot.vSeg || 0,
+          valor_desconto: icmsTot.vDesc || 0,
+          valor_outras: icmsTot.vOutro || 0,
+          valor_total_tributos: icmsTot.vTotTrib || 0,
+          valor_bc_st: icmsTot.vBCST || 0,
+          valor_st: icmsTot.vST || 0,
+          valor_icms_desonerado: icmsTot.vICMSDesonerado || 0,
+          valor_ii: icmsTot.vII || 0,
+          valor_servicos: issqnTot.vServ || 0,
+          valor_iss: issqnTot.vISS || 0,
+          natureza_operacao: compl.xNatureza || '---',
+          chave_nfe: compl.cChaveNFe || '',
+          cod_categoria: compl.cCodCateg || '',
+          modalidade_frete: compl.cModFrete || '',
+          id_pedido: compl.nIdPedido || 0,
+          id_recebimento: compl.nIdReceb || 0,
+          id_transportador: compl.nIdTransp || 0,
+          importado_api: info.cImpAPI || 'N',
+          data_alteracao: info.dAlt || '',
+          hora_alteracao: info.hAlt || '',
+          data_inclusao: info.dInc || '',
+          hora_inclusao: info.hInc || '',
+          usuario_alteracao: info.uAlt || '',
+          usuario_inclusao: info.uInc || '',
+          itens: det.map((item: any) => ({
+            codigo_produto: item.prod?.cProd || '',
+            descricao: item.prod?.xProd || '',
+            quantidade: item.prod?.qCom || 0,
+            valor_unitario: item.prod?.vUnCom || 0,
+            valor_total: item.prod?.vProd || 0,
+          })),
+          titulos: titulos.map((t: any) => ({
+            parcela: t.nParcela || 0,
+            valor: t.nValorTitulo || 0,
+            data_vencimento: t.dDtVenc || '',
+          })),
+          omieData: rawNf,
+        }
+
+        set(state => ({
+          nfsMap: { ...state.nfsMap, [id.toString()]: mapped },
+          nfs: [...state.nfs.filter(nf => nf.id_nf !== mapped.id_nf), mapped],
+          loading: false
+        }))
+        return mapped
+      } catch (error: any) {
+        set({ error: error.message, loading: false })
+        return null
+      } finally {
+        fetchingPromises.delete(id);
+      }
+    })();
+
+    fetchingPromises.set(id, fetchPromise);
+    return fetchPromise;
   },
 }))

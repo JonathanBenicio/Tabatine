@@ -12,6 +12,7 @@ export async function GET(req: Request) {
     }
 
     const { searchParams } = new URL(req.url);
+    const codigo = searchParams.get('codigo');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
     const search = searchParams.get('search') || '';
@@ -22,6 +23,19 @@ export async function GET(req: Request) {
     let query = supabase
       .from('Vendedores')
       .select('*', { count: 'exact' });
+
+    // Handle single item fetch if codigo is provided
+    if (codigo) {
+      const { data, error } = await query.eq('OmieId', parseInt(codigo)).single();
+      if (error && error.code !== 'PGRST116') throw error;
+      
+      return NextResponse.json({ 
+        vendedores: data ? [data] : [],
+        total_de_paginas: data ? 1 : 0,
+        total_de_registros: data ? 1 : 0,
+        pagina: 1
+      });
+    }
 
     if (search) {
       query = query.or(`Nome.ilike.%${search}%,Email.ilike.%${search}%`);
