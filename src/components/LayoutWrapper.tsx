@@ -17,6 +17,7 @@ import {
   Banknote,
   Package
 } from 'lucide-react';
+import { NotificationCenter } from './NotificationCenter';
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -127,10 +128,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
           </div>
 
           <div className="flex items-center gap-6">
-            <button className="relative p-2 text-zinc-400 hover:text-white transition-colors">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full border border-zinc-900"></span>
-            </button>
+            <NotificationCenter />
             
             <div className="h-8 w-px bg-zinc-800"></div>
 
