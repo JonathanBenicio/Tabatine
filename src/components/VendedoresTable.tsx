@@ -45,9 +45,9 @@ export default function VendedoresTable() {
     columnHelper.accessor('email', {
       header: 'Email',
       cell: info => (
-        <div className="flex items-center gap-2 text-zinc-400 group-hover/row:text-zinc-300 transition-colors">
-            <Mail size={12} className="text-zinc-600" />
-            <span className="text-xs">{info.getValue() || '---'}</span>
+        <div className="flex items-center gap-2 text-zinc-500 group-hover/row:text-zinc-400 transition-colors">
+            <Mail size={10} className="text-zinc-700" />
+            <span className="text-[10px] truncate max-w-[150px]">{info.getValue() || '---'}</span>
         </div>
       ),
     }),
@@ -153,6 +153,23 @@ export default function VendedoresTable() {
             <p className="text-3xl font-bold text-white tracking-tighter">{data?.totalRegistros || 0}</p>
             <div className="flex items-center gap-1 mt-1">
               <span className="text-[10px] text-zinc-500">Cadastrados</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-blue-500/30 transition-all">
+          <div className="flex justify-between items-start mb-4">
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Média Comissão</span>
+            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
+              <Percent size={16} />
+            </div>
+          </div>
+          <div>
+            <p className="text-3xl font-bold text-white tracking-tighter">
+              {((data?.vendedores || []).reduce((sum, v) => sum + (v.comissao || 0), 0) / (data?.vendedores?.length || 1)).toFixed(1)}%
+            </p>
+            <div className="flex items-center gap-1 mt-1">
+              <span className="text-[10px] text-zinc-500">Média da equipe</span>
             </div>
           </div>
         </div>

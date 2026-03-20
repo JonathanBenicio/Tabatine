@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { useClienteStore, ClienteCadastro } from '@/store/useClienteStore';
-import { Search, Users as UsersIcon, AlertCircle, RefreshCw, Eye, MapPin, Mail, Phone } from 'lucide-react';
+import { Search, Users as UsersIcon, AlertCircle, RefreshCw, Eye, MapPin, Mail, Phone, ShieldCheck } from 'lucide-react';
 import Pagination from './Pagination';
 import { useRouter } from 'next/navigation';
 import { useClientesQuery } from '@/hooks/useClientesQuery';
@@ -29,9 +29,16 @@ export default function ClientesTable() {
       header: 'Empresa / Razão Social',
       cell: info => (
         <div className="flex flex-col gap-0.5">
-          <span className="text-sm font-bold text-white tracking-tight group-hover/row:text-indigo-400 transition-colors">
-            {info.getValue()}
-          </span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-bold text-white tracking-tight group-hover/row:text-indigo-400 transition-colors">
+              {info.getValue()}
+            </span>
+            {info.row.original.optante_simples_nacional && (
+              <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase tracking-tighter">
+                Simples
+              </span>
+            )}
+          </div>
           {info.row.original.nome_fantasia && info.row.original.nome_fantasia !== info.getValue() && (
             <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">{info.row.original.nome_fantasia}</span>
           )}
@@ -39,8 +46,15 @@ export default function ClientesTable() {
       ),
     }),
     columnHelper.accessor('cnpj_cpf', {
-      header: 'Documento',
-      cell: info => <span className="text-xs font-medium text-zinc-400 font-mono">{info.getValue() || '---'}</span>,
+      header: 'Documento / IE',
+      cell: info => (
+        <div className="flex flex-col gap-1">
+          <span className="text-xs font-medium text-zinc-300 font-mono tracking-tighter">{info.getValue() || '---'}</span>
+          {info.row.original.inscricao_estadual && (
+            <span className="text-[10px] text-zinc-500 font-mono">IE: {info.row.original.inscricao_estadual}</span>
+          )}
+        </div>
+      ),
     }),
     columnHelper.display({
       id: 'localizacao',
@@ -155,15 +169,17 @@ export default function ClientesTable() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-indigo-500/30 transition-all">
           <div className="flex justify-between items-start mb-4">
-            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Total de Clientes</span>
-            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
-              <UsersIcon size={16} />
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Simples Nacional</span>
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+              <ShieldCheck size={16} />
             </div>
           </div>
           <div>
-            <p className="text-3xl font-bold text-white tracking-tighter">{data?.totalRegistros || 0}</p>
+            <p className="text-3xl font-bold text-white tracking-tighter">
+              {data?.clientes?.filter(c => c.optante_simples_nacional).length || 0}
+            </p>
             <div className="flex items-center gap-1 mt-1">
-              <span className="text-[10px] text-zinc-500">Base Ativa</span>
+              <span className="text-[10px] text-zinc-500">Na página atual</span>
             </div>
           </div>
         </div>

@@ -64,6 +64,8 @@ export const useContasCorrentesStore = create<ContasCorrentesStoreState>((set, g
         tipo: c.Tipo,
         tipo_conta_corrente: c.TipoContaCorrente,
         inativo: c.Inativa ? 'S' : 'N',
+        saldo_inicial: c.SaldoInicial || 0,
+        pdv_enviar: c.PdvEnviar, // Added pdv_enviar mapping
         codigo_integracao: c.CodigoIntegracao,
         omie_updated_at: c.OmieUpdatedAt
       }))

@@ -11,7 +11,8 @@ import {
   RefreshCcw,
   Tag,
   Hash,
-  Eye
+  Eye,
+  CheckCircle2
 } from 'lucide-react';
 import Pagination from './Pagination';
 import { useRouter } from 'next/navigation';
@@ -59,12 +60,25 @@ export default function ProdutosTable() {
       ),
     }),
     columnHelper.accessor('codigo', {
-      header: 'SKU / Cód.',
+      header: 'SKU / Cód. / EAN',
       cell: info => (
-        <div className="flex items-center gap-2">
-           <Hash className="w-3.5 h-3.5 text-zinc-600" />
-           <span className="text-sm font-mono text-zinc-400 whitespace-nowrap">{info.getValue() || '--'}</span>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+             <Hash className="w-3.5 h-3.5 text-zinc-600" />
+             <span className="text-sm font-mono text-zinc-400 whitespace-nowrap">{info.getValue() || '--'}</span>
+          </div>
+          {info.row.original.ean && (
+            <span className="text-[10px] text-zinc-500 font-mono">EAN: {info.row.original.ean}</span>
+          )}
         </div>
+      ),
+    }),
+    columnHelper.accessor('familia_produto', {
+      header: 'Família',
+      cell: info => (
+        <span className="text-xs text-zinc-400 truncate max-w-[120px] block italic">
+          {info.getValue() || '--'}
+        </span>
       ),
     }),
     columnHelper.accessor('unidade', {
@@ -129,6 +143,41 @@ export default function ProdutosTable() {
 
   return (
     <div className="space-y-6">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-blue-500/30 transition-all">
+          <div className="flex justify-between items-start mb-4">
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Total Produtos</span>
+            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
+              <Package size={16} />
+            </div>
+          </div>
+          <div>
+            <p className="text-3xl font-bold text-white tracking-tighter">{data?.totalRegistros || 0}</p>
+            <div className="flex items-center gap-1 mt-1">
+              <span className="text-[10px] text-zinc-500">Base Sincronizada</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-emerald-500/30 transition-all">
+          <div className="flex justify-between items-start mb-4">
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Ativos</span>
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+          </div>
+          <div>
+            <p className="text-3xl font-bold text-emerald-400 tracking-tighter">
+              {data?.produtos?.filter(p => p.excluido === 'N').length || 0}
+            </p>
+            <div className="flex items-center gap-1 mt-1">
+              <span className="text-[10px] text-zinc-500">Na página atual</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Header Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md">

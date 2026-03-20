@@ -90,8 +90,13 @@ export default function NfTable() {
       cell: info => <span className="text-sm font-bold text-white tracking-tight">#{info.getValue()}</span>,
     }),
     columnHelper.accessor('serie', {
-      header: 'Série',
-      cell: info => <span className="text-xs font-mono text-zinc-400">{info.getValue()}</span>,
+      header: 'Série / Mod.',
+      cell: info => (
+        <div className="flex flex-col">
+          <span className="text-[11px] font-bold text-white font-mono uppercase tracking-tight">S: {info.getValue()}</span>
+          <span className="text-[9px] text-zinc-500 font-mono italic">M: {info.row.original.modelo || '55'}</span>
+        </div>
+      ),
     }),
     columnHelper.accessor('razao_social', {
       header: 'Destinatário / Cliente',
@@ -187,14 +192,14 @@ export default function NfTable() {
         <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-blue-500/30 transition-all">
           <div className="flex justify-between items-start mb-4">
             <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">NF-e Processadas</span>
-            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
               <Hash size={16} />
             </div>
           </div>
           <div>
             <p className="text-3xl font-bold text-white tracking-tighter">{data?.totalRegistros || 0}</p>
             <div className="flex items-center gap-1 mt-1">
-              <span className="text-[10px] text-zinc-500">Sincronização em Tempo Real</span>
+              <span className="text-[10px] text-zinc-500">Sincronização Ativa</span>
             </div>
           </div>
         </div>
@@ -202,39 +207,30 @@ export default function NfTable() {
         <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-emerald-500/30 transition-all">
           <div className="flex justify-between items-start mb-4">
             <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Total Faturado</span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
               <DollarSign size={16} />
             </div>
           </div>
           <div>
             <p className="text-2xl font-bold text-emerald-400 tracking-tight">{formatCurrency(stats.totalFaturado)}</p>
-            <p className="text-[10px] text-zinc-500 mt-1">{stats.faturados} notas faturadas</p>
+            <p className="text-[10px] text-zinc-500 mt-1">{stats.faturados} notas na página</p>
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-rose-500/30 transition-all">
+        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-indigo-500/30 transition-all">
           <div className="flex justify-between items-start mb-4">
-            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Canceladas</span>
-            <div className="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-400 group-hover:scale-110 transition-transform">
-              <XCircle size={16} />
-            </div>
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-rose-400 tracking-tight">{formatCurrency(stats.totalCancelado)}</p>
-            <p className="text-[10px] text-zinc-500 mt-1">{stats.cancelados} notas canceladas</p>
-          </div>
-        </div>
-
-        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-emerald-500/30 transition-all">
-          <div className="flex justify-between items-start mb-4">
-            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Segurança Fiscal</span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Impostos (Pág.)</span>
+            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">
               <ShieldCheck size={16} />
             </div>
           </div>
           <div>
-            <p className="text-2xl font-bold text-white tracking-tight">Monitorada</p>
-            <p className="text-[10px] text-zinc-500 mt-1">Status SEFAZ consultado</p>
+            <p className="text-2xl font-bold text-white tracking-tight">
+              {formatCurrency(
+                data?.nfs?.reduce((sum, n) => sum + (n.valor_pis || 0) + (n.valor_cofins || 0) + (n.valor_icms || 0), 0) || 0
+              )}
+            </p>
+            <p className="text-[10px] text-zinc-500 mt-1">PIS + COFINS + ICMS</p>
           </div>
         </div>
       </div>

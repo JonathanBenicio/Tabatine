@@ -42,13 +42,13 @@ export default function VendasTable() {
   };
 
   const etapaMap: Record<string, { label: string; color: string }> = {
-    '10': { label: 'Pedido', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
-    '20': { label: 'Separar', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' },
-    '30': { label: 'Faturar', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
-    '50': { label: 'Faturado', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
-    '60': { label: 'Entregue', color: 'text-teal-400 bg-teal-500/10 border-teal-500/20' },
-    '70': { label: 'Cancelado', color: 'text-rose-400 bg-rose-500/10 border-rose-500/20' },
-    '80': { label: 'Devolvido', color: 'text-red-400 bg-red-500/10 border-red-500/20' },
+    '10': { label: 'Pedido', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.1)]' },
+    '20': { label: 'Separar', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20 shadow-[0_0_10px_rgba(234,179,8,0.1)]' },
+    '30': { label: 'Faturar', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20 shadow-[0_0_10px_rgba(168,85,247,0.1)]' },
+    '50': { label: 'Faturado', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]' },
+    '60': { label: 'Entregue', color: 'text-teal-400 bg-teal-500/10 border-teal-500/20 shadow-[0_0_10px_rgba(20,184,166,0.1)]' },
+    '70': { label: 'Cancelado', color: 'text-rose-400 bg-rose-500/10 border-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.1)]' },
+    '80': { label: 'Devolvido', color: 'text-red-400 bg-red-500/10 border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.1)]' },
   };
 
   const formatEtapa = (etapa: string) => {
@@ -257,7 +257,7 @@ export default function VendasTable() {
         <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-orange-500/30 transition-all">
           <div className="flex justify-between items-start mb-4">
             <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Pedidos Encontrados</span>
-            <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-400 group-hover:scale-110 transition-transform">
+            <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-400">
               <Package size={16} />
             </div>
           </div>
@@ -266,6 +266,40 @@ export default function VendasTable() {
             <div className="flex items-center gap-1 mt-1">
               <span className="text-[10px] text-zinc-500">Fluxo Analítico</span>
             </div>
+          </div>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-emerald-500/30 transition-all">
+          <div className="flex justify-between items-start mb-4">
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Volume (Pág. Atual)</span>
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+              <TrendingUp size={16} />
+            </div>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-emerald-400 tracking-tight">
+              {formatCurrency(data?.vendas?.reduce((sum, v) => sum + (v.valorTotal || 0), 0) || 0)}
+            </p>
+            <p className="text-[10px] text-zinc-500 mt-1">Soma dos itens listados</p>
+          </div>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-blue-500/30 transition-all">
+          <div className="flex justify-between items-start mb-4">
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Ticket Médio (Item)</span>
+            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
+               <Package size={14} />
+            </div>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-white tracking-tight">
+              {formatCurrency(
+                data?.vendas?.length 
+                  ? (data.vendas.reduce((sum, v) => sum + (v.valorTotal || 0), 0) / data.vendas.length)
+                  : 0
+              )}
+            </p>
+            <p className="text-[10px] text-zinc-500 mt-1">Média por linha</p>
           </div>
         </div>
       </div>

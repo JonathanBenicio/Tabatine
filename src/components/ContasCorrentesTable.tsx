@@ -39,8 +39,8 @@ export default function ContasCorrentesTable() {
       header: 'Banco / Agência',
       cell: info => (
         <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 text-xs text-zinc-400">
-            <Building2 size={12} className="text-zinc-600" />
+          <div className="flex items-center gap-2 text-xs font-bold text-zinc-300">
+            <Building2 size={12} className="text-emerald-500" />
             <span>Banco: {info.row.original.codigo_banco || '---'}</span>
           </div>
           <span className="text-[10px] text-zinc-500 font-medium tracking-wider uppercase ml-5">Ag: {info.row.original.codigo_agencia || '---'}</span>
@@ -158,6 +158,23 @@ export default function ContasCorrentesTable() {
             <div className="flex items-center gap-1 mt-1">
               <span className="text-[10px] text-zinc-500">Registradas</span>
             </div>
+          </div>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-blue-500/30 transition-all">
+          <div className="flex justify-between items-start mb-4">
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Saldo Inicial (Total)</span>
+            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
+              <Building2 size={16} />
+            </div>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-white tracking-tight">
+              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                data?.contas?.reduce((sum, c) => sum + (c.saldo_inicial || 0), 0) || 0
+              )}
+            </p>
+            <p className="text-[10px] text-zinc-500 mt-1">Soma base formativa</p>
           </div>
         </div>
       </div>
