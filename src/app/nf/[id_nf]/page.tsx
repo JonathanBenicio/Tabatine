@@ -110,6 +110,8 @@ export default function NfDetailsPage() {
   const [notFound, setNotFound] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
   const [rawOpen, setRawOpen] = useState(false);
+  const [danfeUrl, setDanfeUrl] = useState<string | null>(null);
+  const [loadingDanfe, setLoadingDanfe] = useState(false);
 
   useEffect(() => {
     if (nfs.length === 0 && !loading) {
@@ -134,6 +136,46 @@ export default function NfDetailsPage() {
       navigator.clipboard.writeText(chave);
       setCopiedKey(true);
       setTimeout(() => setCopiedKey(false), 2000);
+    }
+  };
+
+  const handleFetchDanfe = async () => {
+    if (danfeUrl) {
+      window.open(danfeUrl, '_blank');
+      return;
+    }
+    
+    // We try to get danfe from status pedido if nIdPedido is available
+    const codigoPedido = nf?.id_pedido || raw?.compl?.nIdPedido || raw?.pedido?.nCodPedido;
+    
+    if (!codigoPedido) {
+      alert('Esta nota não possui um pedido de venda vinculado para consulta de DANFE automatizada.');
+      return;
+    }
+
+    setLoadingDanfe(true);
+    try {
+      const res = await fetch('/api/omie/vendas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          call: 'StatusPedido',
+          param: [{ codigo_pedido: codigoPedido }]
+        })
+      });
+      const data = await res.json();
+      if (data.ListaNfe && data.ListaNfe.length > 0 && data.ListaNfe[0].danfe) {
+        const url = data.ListaNfe[0].danfe;
+        setDanfeUrl(url);
+        window.open(url, '_blank');
+      } else {
+        alert('DANFE não disponível via portal Omie para este pedido vinculado.');
+      }
+    } catch (e) {
+      console.error('Failed to fetch DANFE', e);
+      alert('Erro ao buscar DANFE na Omie.');
+    } finally {
+      setLoadingDanfe(false);
     }
   };
 
@@ -258,6 +300,25 @@ export default function NfDetailsPage() {
               <DataField label="Finalidade" value={ide.cFinalidade || ide.finNFe || '--'} />
               <DataField label="Ambiente" value={ide.cAmbiente === '1' ? 'Produção' : ide.cAmbiente === '2' ? 'Homologação' : (ide.cAmbiente || '--')} />
             </div>
+            
+            {/* DANFE Button */}
+            {nf.status_nf !== 'Cancelado' && (
+              <button
+                onClick={handleFetchDanfe}
+                disabled={loadingDanfe}
+                className="mt-6 w-full p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center gap-3 hover:bg-blue-500/20 disabled:opacity-50 transition-all font-bold group"
+              >
+                {loadingDanfe ? (
+                  <RefreshCw size={20} className="animate-spin text-blue-400" />
+                ) : (
+                  <FileText size={20} className="group-hover:scale-110 transition-transform" />
+                )}
+                <div className="text-left">
+                  <p className="text-sm">{loadingDanfe ? 'Consultando Omie...' : 'Visualizar DANFE'}</p>
+                  {!loadingDanfe && <p className="text-[10px] opacity-60 font-medium uppercase tracking-tight">Recuperar PDF oficial</p>}
+                </div>
+              </button>
+            )}
           </SectionCard>
 
           {/* ── ITENS / PRODUTOS ── */}
@@ -489,6 +550,14 @@ export default function NfDetailsPage() {
                 {pedido.cCodVend && <InfoRow label="Vendedor" value={pedido.cCodVend?.toString()} />}
                 {pedido.nValorTotalPedido > 0 && <InfoRow label="Valor Total" value={fmt(pedido.nValorTotalPedido)} className="text-emerald-400" />}
               </div>
+
+              <button
+                onClick={() => router.push(`/vendas/${pedido.nCodPedido || pedido.nIdPedido || nf.id_pedido}-0`)}
+                className="mt-4 w-full p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center gap-2 hover:bg-indigo-500/20 transition-all font-bold text-xs"
+              >
+                <TrendingUp size={14} />
+                Ir para Detalhes da Venda
+              </button>
             </SectionCard>
           )}
 

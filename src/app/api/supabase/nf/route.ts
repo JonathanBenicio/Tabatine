@@ -27,6 +27,7 @@ export async function GET(req: Request) {
       .select(`
         *,
         Clientes!inner (*),
+        PedidosVenda (OmieId),
         ItensNotaFiscal (
           *,
           Produtos (*)
@@ -93,6 +94,11 @@ export async function GET(req: Request) {
           xNatureza: nf.NaturezaOperacao || 'Venda de Mercadoria',
           cInfCpl: nf.InformacoesComplementares,
           cInfAdFisco: nf.InformacoesFisco,
+          nIdPedido: nf.PedidosVenda?.OmieId,
+        },
+        pedido: {
+          nCodPedido: nf.PedidosVenda?.OmieId,
+          cNumeroPedido: nf.NumeroPedidoInterno || '', 
         },
         ide: {
           dEmi: dataEmiFormatada, // Crucial for useNfStore
