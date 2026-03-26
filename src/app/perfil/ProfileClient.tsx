@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 import { User } from '@supabase/supabase-js';
-import { createClient } from '@/utils/supabase/client';
 import { Camera, Save, Loader2, Trash2, Key } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { updateProfile, updatePassword, deleteAccount } from './actions';
 
 export default function ProfileClient({ user }: { user: User }) {
   const [loading, setLoading] = useState(false);
@@ -13,15 +13,12 @@ export default function ProfileClient({ user }: { user: User }) {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
-  // States para alteração de senha
   const [changingPassword, setChangingPassword] = useState(false);
   const [newPassword, setNewPassword] = useState('');
 
-  // State para exclusão de conta
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
 
-  const supabase = createClient();
   const router = useRouter();
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
@@ -30,16 +27,20 @@ export default function ProfileClient({ user }: { user: User }) {
       setLoading(true);
       setMessage(null);
 
-      const { error } = await supabase.auth.updateUser({
-        data: { full_name: fullName, avatar_url: avatarUrl }
-      });
+      const formData = new FormData();
+      formData.append('fullName', fullName);
+      formData.append('avatarUrl', avatarUrl);
 
-      if (error) throw error;
+      const result = await updateProfile(formData);
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
 
       setMessage({ type: 'success', text: 'Perfil atualizado com sucesso!' });
       router.refresh();
     } catch (error: unknown) {
-      setMessage({ type: 'error', text: ((error as Error).message) || 'Erro ao atualizar perfil' });
+      setMessage({ type: 'error', text: (error as Error).message || 'Erro ao atualizar perfil' });
     } finally {
       setLoading(false);
     }
@@ -55,35 +56,25 @@ export default function ProfileClient({ user }: { user: User }) {
       }
 
       const file = event.target.files[0];
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const formData = new FormData();
+      formData.append('file', file);
 
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file);
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
-
-      setAvatarUrl(data.publicUrl);
-
-      // Update the user profile right away
-      const { error: updateError } = await supabase.auth.updateUser({
-        data: { avatar_url: data.publicUrl }
+      const response = await fetch('/api/auth/upload-avatar', {
+        method: 'POST',
+        body: formData,
       });
 
-      if (updateError) {
-        throw updateError;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao fazer upload da imagem.');
       }
 
+      setAvatarUrl(data.publicUrl);
       setMessage({ type: 'success', text: 'Foto de perfil atualizada!' });
       router.refresh();
     } catch (error: unknown) {
-      setMessage({ type: 'error', text: ((error as Error).message) || 'Erro ao fazer upload da imagem.' });
+      setMessage({ type: 'error', text: (error as Error).message || 'Erro ao fazer upload da imagem.' });
     } finally {
       setUploading(false);
     }
@@ -100,16 +91,19 @@ export default function ProfileClient({ user }: { user: User }) {
       setChangingPassword(true);
       setMessage(null);
 
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
+      const formData = new FormData();
+      formData.append('password', newPassword);
 
-      if (error) throw error;
+      const result = await updatePassword(formData);
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
 
       setMessage({ type: 'success', text: 'Senha atualizada com sucesso!' });
       setNewPassword('');
     } catch (error: unknown) {
-      setMessage({ type: 'error', text: ((error as Error).message) || 'Erro ao atualizar senha' });
+      setMessage({ type: 'error', text: (error as Error).message || 'Erro ao atualizar senha' });
     } finally {
       setChangingPassword(false);
     }
@@ -125,23 +119,19 @@ export default function ProfileClient({ user }: { user: User }) {
       setDeletingAccount(true);
       setMessage(null);
 
-      // Usar a rota da API para exclusão
-      const res = await fetch('/api/auth/delete-account', {
-        method: 'POST',
-      });
+      // Usar a rota da API para exclusão (ou action)
+      const result = await deleteAccount();
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data?.error || 'Erro ao excluir conta');
+      if (result.error) {
+        throw new Error(result.error);
       }
 
-      // Redireciona para login apóes sair
-      await supabase.auth.signOut();
+      // Redireciona para login após sair
       router.push('/auth/login');
       router.refresh();
 
     } catch (error: unknown) {
-      setMessage({ type: 'error', text: ((error as Error).message) || 'Erro ao excluir conta' });
+      setMessage({ type: 'error', text: (error as Error).message || 'Erro ao excluir conta' });
       setDeletingAccount(false);
     }
   };
