@@ -233,9 +233,9 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
 
         {/* Bottom Actions */}
         <div className="p-4 border-t border-zinc-800/50 space-y-2">
-          <Link href="#" title={isSidebarCollapsed ? "Configurações" : undefined} className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all group`}>
+          <Link href="/perfil" title={isSidebarCollapsed ? "Perfil" : undefined} className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all group`}>
             <Settings className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />
-            {!isSidebarCollapsed && <span className="text-sm font-medium">Configurações</span>}
+            {!isSidebarCollapsed && <span className="text-sm font-medium">Perfil</span>}
           </Link>
           <Link href="#" title={isSidebarCollapsed ? "Sair" : undefined} className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl text-rose-400/70 hover:text-rose-400 hover:bg-rose-500/10 transition-all group`}>
             <LogOut className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />
