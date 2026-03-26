@@ -5,7 +5,7 @@ export default function Home() {
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in zoom-in duration-500">
       {/* Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 p-8 shadow-2xl flex items-center justify-between">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-indigo-600 p-8 shadow-2xl flex items-center justify-between">
         <div className="relative z-10 w-2/3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white text-xs font-semibold uppercase tracking-wide mb-4 backdrop-blur-md">
             <Sparkles className="w-3 h-3 text-amber-300" />

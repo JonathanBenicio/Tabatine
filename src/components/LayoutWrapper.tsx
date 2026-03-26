@@ -67,7 +67,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
       )}
 
       {/* Sidebar */}
-      <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} transition-all duration-300 ease-in-out border-r border-slate-200 dark:border-zinc-800/50 bg-zinc-950/95 md:bg-zinc-950/50 backdrop-blur-xl flex flex-col fixed md:relative z-50 h-full ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+      <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} transition-all duration-300 ease-in-out border-r border-slate-200 dark:border-zinc-800/50 bg-slate-50 md:bg-white/80 dark:bg-zinc-950/95 md:dark:bg-zinc-950/50 backdrop-blur-xl flex flex-col fixed md:relative z-50 h-full ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         {/* Logo Area */}
         <div className={`h-20 flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-6'} border-b border-zinc-800/50 relative`}>
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-[0_0_20px_rgba(59,130,246,0.5)] shrink-0">
