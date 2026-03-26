@@ -56,7 +56,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-screen overflow-hidden">
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div
@@ -92,7 +92,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-6 px-4 space-y-2">
+        <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-2">
           {!isSidebarCollapsed && <p className="px-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">Menu Principal</p>}
           
           <Link
@@ -245,10 +245,10 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         
         {/* Top Navbar */}
-        <header className="h-20 border-b border-zinc-800/50 bg-zinc-900/20 backdrop-blur-xl px-4 md:px-8 flex items-center justify-between sticky top-0 z-30">
+        <header className="h-20 shrink-0 border-b border-zinc-800/50 bg-zinc-900/20 backdrop-blur-xl px-4 md:px-8 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-4">
             <button
               onClick={toggleMobileMenu}
