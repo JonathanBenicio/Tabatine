@@ -244,7 +244,7 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
       lookupStore.setVendedores(vendedoresMap);
       lookupStore.setContas(contasMap);
 
-      let pedidosToProcess = rawPedidos;
+      const pedidosToProcess = rawPedidos;
       // Note: Server-side filtering by startDate/endDate is already done in the API.
       // We keep the mapping logic beneath.
 

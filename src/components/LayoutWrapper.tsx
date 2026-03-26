@@ -22,6 +22,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { NotificationCenter } from './NotificationCenter';
+import { ThemeToggle } from './ThemeToggle';
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -66,7 +67,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
       )}
 
       {/* Sidebar */}
-      <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} transition-all duration-300 ease-in-out border-r border-zinc-800/50 bg-zinc-950/95 md:bg-zinc-950/50 backdrop-blur-xl flex flex-col fixed md:relative z-50 h-full ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+      <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} transition-all duration-300 ease-in-out border-r border-slate-200 dark:border-zinc-800/50 bg-zinc-950/95 md:bg-zinc-950/50 backdrop-blur-xl flex flex-col fixed md:relative z-50 h-full ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         {/* Logo Area */}
         <div className={`h-20 flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-6'} border-b border-zinc-800/50 relative`}>
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-[0_0_20px_rgba(59,130,246,0.5)] shrink-0">
@@ -85,7 +86,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
           )}
           <button
             onClick={toggleSidebar}
-            className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-zinc-800 rounded-full border border-zinc-700 items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors z-10"
+            className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-slate-300 dark:bg-zinc-800 rounded-full border border-zinc-700 items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors z-10"
           >
             {isSidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>
@@ -98,7 +99,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
           <Link
               href="/dashboard"
               title={isSidebarCollapsed ? "Dashboard" : undefined}
-              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/dashboard' ? 'bg-purple-500/10 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}
+              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/dashboard' ? 'bg-purple-500/10 text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'}`}
             >
               {pathname === '/dashboard' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-500 rounded-r-md"></div>}
               <LayoutDashboard className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'} ${pathname === '/dashboard' ? 'text-purple-400' : 'group-hover:text-purple-400 transition-colors'}`} />
@@ -113,7 +114,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
           <Link
               href="/"
               title={isSidebarCollapsed ? "Notas Fiscais" : undefined}
-              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/' ? 'bg-blue-500/10 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}
+              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/' ? 'bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'}`}
             >
               {pathname === '/' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-r-md"></div>}
               <FileText className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'} ${pathname === '/' ? 'text-blue-400' : 'group-hover:text-blue-400 transition-colors'}`} />
@@ -128,7 +129,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
           <Link
               href="/vendas"
               title={isSidebarCollapsed ? "Relatório Vendas" : undefined}
-              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/vendas' ? 'bg-orange-500/10 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}
+              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/vendas' ? 'bg-orange-100 dark:bg-orange-500/10 text-orange-700 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'}`}
             >
               {pathname === '/vendas' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500 rounded-r-md"></div>}
               <TrendingUp className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'} ${pathname === '/vendas' ? 'text-orange-400' : 'group-hover:text-orange-400 transition-colors'}`} />
@@ -143,7 +144,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
           <Link
               href="/notificacoes"
               title={isSidebarCollapsed ? "Notificações" : undefined}
-              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/notificacoes' ? 'bg-blue-500/10 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}
+              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/notificacoes' ? 'bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'}`}
             >
               {pathname === '/notificacoes' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-r-md"></div>}
               <Bell className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'} ${pathname === '/notificacoes' ? 'text-blue-400' : 'group-hover:text-blue-400 transition-colors'}`} />
@@ -158,7 +159,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
           <Link
               href="/clientes"
               title={isSidebarCollapsed ? "Clientes" : undefined}
-              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/clientes' ? 'bg-blue-500/10 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}
+              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/clientes' ? 'bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'}`}
             >
               {pathname === '/clientes' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-r-md"></div>}
               <Users className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'} ${pathname === '/clientes' ? 'text-blue-400' : 'group-hover:text-blue-400 transition-colors'}`} />
@@ -173,7 +174,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
           <Link
               href="/vendedores"
               title={isSidebarCollapsed ? "Vendedores" : undefined}
-              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/vendedores' ? 'bg-blue-500/10 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}
+              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/vendedores' ? 'bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'}`}
             >
               {pathname === '/vendedores' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-r-md"></div>}
               <ArrowRight className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'} ${pathname === '/vendedores' ? 'text-blue-400' : 'group-hover:text-blue-400 transition-colors'}`} />
@@ -188,7 +189,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
           <Link
               href="/produtos"
               title={isSidebarCollapsed ? "Produtos" : undefined}
-              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/produtos' ? 'bg-indigo-500/10 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}
+              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/produtos' ? 'bg-indigo-100 dark:bg-indigo-500/10 text-indigo-700 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'}`}
             >
               {pathname === '/produtos' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-r-md"></div>}
               <Package className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'} ${pathname === '/produtos' ? 'text-indigo-400' : 'group-hover:text-indigo-400 transition-colors'}`} />
@@ -203,7 +204,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
           <Link
               href="/conciliacao"
               title={isSidebarCollapsed ? "Conciliação" : undefined}
-              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/conciliacao' ? 'bg-emerald-500/10 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}
+              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/conciliacao' ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'}`}
             >
               {pathname === '/conciliacao' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 rounded-r-md"></div>}
               <Banknote className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'} ${pathname === '/conciliacao' ? 'text-emerald-400' : 'group-hover:text-emerald-400 transition-colors'}`} />
@@ -218,7 +219,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
           <Link
               href="/contas-correntes"
               title={isSidebarCollapsed ? "Bancos" : undefined}
-              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/contas-correntes' ? 'bg-emerald-500/10 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}
+              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/contas-correntes' ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'}`}
             >
               {pathname === '/contas-correntes' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 rounded-r-md"></div>}
 
@@ -233,7 +234,8 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
 
         {/* Bottom Actions */}
         <div className="p-4 border-t border-zinc-800/50 space-y-2">
-          <Link href="#" title={isSidebarCollapsed ? "Configurações" : undefined} className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all group`}>
+          <ThemeToggle isSidebarCollapsed={isSidebarCollapsed} />
+          <Link href="#" title={isSidebarCollapsed ? "Configurações" : undefined} className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50 transition-all group`}>
             <Settings className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />
             {!isSidebarCollapsed && <span className="text-sm font-medium">Configurações</span>}
           </Link>
@@ -248,20 +250,20 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
       <main className="flex-1 flex flex-col min-w-0">
         
         {/* Top Navbar */}
-        <header className="h-20 border-b border-zinc-800/50 bg-zinc-900/20 backdrop-blur-xl px-4 md:px-8 flex items-center justify-between sticky top-0 z-30">
+        <header className="h-20 border-b border-slate-200 dark:border-zinc-800/50 bg-white/80 dark:bg-slate-100 dark:bg-zinc-900/20 backdrop-blur-xl shadow-sm dark:shadow-none px-4 md:px-8 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-4">
             <button
               onClick={toggleMobileMenu}
-              className="md:hidden p-2 -ml-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl transition-colors"
+              className="md:hidden p-2 -ml-2 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50 rounded-xl transition-colors"
             >
               <Menu className="w-6 h-6" />
             </button>
-                    <div className="hidden md:flex items-center bg-zinc-900/50 border border-zinc-800 rounded-full px-4 py-2 w-96 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500/50 transition-all">
+                    <div className="hidden md:flex items-center bg-slate-100 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 rounded-full px-4 py-2 w-96 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500/50 transition-all">
             <Search className="w-4 h-4 text-zinc-500" />
             <input 
               type="text" 
               placeholder="Pesquisar em toda plataforma..." 
-              className="bg-transparent border-none outline-none text-sm ml-3 w-full text-zinc-300 placeholder:text-zinc-600"
+              className="bg-transparent border-none outline-none text-sm ml-3 w-full text-slate-900 dark:text-zinc-300 placeholder:text-slate-500 dark:placeholder:text-zinc-600"
             />
           </div>
           </div>
@@ -273,10 +275,10 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
 
             <button className="flex items-center gap-3 group">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-semibold text-white group-hover:text-blue-400 transition-colors">Administrador</p>
+                <p className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Administrador</p>
                 <p className="text-xs text-zinc-500">admin@empresa.com</p>
               </div>
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-zinc-800 to-zinc-700 border border-zinc-600 flex items-center justify-center p-0.5 relative">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-slate-200 to-slate-100 dark:from-zinc-800 dark:to-zinc-700 border border-slate-300 dark:border-zinc-600 flex items-center justify-center p-0.5 relative">
                 <img 
                   src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=transparent" 
                   alt="Avatar" 

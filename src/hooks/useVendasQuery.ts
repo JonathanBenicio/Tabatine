@@ -67,7 +67,7 @@ export const useVendasQuery = (
       lookupStore.setVendedores(vendedoresMap);
       lookupStore.setContas(contasMap);
 
-      let pedidosToProcess = rawPedidos;
+      const pedidosToProcess = rawPedidos;
 
       const flatVendas: VendaPlana[] = [];
       pedidosToProcess.forEach((ped: any) => {
