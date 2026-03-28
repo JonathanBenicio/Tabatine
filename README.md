@@ -10,9 +10,11 @@ A aplicação utiliza as tecnologias mais modernas do ecossistema React/Next.js:
 - **Linguagem**: [TypeScript](https://www.typescriptlang.org/)
 - **Estilização**: [Tailwind CSS 4](https://tailwindcss.com/)
 - **Gerenciamento de Estado**: [Zustand](https://zustand-demo.pmnd.rs/) (Stores modulares e leves)
+- **Data Fetching**: [TanStack Query v5](https://tanstack.com/query/latest)
+- **Tabelas**: [TanStack Table v8](https://tanstack.com/table/latest) (Paginação e Sorting no Servidor)
 - **Ícones**: [Lucide React](https://lucide.dev/)
 - **Gráficos**: [Recharts](https://recharts.org/)
-- **Consumo de API**: [Axios](https://axios-http.com/) e Fetch API
+- **Consumo de API**: [Axios](https://axios-http.com/)
 - **Datas**: [date-fns](https://date-fns.org/)
 
 ## 📂 Estrutura de Páginas
@@ -33,8 +35,9 @@ A navegação está organizada de forma intuitiva no `LayoutWrapper`:
 
 1. **Proxy API**: As chamadas para a API do Omie são feitas através de rotas internas do Next.js (`src/app/api/omie`), protegendo as credenciais (`APP_KEY`, `APP_SECRET`) no servidor.
 2. **State Management**: Utiliza **Zustand** para persistência e compartilhamento de estado global entre componentes, evitando *prop drilling* e facilitando a sincronização com o backend.
-3. **Componentização**: Interface construída com componentes reutilizáveis em `src/components`, seguindo uma estética moderna de Glassmorphism e Dark Mode.
-4. **Hooks Customizados**: Lógica de busca e paginação separada da interface para reaproveitamento nos stores.
+3. **Data Fetching & Table Strategy**: Utiliza **TanStack Query** para sincronização de dados e **TanStack Table** para renderização de tabelas complexas com suporte a paginação, ordenação e filtros avançados.
+4. **Hooks Customizados**: Lógica de busca, paginação e mutações separada da interface para reaproveitamento nos componentes e stores.
+5. **Real-time Notifications**: Integração com Webhooks da Omie via backend para notificações instantâneas no dashboard.
 
 ## 📦 Dependências Principais
 

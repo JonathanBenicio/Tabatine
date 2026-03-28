@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { mapSupabaseToVendedores, mapSupabaseToVendedor } from '@/lib/vendedores-mapper'
 
 export interface Vendedor {
   codigo: number
@@ -55,13 +56,7 @@ export const useVendedoresStore = create<VendedoresStoreState>((set, get) => ({
         throw new Error(data.error || 'Failed to fetch Vendedores from Supabase')
       }
 
-      const mappedVendedores = (data.vendedores || []).map((v: any) => ({
-        codigo: v.OmieId,
-        nome: v.Nome,
-        email: v.Email,
-        comissao: v.Comissao,
-        inativo: v.Inativo ? 'S' : 'N'
-      }))
+      const mappedVendedores = mapSupabaseToVendedores(data.vendedores);
 
       set({
         vendedores: mappedVendedores,
@@ -97,17 +92,7 @@ export const useVendedoresStore = create<VendedoresStoreState>((set, get) => ({
         }
 
         if (data.vendedores && data.vendedores.length > 0) {
-          const v = data.vendedores[0]
-          const mapped: Vendedor = {
-            codigo: v.OmieId,
-            nome: v.Nome,
-            email: v.Email,
-            comissao: v.Comissao,
-            inativo: v.Inativo ? 'S' : 'N',
-            codInt: v.CodInt || '',
-            fatura_pedido: v.FaturaPedido || 'N',
-            visualiza_pedido: v.VisualizaPedido || 'N'
-          }
+          const mapped = mapSupabaseToVendedor(data.vendedores[0]);
           
           set(state => ({
             vendedores: [...state.vendedores.filter(item => item.codigo !== mapped.codigo), mapped],

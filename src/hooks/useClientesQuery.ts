@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { ClienteCadastro } from '@/store/useClienteStore'
+import { mapSupabaseToClientes } from '@/lib/clientes-mapper'
 
 interface FetchClientesResponse {
   clientes: ClienteCadastro[]
@@ -24,18 +25,7 @@ export const useClientesQuery = (page: number, search: string) => {
         throw new Error(data.error || 'Failed to fetch Clientes')
       }
 
-      const mappedClientes = (data.clientes || []).map((c: any) => ({
-        codigo_cliente_omie: c.OmieId,
-        razao_social: c.RazaoSocial,
-        nome_fantasia: c.NomeFantasia,
-        cnpj_cpf: c.CnpjCpf,
-        telefone1_ddd: c.TelefoneDdd,
-        telefone1_numero: c.TelefoneNumero,
-        email: c.Email,
-        cidade: c.Cidade,
-        estado: c.Estado,
-        tags: [] // Tags are not yet synced to Supabase in this version
-      }))
+      const mappedClientes = mapSupabaseToClientes(data.clientes);
 
       return {
         clientes: mappedClientes,

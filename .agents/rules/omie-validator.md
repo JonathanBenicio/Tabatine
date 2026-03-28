@@ -1,5 +1,5 @@
 ---
-trigger: always_on
+trigger: model_decision
 ---
 
 # Regras de Validação e Consumo - API Omie

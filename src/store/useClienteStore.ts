@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { mapSupabaseToClientes, mapSupabaseToCliente } from '@/lib/clientes-mapper'
 
 export interface ClienteCadastro {
   codigo_cliente_omie: number
@@ -66,26 +67,7 @@ export const useClienteStore = create<ClienteStoreState>((set, get) => ({
         throw new Error(data.error || 'Failed to fetch Clientes from Supabase')
       }
 
-      const mappedClientes = (data.clientes || []).map((c: any) => ({
-        codigo_cliente_omie: c.OmieId,
-        codigo_cliente_integracao: c.CodigoClienteIntegracao,
-        razao_social: c.RazaoSocial,
-        nome_fantasia: c.NomeFantasia,
-        cnpj_cpf: c.CnpjCpf,
-        telefone1_ddd: '',
-        telefone1_numero: c.Telefone || '',
-        email: c.Email,
-        cidade: c.Cidade,
-        estado: c.Estado,
-        bairro: c.Bairro,
-        endereco: c.Endereco,
-        endereco_numero: c.EnderecoNumero,
-        endereco_complemento: c.EnderecoComplemento,
-        inscricao_estadual: c.InscricaoEstadual,
-        inscricao_municipal: c.InscricaoMunicipal,
-        optante_simples_nacional: c.OptanteSimplesNacional,
-        tags: [] // Tags are not yet synced to Supabase in this version
-      }))
+      const mappedClientes = mapSupabaseToClientes(data.clientes);
 
       set({
         clientes: mappedClientes,
@@ -123,26 +105,7 @@ export const useClienteStore = create<ClienteStoreState>((set, get) => ({
         const c = data.clientes?.[0]
         if (!c) return null
 
-        const mapped: ClienteCadastro = {
-          codigo_cliente_omie: c.OmieId,
-          codigo_cliente_integracao: c.CodigoClienteIntegracao,
-          razao_social: c.RazaoSocial,
-          nome_fantasia: c.NomeFantasia,
-          cnpj_cpf: c.CnpjCpf,
-          telefone1_ddd: '',
-          telefone1_numero: c.Telefone || '',
-          email: c.Email,
-          cidade: c.Cidade,
-          estado: c.Estado,
-          bairro: c.Bairro,
-          endereco: c.Endereco,
-          endereco_numero: c.EnderecoNumero,
-          endereco_complemento: c.EnderecoComplemento,
-          inscricao_estadual: c.InscricaoEstadual,
-          inscricao_municipal: c.InscricaoMunicipal,
-          optante_simples_nacional: c.OptanteSimplesNacional,
-          tags: []
-        }
+        const mapped = mapSupabaseToCliente(data.clientes?.[0]);
 
         set(state => ({ 
           clientes: [...state.clientes.filter(item => item.codigo_cliente_omie !== omieId), mapped],
