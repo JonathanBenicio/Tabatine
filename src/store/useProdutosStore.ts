@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { SortingState, VisibilityState } from '@tanstack/react-table'
+import { mapSupabaseToProdutos, mapSupabaseToProduto } from '@/lib/produtos-mapper'
 
 export interface Produto {
   codigo_produto: number
@@ -89,20 +90,7 @@ export const useProdutosStore = create<ProdutosStoreState>((set, get) => ({
         throw new Error(data.error || 'Failed to fetch produtos from Supabase')
       }
 
-      const mappedProdutos = (data.produtos || []).map((p: any) => ({
-        codigo_produto: p.OmieId,
-        codigo_produto_integracao: p.CodigoProdutoIntegracao,
-        codigo: p.CodigoProduto,
-        descricao: p.Descricao,
-        unidade: p.UnidadeMedida,
-        valor_unitario: Number(p.PrecoUnitario || 0),
-        ncm: p.Ncm,
-        ean: p.Ean,
-        peso_bruto: Number(p.PesoBruto || 0),
-        peso_liquido: Number(p.PesoLiquido || 0),
-        familia_produto: p.FamiliaProduto,
-        excluido: p.Ativo ? 'N' : 'S'
-      }))
+      const mappedProdutos = mapSupabaseToProdutos(data.produtos);
 
       set({
         produtos: mappedProdutos,
@@ -140,20 +128,7 @@ export const useProdutosStore = create<ProdutosStoreState>((set, get) => ({
         const p = data.produtos?.[0]
         if (!p) return null
 
-        const mapped: Produto = {
-          codigo_produto: p.OmieId,
-          codigo_produto_integracao: p.CodigoProdutoIntegracao,
-          codigo: p.CodigoProduto,
-          descricao: p.Descricao,
-          unidade: p.UnidadeMedida,
-          valor_unitario: Number(p.PrecoUnitario || 0),
-          ncm: p.Ncm,
-          ean: p.Ean,
-          peso_bruto: Number(p.PesoBruto || 0),
-          peso_liquido: Number(p.PesoLiquido || 0),
-          familia_produto: p.FamiliaProduto,
-          excluido: p.Ativo ? 'N' : 'S'
-        }
+        const mapped = mapSupabaseToProduto(data.produtos?.[0]);
 
         set(state => ({ 
           produtos: [...state.produtos.filter(item => item.codigo_produto !== omieId), mapped],
