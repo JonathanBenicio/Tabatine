@@ -122,6 +122,8 @@ export default function DashboardCharts() {
     let totalValorSemana = 0;
     let totalVendasSemana = 0;
     const statusVendas: Record<string, number> = {};
+    const vendedoresAgg: Record<string, number> = {};
+    const produtosAgg: Record<string, number> = {};
 
     vendas.forEach(venda => {
       const dateObj = parseDateString(venda.data);
@@ -137,11 +139,38 @@ export default function DashboardCharts() {
       faturamentoPorDia[dayIdx] += valor;
       qtdPorDia[dayIdx] += 1;
 
-      const status = venda.vencimentoStatus || 'Desconhecido';
+      const status = venda.vencimentoStatus || 'Pendente';
       statusVendas[status] = (statusVendas[status] || 0) + 1;
+
+      // Top Vendedores Aggregation
+      const vendKey = venda.vendedor || 'Sem Vendedor';
+      vendedoresAgg[vendKey] = (vendedoresAgg[vendKey] || 0) + valor;
+
+      // Top Produtos Aggregation
+      const prodKey = venda.produto || 'Sem Nome';
+      produtosAgg[prodKey] = (produtosAgg[prodKey] || 0) + valor;
     });
 
     const ticketMedio = totalVendasSemana > 0 ? totalValorSemana / totalVendasSemana : 0;
+    
+    // Total Commissions projection (heuristic)
+    const totalComissaoSemana = vendas.reduce((acc, v) => {
+      const d = parseDateString(v.data);
+      if (d && isWithinInterval(d, { start: weekStart, end: weekEnd })) {
+        return acc + (v.valorTotal * (v.percComissao / 100));
+      }
+      return acc;
+    }, 0);
+
+    const topVendedores = Object.entries(vendedoresAgg)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, total]) => ({ name, total }));
+
+    const topProdutos = Object.entries(produtosAgg)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, total]) => ({ name, total }));
 
     const chartFaturamentoDia = daysOfWeek.map((day, i) => ({
       name: day,
@@ -165,6 +194,9 @@ export default function DashboardCharts() {
       chartFaturamentoDia,
       chartStatus,
       chartQtdDia,
+      topVendedores,
+      topProdutos,
+      totalComissaoSemana,
       weekLabel,
     };
   }, [vendas, selectedWeek, selectedYear]);
@@ -190,7 +222,18 @@ export default function DashboardCharts() {
     );
   }
 
-  const { totalValorSemana, ticketMedio, totalVendasSemana, chartFaturamentoDia, chartStatus, chartQtdDia, weekLabel } = aggregatedData;
+  const { 
+    totalValorSemana, 
+    ticketMedio, 
+    totalVendasSemana, 
+    totalComissaoSemana,
+    chartFaturamentoDia, 
+    chartStatus, 
+    chartQtdDia, 
+    topVendedores,
+    topProdutos,
+    weekLabel 
+  } = aggregatedData;
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -244,10 +287,10 @@ export default function DashboardCharts() {
       </div>
       
       {/* Cards de Insights */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/50 p-6 backdrop-blur-xl transition-all hover:bg-zinc-800/50 group">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-zinc-400">Faturamento da Semana</h3>
+            <h3 className="text-sm font-medium text-zinc-400">Faturamento</h3>
             <div className="p-2 bg-blue-500/10 rounded-lg group-hover:bg-blue-500/20 transition-colors">
               <DollarSign className="w-5 h-5 text-blue-400" />
             </div>
@@ -257,7 +300,7 @@ export default function DashboardCharts() {
 
         <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/50 p-6 backdrop-blur-xl transition-all hover:bg-zinc-800/50 group">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-zinc-400">Pedidos na Semana</h3>
+            <h3 className="text-sm font-medium text-zinc-400">Pedidos</h3>
             <div className="p-2 bg-emerald-500/10 rounded-lg group-hover:bg-emerald-500/20 transition-colors">
               <ShoppingCart className="w-5 h-5 text-emerald-400" />
             </div>
@@ -285,6 +328,16 @@ export default function DashboardCharts() {
           <p className="text-2xl font-bold text-white">{bestDay.valor > 0 ? bestDay.name : '--'}</p>
           {bestDay.valor > 0 && <p className="text-xs text-zinc-500 mt-1">{formatCurrency(bestDay.valor)}</p>}
         </div>
+
+        <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/50 p-6 backdrop-blur-xl transition-all hover:bg-zinc-800/50 group">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-medium text-zinc-400">Comissão</h3>
+            <div className="p-2 bg-pink-500/10 rounded-lg group-hover:bg-pink-500/20 transition-colors">
+              <TrendingUp className="w-5 h-5 text-pink-400" />
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-white">{formatCurrency(totalComissaoSemana)}</p>
+        </div>
       </div>
 
       {/* Gráficos Principais */}
@@ -310,7 +363,7 @@ export default function DashboardCharts() {
                   cursor={{ fill: '#27272a', opacity: 0.4 }}
                   contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '12px', color: '#fff' }}
                   itemStyle={{ color: '#e4e4e7' }}
-                  formatter={(value: number | string | readonly (number | string)[] | undefined) => [formatCurrency(Number(value ?? 0)), 'Faturamento']}
+                  formatter={(value: any) => [formatCurrency(Number(value ?? 0)), 'Faturamento']}
                 />
                 <Bar dataKey="valor" fill="url(#barGradient)" radius={[6, 6, 0, 0]} maxBarSize={48} />
               </BarChart>
@@ -320,8 +373,8 @@ export default function DashboardCharts() {
 
         {/* Gráfico de Pizza (Status) */}
         <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/50 p-6 backdrop-blur-xl">
-          <h3 className="text-lg font-semibold text-white mb-1">Pedidos por Etapa</h3>
-          <p className="text-xs text-zinc-500 mb-6">Distribuição — {weekLabel}</p>
+          <h3 className="text-lg font-semibold text-white mb-1">Pedidos por Status</h3>
+          <p className="text-xs text-zinc-500 mb-6">Distribuição Financeira — {weekLabel}</p>
           <div className="h-[300px] w-full flex flex-col items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -353,8 +406,8 @@ export default function DashboardCharts() {
       {/* Gráfico Secundário — Quantidade de Pedidos por Dia */}
       <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/50 p-6 backdrop-blur-xl">
         <h3 className="text-lg font-semibold text-white mb-1">Quantidade de Pedidos por Dia</h3>
-        <p className="text-xs text-zinc-500 mb-6">Número de itens vendidos — {weekLabel}</p>
-        <div className="h-[300px] w-full">
+        <p className="text-xs text-zinc-500 mb-6">Volume diário — {weekLabel}</p>
+        <div className="h-[250px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartQtdDia} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
@@ -369,11 +422,69 @@ export default function DashboardCharts() {
               <Tooltip 
                 contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '12px', color: '#fff' }}
                 itemStyle={{ color: '#e4e4e7' }}
-                formatter={(value: number | string | readonly (number | string)[] | undefined) => [value ?? 0, 'Pedidos']}
+                formatter={(value: any) => [value ?? 0, 'Pedidos']}
               />
               <Area type="monotone" dataKey="qtd" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorQtd)" />
             </AreaChart>
           </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Rankings Side by Side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Vendedores */}
+        <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/50 p-6 backdrop-blur-xl transition-all hover:bg-zinc-800/20">
+          <h3 className="text-lg font-semibold text-white mb-1">Top Vendedores</h3>
+          <p className="text-xs text-zinc-500 mb-6">Maiores faturamentos — {weekLabel}</p>
+          
+          <div className="space-y-6">
+            {topVendedores.map((vend, idx) => (
+              <div key={vend.name} className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-zinc-300 font-medium flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center text-[10px] text-blue-400 border border-blue-500/20">
+                      {idx + 1}
+                    </span>
+                    {vend.name}
+                  </span>
+                  <span className="text-white font-semibold">{formatCurrency(vend.total)}</span>
+                </div>
+                <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full"
+                    style={{ width: `${(vend.total / (topVendedores[0]?.total || 1)) * 100}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+            {topVendedores.length === 0 && (
+              <p className="text-center text-zinc-500 py-8 italic">Sem faturamentos nesta semana.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Top Produtos */}
+        <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/50 p-6 backdrop-blur-xl transition-all hover:bg-zinc-800/20">
+          <h3 className="text-lg font-semibold text-white mb-1">Top Produtos</h3>
+          <p className="text-xs text-zinc-500 mb-6">Produtos mais rentáveis — {weekLabel}</p>
+          
+          <div className="space-y-4">
+            {topProdutos.map((prod, idx) => (
+              <div key={prod.name} className="flex items-center gap-4 p-3 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:bg-zinc-800/50 transition-colors group">
+                 <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-bold border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-colors">
+                    {idx + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white truncate">{prod.name}</p>
+                    <p className="text-xs text-zinc-500">{formatCurrency(prod.total)}</p>
+                  </div>
+                  <TrendingUp className="w-4 h-4 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            ))}
+            {topProdutos.length === 0 && (
+              <p className="text-center text-zinc-500 py-8 italic">Dados de produtos indisponíveis.</p>
+            )}
+          </div>
         </div>
       </div>
 

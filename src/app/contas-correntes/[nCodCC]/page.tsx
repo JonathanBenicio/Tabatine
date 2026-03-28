@@ -66,7 +66,7 @@ function StatCard({ icon: Icon, iconBg, label, value, subValue }: {
 }
 
 function RecentOrdersSection({ contaCorrenteId }: { contaCorrenteId: number }) {
-  const { data, isLoading } = useVendasQuery(1, '', [], { contaCorrenteId }, true);
+  const { data, isLoading } = useVendasQuery(1, 10, '', [], [], { contaCorrenteId });
   const router = useRouter();
   const orders = data?.vendas?.slice(0, 5) || [];
 
@@ -142,7 +142,9 @@ export default function ContaCorrenteDetailsPage() {
   // Hook must be called at the top level
   const { data: vendasData } = useVendasQuery(
     1, 
+    10, 
     '', 
+    [], 
     [], 
     { contaCorrenteId: conta?.nCodCC }, 
     !!conta
