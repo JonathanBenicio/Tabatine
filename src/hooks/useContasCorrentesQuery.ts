@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import { ContaCorrente } from '@/store/useContasCorrentesStore'
-import { mapSupabaseToContasCorrentes } from '@/lib/contas-mapper'
 
 interface FetchContasResponse {
   contas: ContaCorrente[]
@@ -25,7 +24,16 @@ export const useContasCorrentesQuery = (page: number, search: string) => {
         throw new Error(data.error || 'Failed to fetch Contas Correntes')
       }
 
-      const mappedContas = mapSupabaseToContasCorrentes(data.contas);
+      const mappedContas = (data.contas || []).map((c: any) => ({
+        nCodCC: c.OmieId,
+        descricao: c.Descricao,
+        codigo_banco: c.CodigoBanco,
+        codigo_agencia: c.CodigoAgencia,
+        numero_conta_corrente: c.NumeroContaCorrente,
+        tipo: c.Tipo,
+        tipo_conta_corrente: c.TipoContaCorrente,
+        inativo: c.Inativo ? 'S' : 'N'
+      }))
 
       return {
         contas: mappedContas,

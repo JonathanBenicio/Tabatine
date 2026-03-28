@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Produto } from '@/store/useProdutosStore'
 import { SortingState } from '@tanstack/react-table'
-import { mapSupabaseToProdutos } from '@/lib/produtos-mapper'
 
 interface FetchProdutosResponse {
   produtos: Produto[]
@@ -43,7 +42,15 @@ export const useProdutosQuery = (
         throw new Error(data.error || 'Failed to fetch produtos')
       }
 
-      const mappedProdutos = mapSupabaseToProdutos(data.produtos);
+      const mappedProdutos = (data.produtos || []).map((p: any) => ({
+        codigo_produto: p.OmieId,
+        codigo: p.CodigoProduto,
+        descricao: p.Descricao,
+        unidade: p.UnidadeMedida,
+        valor_unitario: Number(p.PrecoUnitario || 0),
+        ncm: p.Ncm,
+        excluido: p.Ativo ? 'N' : 'S'
+      }))
 
       return {
         produtos: mappedProdutos,

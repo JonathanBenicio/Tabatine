@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { createClient } from '@/utils/supabase/client';
+const supabase = createClient();
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export interface Notification {
@@ -15,26 +17,29 @@ export function useNotifications() {
   const queryClient = useQueryClient();
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Fetch notifications with polling (100% server-side via API proxy)
+  // Fetch initial notifications
   const { data: notifications = [] } = useQuery<Notification[]>({
     queryKey: ['notifications'],
     queryFn: async () => {
-      const response = await fetch('/api/supabase/notifications');
-      if (!response.ok) throw new Error('Failed to fetch notifications');
-      return response.json();
+      const { data, error } = await supabase
+        .from('Notifications')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+      return data || [];
     },
-    refetchInterval: 30000, // Poll every 30 seconds
   });
 
   // Mutation to mark as read
   const markAsReadMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch('/api/supabase/notifications', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
-      });
-      if (!response.ok) throw new Error('Failed to mark notification as read');
+      const { error } = await supabase
+        .from('Notifications')
+        .update({ is_read: true })
+        .eq('id', id);
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -43,12 +48,11 @@ export function useNotifications() {
 
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/supabase/notifications', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ all: true }),
-      });
-      if (!response.ok) throw new Error('Failed to mark all as read');
+      const { error } = await supabase
+        .from('Notifications')
+        .update({ is_read: true })
+        .eq('is_read', false);
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -56,10 +60,38 @@ export function useNotifications() {
   });
 
   useEffect(() => {
-    // Update unread count when notifications change
+    // Initial unread count
     const count = notifications.filter(n => !n.is_read).length;
     setUnreadCount(count);
-  }, [notifications]);
+
+    // Subscribe to real-time changes
+    const channel = supabase
+      .channel('notifications-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'Notifications',
+        },
+        (payload: any) => {
+          console.log('Nova notificação recebida:', payload);
+          queryClient.invalidateQueries({ queryKey: ['notifications'] });
+
+          // Show browser notification if permitted
+          if (Notification.permission === 'granted') {
+            new Notification(payload.new.title, {
+              body: payload.new.message,
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [notifications, queryClient]);
 
   return {
     notifications,

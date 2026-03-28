@@ -27,128 +27,99 @@ export async function GET(req: Request) {
     const omieId = searchParams.get('omieId');
 
     // Map frontend field name to DB column name
-    // Map frontend field name to DB column name for filtering/sorting
     const VENDA_COLUMN_MAP: Record<string, string> = {
       data: 'DataInclusao',
       pedido: 'NumeroPedido',
       numeroPedido: 'NumeroPedido',
-      cliente: 'Clientes.Nome',
-      vendedor: 'Vendedores.Nome',
+      cliente: 'ClienteId',
+      vendedor: 'VendedorId',
       valorTotal: 'ValorTotal',
       etapa: 'Etapa',
       nf: 'NotasFiscais.NumeroNf',
       formaPg: 'MeioPagamento',
       banco: 'ContasCorrente.Descricao',
       vencimentoStatus: 'Etapa',
-      produto: 'ItensPedido.Produtos.Descricao',
     };
     const sortField = VENDA_COLUMN_MAP[sortFieldFront] || sortFieldFront;
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
-    const activeFilters = Array.from(searchParams.entries())
-      .filter(([key]) => key.startsWith('filter_'))
-      .map(([key, value]) => ({ 
-        field: key.replace('filter_', ''), 
-        value 
-      }));
+    // Base query using !inner for Clientes since it's a required relationship
+    let selectQuery = `
+      *,
+      Clientes!inner (*),
+      Vendedores (*),
+      ContasCorrente (*),
+      FormasPagamento (*),
+      ItensPedido (
+        *,
+        Produtos (*)
+      ),
+      PedidoParcelas (*),
+      NotasFiscais (*)
+    `;
 
-    const searchFilterIds: { cliente?: number[]; vendedor?: number[]; banco?: number[] } = {};
-
-    if (search || activeFilters.some(f => ['cliente', 'vendedor', 'banco'].includes(f.field))) {
-      const escapedSearch = escapeFilterValue(`%${search}%`);
-      
-      // Lookup Clientes matching search or specific client filter
-      const clientFilter = activeFilters.find(f => f.field === 'cliente');
-      if (search || clientFilter) {
-        let clientQuery = supabase.from('Clientes').select('Id');
-        if (clientFilter) {
-          clientQuery = clientQuery.ilike('Nome', `%${clientFilter.value}%`);
-        } else {
-          clientQuery = clientQuery.or(`RazaoSocial.ilike.${escapedSearch},NomeFantasia.ilike.${escapedSearch},Nome.ilike.${escapedSearch}`);
-        }
-        const { data: cData } = await clientQuery;
-        if (cData) searchFilterIds.cliente = cData.map(c => (c as any).Id);
-      }
-
-      // Lookup Vendedores matching search or specific vendor filter
-      const vendorFilter = activeFilters.find(f => f.field === 'vendedor');
-      if (search || vendorFilter) {
-        let vendorQuery = supabase.from('Vendedores').select('Id');
-        if (vendorFilter) {
-          vendorQuery = vendorQuery.ilike('Nome', `%${vendorFilter.value}%`);
-        } else {
-          vendorQuery = vendorQuery.ilike('Nome', escapedSearch);
-        }
-        const { data: vData } = await vendorQuery;
-        if (vData) searchFilterIds.vendedor = vData.map(v => (v as any).Id);
-      }
-
-      // Lookup Bancos matching banco filter
-      const bancoFilter = activeFilters.find(f => f.field === 'banco');
-      if (bancoFilter) {
-        const { data: bData } = await supabase.from('ContasCorrente').select('Id').ilike('Descricao', `%${bancoFilter.value}%`);
-        if (bData) searchFilterIds.banco = bData.map(b => (b as any).Id);
-      }
+    // If filtering by vendor, we need !inner to filter on the related table
+    if (vendedorOmieId) {
+      selectQuery = `
+        *,
+        Clientes!inner (*),
+        Vendedores!inner (*),
+        ContasCorrente (*),
+        FormasPagamento (*),
+        ItensPedido (
+          *,
+          Produtos (*)
+        ),
+        PedidoParcelas (*),
+        NotasFiscais (*)
+      `;
     }
 
     let query = supabase
       .from('PedidosVenda')
-      .select(`
-        *,
-        Clientes (*),
-        Vendedores (*),
-        ContasCorrente (*),
-        FormasPagamento (*),
-        ItensPedido (*, Produtos (*)),
-        PedidoParcelas (*),
-        NotasFiscais (*)
-      `, { count: 'exact' });
+      .select(selectQuery, { count: 'exact' });
 
     if (omieId) {
       query = query.eq('OmieId', parseInt(omieId));
     } else {
-      if (clienteOmieId) query = query.eq('Clientes.OmieId', parseInt(clienteOmieId));
-      if (vendedorOmieId) query = query.eq('Vendedores.OmieId', parseInt(vendedorOmieId));
-      if (contaCorrenteId) query = query.eq('ContasCorrente.OmieId', parseInt(contaCorrenteId));
-
-      if (startDate) query = query.gte('DataInclusao', startDate);
-      if (endDate) query = query.lte('DataInclusao', endDate);
-
-      // Apply search across matches or NumeroPedido
-      if (search) {
-        const escapedSearch = escapeFilterValue(`%${search}%`);
-        const orConditions = [`NumeroPedido.ilike.${escapedSearch}`];
-        // Use root column ClienteId and VendedorId with the IDs we found
-        if (searchFilterIds.cliente?.length) orConditions.push(`ClienteId.in.(${searchFilterIds.cliente.join(',')})`);
-        if (searchFilterIds.vendedor?.length) orConditions.push(`VendedorId.in.(${searchFilterIds.vendedor.join(',')})`);
-        query = query.or(orConditions.join(','));
+      if (clienteOmieId) {
+        query = query.eq('Clientes.OmieId', parseInt(clienteOmieId));
       }
 
-      // Apply column filters
-      const EMPTY_UUID = '00000000-0000-0000-0000-000000000000';
-      activeFilters.forEach(({ field, value }) => {
-        if (field === 'cliente') {
-           if (searchFilterIds.cliente?.length) query = query.in('ClienteId', searchFilterIds.cliente);
-           else if (value) query = query.eq('ClienteId', EMPTY_UUID); // Force empty result if filter typed but no match found
-        } else if (field === 'vendedor') {
-           if (searchFilterIds.vendedor?.length) query = query.in('VendedorId', searchFilterIds.vendedor);
-           else if (value) query = query.eq('VendedorId', EMPTY_UUID);
-        } else if (field === 'banco') {
-           if (searchFilterIds.banco?.length) query = query.in('ContaCorrenteId', searchFilterIds.banco);
-           else if (value) query = query.eq('ContaCorrenteId', EMPTY_UUID);
+      if (vendedorOmieId) {
+        query = query.eq('Vendedores.OmieId', parseInt(vendedorOmieId));
+      }
+
+      if (contaCorrenteId) {
+        query = query.eq('ContasCorrente.OmieId', parseInt(contaCorrenteId));
+      }
+
+      if (search) {
+        const escapedSearch = escapeFilterValue(`%${search}%`);
+
+        // Step A: Find IDs of clients matching the search term
+        const { data: clientesMatch } = await supabase
+          .from('Clientes')
+          .select('Id')
+          .or(`RazaoSocial.ilike.${escapedSearch},NomeFantasia.ilike.${escapedSearch}`);
+
+        const clienteIds = (clientesMatch || []).map(c => c.Id);
+
+        if (clienteIds.length > 0) {
+          query = query.or(`NumeroPedido.ilike.${escapedSearch},ClienteId.in.(${clienteIds.join(',')})`);
         } else {
-           const dbColumn = VENDA_COLUMN_MAP[field] || field;
-           const numericFields = ['valorTotal', 'valorVenda', 'frete', 'percComissao', 'qtdItens', 'qtdParcelas'];
-           if (numericFields.includes(field)) {
-             const numV = parseFloat(value as string);
-             if (!isNaN(numV)) query = query.eq(dbColumn, numV);
-           } else if (!dbColumn.includes('.')) { 
-             query = query.ilike(dbColumn, `%${value}%`);
-           }
+          query = query.or(`NumeroPedido.ilike.${escapedSearch}`);
         }
-      });
+      }
+
+      if (startDate) {
+        query = query.gte('DataInclusao', startDate);
+      }
+      if (endDate) {
+        query = query.lte('DataInclusao', endDate);
+      }
     }
 
     const { data, error, count } = await (omieId 

@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { mapSupabaseToContasCorrentes, mapSupabaseToContaCorrente } from '@/lib/contas-mapper';
 
 export interface ContaCorrente {
   nCodCC: number
@@ -60,7 +59,20 @@ export const useContasCorrentesStore = create<ContasCorrentesStoreState>((set, g
         throw new Error(data.error || 'Failed to fetch Contas Correntes from Supabase')
       }
 
-      const mappedContas = mapSupabaseToContasCorrentes(data.contas);
+      const mappedContas = (data.contas || []).map((c: any) => ({
+        nCodCC: c.OmieId,
+        descricao: c.Descricao,
+        codigo_banco: c.Bancos?.CodigoBanco || '',
+        codigo_agencia: '',
+        numero_conta_corrente: '',
+        tipo: c.Tipo,
+        tipo_conta_corrente: '',
+        inativo: c.Inativa ? 'S' : 'N',
+        saldo_inicial: 0,
+        pdv_enviar: 'N',
+        codigo_integracao: c.CodigoIntegracao,
+        omie_updated_at: c.OmieUpdatedAt
+      }))
 
       set({
         contas: mappedContas,
@@ -96,7 +108,21 @@ export const useContasCorrentesStore = create<ContasCorrentesStoreState>((set, g
         }
 
         if (data.contas && data.contas.length > 0) {
-          const mapped = mapSupabaseToContaCorrente(data.contas[0]);
+          const c = data.contas[0]
+          const mapped: ContaCorrente = {
+            nCodCC: c.OmieId,
+            descricao: c.Descricao,
+            codigo_banco: c.Bancos?.CodigoBanco || '',
+            codigo_agencia: '',
+            numero_conta_corrente: '',
+            tipo: c.Tipo,
+            tipo_conta_corrente: '',
+            inativo: c.Inativa ? 'S' : 'N',
+            saldo_inicial: 0,
+            pdv_enviar: 'N',
+            codigo_integracao: c.CodigoIntegracao,
+            omie_updated_at: c.OmieUpdatedAt
+          }
           
           set(state => ({
             contas: [...state.contas.filter(item => item.nCodCC !== mapped.nCodCC), mapped],

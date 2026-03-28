@@ -1,5 +1,5 @@
 ---
-trigger: model_decision
+trigger: always_on
 ---
 
 # Tabatine — Regras de Frontend (UI Patterns)

@@ -1,5 +1,5 @@
 ---
-trigger: model_decision
+trigger: always_on
 ---
 
 # Tabatine — Regras do Workspace
@@ -20,8 +20,7 @@ Frontend (React + Zustand stores)
 
 - **Credenciais**: `APP_KEY` e `APP_SECRET` ficam em `.env.local` e são injetados no corpo da requisição pelo API Route.
 - **Proxy Pattern**: O frontend chama `/api/omie/<módulo>` com `{ call: "NomeDoMétodo", param: [...] }`. O route.ts injeta as credenciais e faz POST para a URL correspondente no Omie.
-- **State Management**: Zustand stores em `src/store/` gerenciam o estado global.
-- **Data Transformation (SSOT)**: Mapeadores centralizados em `src/lib/*-mapper.ts` transformam dados brutos (API/Supabase) para interfaces planas consumidas pela UI.
+- **State Management**: Zustand stores em `src/store/` gerenciam cache e flatten dos dados.
 
 ---
 
@@ -294,17 +293,18 @@ src/
 │   │   └── clientes/route.ts# → /api/v1/geral/clientes/
 │   └── ...                  # Pages (App Router)
 ├── components/              # Componentes React (ex: VendasTable.tsx)
-├── store/                   # Zustand stores (gerência de estado)
-├── lib/                     # Mapeadores (SSOT) e utilitários
-│   ├── vendas-mapper.ts
-│   ├── nf-mapper.ts
-│   └── ...
+├── store/                   # Zustand stores (ex: useVendasStore.ts)
+└── lib/                     # Utilitários
 .doc/                        # Documentação interna do projeto
 .env.local                   # APP_KEY, APP_SECRET, OMIE_API_URL
 ```
 
-## Regras de Workflow e Arquitetura
+---
 
-- **Arquitetura de Mapeamento**: Veja `.agents/rules/arquitetura-mappers.md` para o padrão de transformação de dados.
-- **Criação de Módulos**: Use o workflow `/create-mapped-module` (`.agents/workflows/create-mapped-module.md`) ao adicionar novas entidades.
-- **Padrão de UI**: Seguir as diretrizes de `LayoutWrapper.tsx` e componentes de tabela baseados em `@tanstack/react-table`.
+## Problemas Conhecidos
+
+Consulte `.doc/vendas/colunas/README.md` para detalhes sobre:
+- `statusComissao`: hardcoded como `PENDENTE`
+- `percComissao`: usa `perc_desconto` como fallback (campo errado)
+- `vencimentoStatus`: usa `etapa` do pedido em vez de status de vencimento real
+- `cliente` e `vendedor`: exibem código numérico em vez do nome
