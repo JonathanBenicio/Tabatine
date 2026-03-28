@@ -40,7 +40,9 @@ export default function VendasTable() {
   const { 
     currentPage, searchTerm, setSearchTerm, setCurrentPage,
     sorting, setSorting, columnVisibility, setColumnVisibility,
-    filters, setFilters
+    filters, setFilters, pageSize, setPageSize,
+    columnFilters, setColumnFilters, columnPinning, setColumnPinning,
+    showColumnFilters, setShowColumnFilters
   } = useVendasStore();
 
   const { getClienteNome, getVendedorNome, getContaNome, clientes, vendedores, contas } = useLookupStore();
@@ -50,8 +52,10 @@ export default function VendasTable() {
 
   const { data, isLoading, error, refetch } = useVendasQuery(
     currentPage, 
+    pageSize,
     searchTerm, 
     sorting, 
+    columnFilters,
     filters
   );
 
@@ -86,13 +90,16 @@ export default function VendasTable() {
   };
 
   const columns = useMemo(() => [
-    columnHelper.accessor('data', {
+    {
       header: '📅 DATA',
-      cell: info => <span className="text-xs font-mono text-zinc-400">{formatDate(info.getValue())}</span>,
-    }),
-    columnHelper.accessor('cliente', {
+      accessorKey: 'data',
+      cell: (info: any) => <span className="text-xs font-mono text-zinc-400">{formatDate(info.getValue())}</span>,
+    },
+    {
       header: '👥 CLIENTE',
-      cell: info => (
+      accessorKey: 'cliente',
+      id: 'cliente',
+      cell: (info: any) => (
         <div className="flex items-center gap-2 group-hover/row:translate-x-1 transition-transform">
           <User size={12} className="text-zinc-600" />
           <span className="text-xs font-bold text-white group-hover/row:text-orange-400 transition-colors">
@@ -101,75 +108,78 @@ export default function VendasTable() {
         </div>
       ),
       minSize: 220,
-    }),
-    columnHelper.accessor('vendedor', {
+    },
+    {
       header: '👤 VENDEDOR',
-      cell: info => <span className="text-[11px] text-zinc-400 font-medium">{getVendedorNome(info.getValue())}</span>,
+      accessorKey: 'vendedor',
+      cell: (info: any) => <span className="text-[11px] text-zinc-400 font-medium">{getVendedorNome(info.getValue())}</span>,
       minSize: 150,
-    }),
-    columnHelper.accessor('pedido', {
+    },
+    {
       header: '📦 PEDIDO',
-      cell: info => <span className="text-[11px] font-black text-orange-500/80 bg-orange-500/5 px-2 py-0.5 rounded-lg border border-orange-500/10">#{info.getValue()}</span>,
-    }),
-    columnHelper.accessor('nf', {
+      accessorKey: 'pedido',
+      cell: (info: any) => <span className="text-[11px] font-black text-orange-500/80 bg-orange-500/5 px-2 py-0.5 rounded-lg border border-orange-500/10">#{info.getValue()}</span>,
+    },
+    {
       header: '📄 NF',
-      cell: info => <span className="text-[11px] text-zinc-500 font-mono">{info.getValue() || '---'}</span>,
-    }),
-    columnHelper.accessor('produto', {
+      accessorKey: 'nf',
+      cell: (info: any) => <span className="text-[11px] text-zinc-500 font-mono">{info.getValue() || '---'}</span>,
+    },
+    {
       header: '🛒 PRODUTO',
-      cell: info => (
+      accessorKey: 'produto',
+      cell: (info: any) => (
         <div className="flex items-center gap-2">
           <Package size={12} className="text-zinc-600" />
           <span className="text-xs font-medium text-zinc-300 truncate max-w-[180px]">{info.getValue()}</span>
         </div>
       ),
       minSize: 200,
-    }),
-    columnHelper.accessor('und', {
+    },
+    {
       header: '📦 UND',
-      cell: info => <span className="text-[11px] font-bold text-zinc-500 uppercase">{info.getValue()}</span>,
-    }),
-    columnHelper.accessor('valorVenda', {
+      accessorKey: 'und',
+      cell: (info: any) => <span className="text-[11px] font-bold text-zinc-500 uppercase">{info.getValue()}</span>,
+    },
+    {
       header: '💰 VALOR VENDA',
-      cell: info => <span className="text-xs font-bold text-emerald-400">{formatCurrency(info.getValue())}</span>,
-    }),
-    columnHelper.accessor('condPagto', {
+      accessorKey: 'valorVenda',
+      cell: (info: any) => <span className="text-xs font-bold text-emerald-400">{formatCurrency(info.getValue())}</span>,
+    },
+    {
       header: '💳 COND. PAGTO.',
-      cell: info => <span className="text-[11px] text-zinc-400 font-medium italic">{info.getValue()}</span>,
-    }),
-    columnHelper.accessor('frete', {
+      accessorKey: 'condPagto',
+      cell: (info: any) => <span className="text-[11px] text-zinc-400 font-medium italic">{info.getValue()}</span>,
+    },
+    {
       header: '🚚 FRETE',
-      cell: info => <span className="text-[11px] text-zinc-500">{formatCurrency(info.getValue())}</span>,
-    }),
-    columnHelper.accessor('percComissao', {
+      accessorKey: 'frete',
+      cell: (info: any) => <span className="text-[11px] text-zinc-500">{formatCurrency(info.getValue())}</span>,
+    },
+    {
       header: '📈 COMS. %',
-      cell: info => <span className="text-[11px] font-bold text-indigo-400">{info.getValue()}%</span>,
-    }),
-    columnHelper.accessor('valorTotal', {
+      accessorKey: 'percComissao',
+      cell: (info: any) => <span className="text-[11px] font-bold text-indigo-400">{info.getValue()}%</span>,
+    },
+    {
       header: '🎯 VALOR TOTAL',
-      cell: info => <span className="text-xs font-black text-white">{formatCurrency(info.getValue())}</span>,
-    }),
-    columnHelper.accessor('formaPg', {
+      accessorKey: 'valorTotal',
+      cell: (info: any) => <span className="text-xs font-black text-white">{formatCurrency(info.getValue())}</span>,
+    },
+    {
       header: '🏦 FORMA PG',
-      cell: info => <span className="text-[11px] text-zinc-400 uppercase tracking-tighter">{info.getValue()}</span>,
-    }),
-    columnHelper.accessor('banco', {
+      accessorKey: 'formaPg',
+      cell: (info: any) => <span className="text-[11px] text-zinc-400 uppercase tracking-tighter">{info.getValue()}</span>,
+    },
+    {
       header: '🏛️ BANCO',
-      cell: info => <span className="text-[10px] text-zinc-500 font-medium">{getContaNome(info.getValue())}</span>,
-    }),
-    columnHelper.accessor('parcela1.valor', {
-      id: 'parcela1',
-      header: '💰 Parcela 1',
-      cell: info => <span className="text-[11px] font-bold text-amber-500/80">{info.getValue() ? formatCurrency(info.getValue() as number) : '---'}</span>,
-    }),
-    columnHelper.accessor('parcela1.vencimento', {
-        id: 'venc1',
-        header: '📅 Venc. 1',
-        cell: info => <span className="text-[10px] font-mono text-zinc-500">{info.getValue() ? formatDate(info.getValue() as string) : '---'}</span>,
-    }),
-    columnHelper.accessor('vencimentoStatus', {
+      accessorKey: 'banco',
+      cell: (info: any) => <span className="text-[10px] text-zinc-500 font-medium">{getContaNome(info.getValue())}</span>,
+    },
+    {
       header: '🚦 Status Venc.',
-      cell: info => {
+      accessorKey: 'vencimentoStatus',
+      cell: (info: any) => {
         const status = formatEtapa(info.getValue());
         return (
           <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-tighter border ${status.color}`}>
@@ -177,39 +187,50 @@ export default function VendasTable() {
           </span>
         );
       },
-    }),
-    columnHelper.accessor('parcela2.valor', {
-      id: 'parcela2',
+    },
+    {
+      header: '💰 Parcela 1',
+      accessorKey: 'parcela1.valor',
+      cell: (info: any) => <span className="text-[11px] font-bold text-amber-500/80">{info.getValue() ? formatCurrency(info.getValue() as number) : '---'}</span>,
+    },
+    {
+      header: '📅 Venc. 1',
+      accessorKey: 'parcela1.vencimento',
+      cell: (info: any) => <span className="text-[10px] font-mono text-zinc-500">{info.getValue() ? formatDate(info.getValue() as string) : '---'}</span>,
+    },
+    {
       header: '💰 Parcela 2',
-      cell: info => <span className="text-[11px] font-bold text-amber-500/80">{info.getValue() ? formatCurrency(info.getValue() as number) : '---'}</span>,
-    }),
-    columnHelper.accessor('parcela2.vencimento', {
-        id: 'venc2',
-        header: '📅 Venc. 2',
-        cell: info => <span className="text-[10px] font-mono text-zinc-500">{info.getValue() ? formatDate(info.getValue() as string) : '---'}</span>,
-    }),
-    columnHelper.accessor('parcela3.valor', {
-      id: 'parcela3',
+      accessorKey: 'parcela2.valor',
+      cell: (info: any) => <span className="text-[11px] font-bold text-amber-500/80">{info.getValue() ? formatCurrency(info.getValue() as number) : '---'}</span>,
+    },
+    {
+      header: '📅 Venc. 2',
+      accessorKey: 'parcela2.vencimento',
+      cell: (info: any) => <span className="text-[10px] font-mono text-zinc-500">{info.getValue() ? formatDate(info.getValue() as string) : '---'}</span>,
+    },
+    {
       header: '💰 Parcela 3',
-      cell: info => <span className="text-[11px] font-bold text-amber-500/80">{info.getValue() ? formatCurrency(info.getValue() as number) : '---'}</span>,
-    }),
-    columnHelper.accessor('parcela3.vencimento', {
-        id: 'venc3',
-        header: '📅 Venc. 3',
-        cell: info => <span className="text-[10px] font-mono text-zinc-500">{info.getValue() ? formatDate(info.getValue() as string) : '---'}</span>,
-    }),
-    columnHelper.accessor('statusComissao', {
+      accessorKey: 'parcela3.valor',
+      cell: (info: any) => <span className="text-[11px] font-bold text-amber-500/80">{info.getValue() ? formatCurrency(info.getValue() as number) : '---'}</span>,
+    },
+    {
+      header: '📅 Venc. 3',
+      accessorKey: 'parcela3.vencimento',
+      cell: (info: any) => <span className="text-[10px] font-mono text-zinc-500">{info.getValue() ? formatDate(info.getValue() as string) : '---'}</span>,
+    },
+    {
       header: '🎗️ Status Comissão',
-      cell: info => (
+      accessorKey: 'statusComissao',
+      cell: (info: any) => (
         <span className="px-2 py-1 rounded-lg bg-orange-500/10 text-orange-400 text-[9px] font-black uppercase border border-orange-500/20">
           {info.getValue()}
         </span>
       ),
-    }),
-    columnHelper.display({
+    },
+    {
       id: 'actions',
       header: '⚡ AÇÕES',
-      cell: info => (
+      cell: (info: any) => (
         <button 
           onClick={() => router.push(`/vendas/${info.row.original.id_linha}`)}
           className="p-2 rounded-lg bg-zinc-800/50 hover:bg-orange-500/20 text-zinc-400 hover:text-orange-400 transition-colors border border-zinc-700/50 hover:border-orange-500/30 group"
@@ -218,8 +239,7 @@ export default function VendasTable() {
           <Eye size={16} className="group-hover:scale-110 transition-transform" />
         </button>
       ),
-      meta: { align: 'right' }
-    }),
+    },
   ], [getClienteNome, getVendedorNome, getContaNome, router]);
 
   const table = useReactTable({
@@ -227,18 +247,30 @@ export default function VendasTable() {
     columns,
     state: {
       sorting,
+      columnFilters,
       columnVisibility,
+      columnPinning,
     },
     onSortingChange: (updater) => {
       const newSorting = typeof updater === 'function' ? updater(sorting) : updater;
       setSorting(newSorting);
     },
+    onColumnFiltersChange: (updater) => {
+      const newFilters = typeof updater === 'function' ? updater(columnFilters) : updater;
+      setColumnFilters(newFilters);
+    },
     onColumnVisibilityChange: (updater) => {
       const newVisibility = typeof updater === 'function' ? updater(columnVisibility) : updater;
       setColumnVisibility(newVisibility);
     },
+    onColumnPinningChange: (updater) => {
+      const newPinning = typeof updater === 'function' ? updater(columnPinning) : updater;
+      setColumnPinning(newPinning);
+    },
     getCoreRowModel: getCoreRowModel(),
     manualSorting: true,
+    manualFiltering: true,
+    columnResizeMode: 'onChange',
   });
 
   const handleExport = () => {
@@ -370,8 +402,22 @@ export default function VendasTable() {
                     <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Filtros Avançados</span>
                     <button onClick={() => setShowFilters(false)} className="text-zinc-500 hover:text-white"><X size={16} /></button>
                  </div>
-                 
-                 <div className="space-y-6 max-h-[450px] overflow-y-auto pr-2 custom-scrollbar">
+
+                  {/* Column Filter Toggle Switch */}
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-950 border border-zinc-800/50 mb-6 group/switch">
+                    <div className="flex items-center gap-2">
+                       <Settings2 size={14} className="text-zinc-500 group-hover/switch:text-orange-400 transition-colors" />
+                       <span className="text-xs font-medium text-zinc-300">Exibir Filtros por Coluna</span>
+                    </div>
+                    <button 
+                      onClick={() => setShowColumnFilters(!showColumnFilters)}
+                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-all focus:outline-none ring-offset-zinc-950 ${showColumnFilters ? 'bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.3)]' : 'bg-zinc-800'}`}
+                    >
+                      <span className={`pointer-events-none block h-3.5 w-3.5 rounded-full bg-white shadow-lg ring-0 transition-transform ${showColumnFilters ? 'translate-x-[18px]' : 'translate-x-[2px]'}`} />
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-6 max-h-[450px] overflow-y-auto pr-2 custom-scrollbar">
                     <div className="space-y-3">
                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest pl-1">Data (Presets)</label>
                        <div className="grid grid-cols-2 gap-2">
@@ -448,6 +494,7 @@ export default function VendasTable() {
               </div>
             )}
           </div>
+
 
           <button 
             onClick={handleExport}
@@ -535,28 +582,71 @@ export default function VendasTable() {
         <div className="overflow-x-auto">
           <table className="w-max min-w-full text-left border-collapse">
             <thead>
-              {table.getHeaderGroups().map(headerGroup => (
+              {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id} className="border-b border-zinc-800/50 bg-zinc-900/20">
-                  {headerGroup.headers.map(header => (
-                    <th 
-                      key={header.id} 
-                      className={`py-5 px-5 text-[9px] font-black text-zinc-500 uppercase tracking-widest font-sans whitespace-nowrap select-none ${header.column.getCanSort() ? 'cursor-pointer hover:bg-orange-500/5 hover:text-orange-400 transition-colors' : ''}`}
-                      style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
-                      onClick={header.column.getToggleSortingHandler()}
-                    >
-                      <div className="flex items-center gap-2">
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                        {header.column.getCanSort() && (
-                          <div className="text-orange-500/50 transition-colors">
-                            {{
-                              asc: <ArrowUp className="w-3 h-3 text-orange-400" />,
-                              desc: <ArrowDown className="w-3 h-3 text-orange-400" />,
-                            }[header.column.getIsSorted() as string] ?? <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100" />}
+                  {headerGroup.headers.map(header => {
+                    const isPinned = header.column.getIsPinned();
+                    
+                    const pinningStyles: React.CSSProperties = isPinned ? {
+                      position: 'sticky',
+                      left: isPinned === 'left' ? `${header.column.getStart('left')}px` : undefined,
+                      right: isPinned === 'right' ? `${header.column.getAfter('right')}px` : undefined, 
+                      zIndex: 30,
+                      backgroundColor: 'rgb(24, 24, 27)', // zinc-900
+                    } : {
+                      // Se o cabeçalho não for fixo lateralmente, ele ainda deve ser fixo no topo
+                      position: 'sticky',
+                      top: 0,
+                      zIndex: 10,
+                      backgroundColor: 'rgb(24, 24, 27)',
+                    };
+
+                    return (
+                      <th 
+                        key={header.id} 
+                        colSpan={header.colSpan}
+                        className={`py-4 px-5 text-[9px] font-black text-zinc-500 uppercase tracking-widest font-sans whitespace-nowrap select-none transition-colors 
+                          ${header.column.getCanSort() ? 'cursor-pointer hover:bg-orange-500/5 hover:text-orange-400' : ''} 
+                          ${isPinned ? 'shadow-[2px_0_10px_rgba(0,0,0,0.5)] z-40' : ''}`}
+                        style={{ 
+                          width: header.getSize() !== 150 ? header.getSize() : undefined,
+                          ...pinningStyles
+                        }}
+                      >
+                        <div className="flex flex-col gap-2">
+                          <div 
+                            className="flex items-center gap-2" 
+                            onClick={header.column.getToggleSortingHandler()}
+                          >
+                            {flexRender(header.column.columnDef.header, header.getContext())}
+                            {header.column.getCanSort() && (
+                              <div className="text-orange-500/50 transition-colors">
+                                {{
+                                  asc: <ArrowUp className="w-3 h-3 text-orange-400" />,
+                                  desc: <ArrowDown className="w-3 h-3 text-orange-400" />,
+                                }[header.column.getIsSorted() as string] ?? <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100" />}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    </th>
-                  ))}
+                          
+                          {/* Column Filter */}
+                          {header.column.getCanFilter() && showColumnFilters && (
+                            <div className="relative group/filter mt-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                              <Search size={10} className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within/filter:text-orange-500 transition-colors" />
+                              <input
+                                type="text"
+                                value={(header.column.getFilterValue() ?? '') as string}
+                                onChange={e => header.column.setFilterValue(e.target.value)}
+                                placeholder="Filtrar..."
+                                onClick={e => e.stopPropagation()}
+                                className="w-full bg-zinc-950/50 border border-zinc-800 rounded-md py-1.5 pl-7 pr-2 text-[9px] font-medium text-zinc-400 placeholder:text-zinc-700 outline-none focus:border-orange-500/30 transition-all focus:bg-zinc-900"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </th>
+                    );
+                  })}
                 </tr>
               ))}
             </thead>
@@ -590,11 +680,27 @@ export default function VendasTable() {
                     key={row.id} 
                     className="group/row hover:bg-orange-500/[0.03] transition-all duration-300"
                   >
-                    {row.getVisibleCells().map(cell => (
-                      <td key={cell.id} className="py-4 px-5 whitespace-nowrap">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
+                    {row.getVisibleCells().map(cell => {
+                      const isPinned = cell.column.getIsPinned();
+                      const pinningStyles: React.CSSProperties = isPinned ? {
+                        position: 'sticky',
+                        left: isPinned === 'left' ? `${cell.column.getStart('left')}px` : undefined,
+                        right: isPinned === 'right' ? `${cell.column.getAfter('right')}px` : undefined,
+                        zIndex: 10,
+                        backgroundColor: 'rgba(9, 9, 11, 0.95)', // bg-zinc-950 com opacidade
+                        backdropFilter: 'blur(8px)',
+                      } : {};
+
+                      return (
+                        <td 
+                          key={cell.id} 
+                          className={`py-4 px-5 whitespace-nowrap border-b border-zinc-800/10 ${isPinned ? 'shadow-[2px_0_5px_rgba(0,0,0,0.3)]' : ''}`}
+                          style={pinningStyles}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))
               )}
@@ -603,9 +709,24 @@ export default function VendasTable() {
         </div>
 
         <div className="px-6 py-4 border-t border-zinc-800/50 bg-zinc-900/30 flex flex-col sm:flex-row items-center justify-between gap-4">
-           <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
-            Mostrando <span className="text-white">{table.getRowModel().rows.length}</span> de <span className="text-white">{data?.totalRegistros || 0}</span> pedidos
-          </p>
+           <div className="flex items-center gap-6">
+              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
+                Mostrando <span className="text-white">{table.getRowModel().rows.length}</span> de <span className="text-white">{data?.totalRegistros || 0}</span> pedidos
+              </p>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Linhas:</span>
+                <select 
+                  value={pageSize}
+                  onChange={e => setPageSize(Number(e.target.value))}
+                  className="bg-zinc-950 border border-zinc-800 rounded-lg px-2 py-1 text-[10px] font-bold text-zinc-400 outline-none focus:border-orange-500/50 transition-colors"
+                >
+                  {[10, 20, 50, 100].map(size => (
+                    <option key={size} value={size}>{size}</option>
+                  ))}
+                </select>
+              </div>
+           </div>
           <Pagination 
             currentPage={currentPage}
             totalPaginas={data?.totalPaginas || 1}

@@ -51,7 +51,7 @@ function DataField({ label, value, className = 'text-zinc-300', large = false }:
 }
 
 function RecentOrdersSection({ clienteOmieId }: { clienteOmieId: number }) {
-  const { data, isLoading } = useVendasQuery(1, '', [], { clienteOmieId });
+  const { data, isLoading } = useVendasQuery(1, 10, '', [], [], { clienteOmieId });
   const router = useRouter();
   const orders = data?.vendas?.slice(0, 5) || [];
 

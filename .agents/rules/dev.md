@@ -1,5 +1,5 @@
 ---
-trigger: always_on
+trigger: model_decision
 ---
 
 # Tabatine — Regras do Workspace (AI Instructions)
