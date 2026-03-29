@@ -41,7 +41,7 @@ export default function NfTable() {
     const s = status?.toLowerCase();
     if (s === 'faturado' || s === 'concluido' || s === 'f' || s === 'autorizado' || s === 'a') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-[10px] font-black tracking-tight uppercase shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 dark:bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 rounded-full text-[10px] font-black tracking-tight uppercase ">
           <CheckCircle2 size={10} />
           {status}
         </span>
@@ -49,7 +49,7 @@ export default function NfTable() {
     }
     if (s === 'cancelado' || s === 'c') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-full text-[10px] font-black tracking-tight uppercase shadow-[0_0_15px_rgba(244,63,94,0.1)]">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 rounded-full text-[10px] font-black tracking-tight uppercase ">
           <XCircle size={10} />
           {status}
         </span>
@@ -57,14 +57,14 @@ export default function NfTable() {
     }
     if (s === 'denegado' || s === 'd') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-500/10 text-orange-400 border border-orange-500/20 rounded-full text-[10px] font-black tracking-tight uppercase shadow-[0_0_15px_rgba(249,115,22,0.1)]">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-500/20 rounded-full text-[10px] font-black tracking-tight uppercase ">
           <Ban size={10} />
           {status}
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full text-[10px] font-black tracking-tight uppercase shadow-[0_0_15px_rgba(245,158,11,0.1)]">
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 rounded-full text-[10px] font-black tracking-tight uppercase ">
         <Clock size={10} />
         {status || 'Pendente'}
       </span>
@@ -119,7 +119,7 @@ export default function NfTable() {
     }),
     columnHelper.accessor('valor_total_nf', {
       header: 'Valor Líquido',
-      cell: info => <span className="text-sm font-black text-white group-hover/row:text-blue-400 transition-colors">{formatCurrency(info.getValue())}</span>,
+      cell: info => <span className="text-sm font-black text-white group-hover/row:text-blue-600 dark:text-blue-400 transition-colors">{formatCurrency(info.getValue())}</span>,
       meta: { align: 'right' }
     }),
     columnHelper.accessor('status_nf', {
@@ -156,7 +156,7 @@ export default function NfTable() {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
+            <div className="p-2 bg-blue-50 dark:bg-blue-500/10 rounded-lg text-blue-400">
               <FileText size={20} />
             </div>
             <h2 className="text-2xl font-bold text-white tracking-tight">
@@ -174,13 +174,13 @@ export default function NfTable() {
               placeholder="Localizar NF-e ou cliente..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2.5 bg-zinc-900/40 border border-zinc-800 focus:border-blue-500/40 rounded-xl text-sm placeholder:text-zinc-600 outline-none w-full lg:w-72 transition-all focus:ring-4 focus:ring-blue-500/5 backdrop-blur-sm"
+              className="pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-zinc-900/40 border border-slate-200 dark:border-zinc-800 focus:border-blue-500/40 rounded-xl text-sm placeholder:text-slate-400 dark:placeholder:text-zinc-600 outline-none w-full lg:w-72 transition-all focus:ring-4 focus:ring-blue-500/5 backdrop-blur-sm"
             />
           </div>
           <button 
             onClick={() => refetch()} 
             disabled={isLoading}
-            className="p-2.5 bg-zinc-900/40 border border-zinc-800 hover:border-zinc-700 rounded-xl text-zinc-400 hover:text-white transition-all active:scale-95 disabled:opacity-50 group backdrop-blur-sm"
+            className="p-2.5 bg-slate-50 dark:bg-zinc-900/40 border border-slate-200 dark:border-zinc-800 hover:border-zinc-700 rounded-xl text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-all active:scale-95 disabled:opacity-50 group backdrop-blur-sm"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-blue-400' : 'group-hover:rotate-180 transition-transform duration-700'}`} />
           </button>
@@ -189,25 +189,25 @@ export default function NfTable() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-blue-500/30 transition-all">
+        <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900/30 shadow-sm dark:shadow-none border border-slate-200 dark:border-slate-200 dark:border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-blue-500/30 transition-all">
           <div className="flex justify-between items-start mb-4">
             <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">NF-e Processadas</span>
-            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
+            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-400">
               <Hash size={16} />
             </div>
           </div>
           <div>
-            <p className="text-3xl font-bold text-white tracking-tighter">{data?.totalRegistros || 0}</p>
+            <p className="text-3xl font-bold text-slate-900 dark:text-white tracking-tighter">{data?.totalRegistros || 0}</p>
             <div className="flex items-center gap-1 mt-1">
               <span className="text-[10px] text-zinc-500">Sincronização Ativa</span>
             </div>
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-emerald-500/30 transition-all">
+        <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900/30 shadow-sm dark:shadow-none border border-slate-200 dark:border-slate-200 dark:border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-emerald-500/30 transition-all">
           <div className="flex justify-between items-start mb-4">
             <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Total Faturado</span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-400">
               <DollarSign size={16} />
             </div>
           </div>
@@ -217,10 +217,10 @@ export default function NfTable() {
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-indigo-500/30 transition-all">
+        <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900/30 shadow-sm dark:shadow-none border border-slate-200 dark:border-slate-200 dark:border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-indigo-500/30 transition-all">
           <div className="flex justify-between items-start mb-4">
             <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Impostos (Pág.)</span>
-            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+            <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
               <ShieldCheck size={16} />
             </div>
           </div>
@@ -247,12 +247,12 @@ export default function NfTable() {
       )}
 
       {/* Table Container */}
-      <div className="group relative rounded-3xl border border-zinc-800/50 bg-zinc-950/20 backdrop-blur-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+      <div className="group relative rounded-3xl border border-slate-200 dark:border-slate-200 dark:border-zinc-800/50 bg-white dark:bg-zinc-950/20 backdrop-blur-2xl overflow-hidden shadow-sm dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               {table.getHeaderGroups().map(headerGroup => (
-                <tr key={headerGroup.id} className="border-b border-zinc-800/50 bg-zinc-900/20">
+                <tr key={headerGroup.id} className="border-b border-slate-200 dark:border-slate-200 dark:border-zinc-800/50 bg-slate-50 dark:bg-zinc-900/20">
                   {headerGroup.headers.map(header => (
                     <th 
                       key={header.id} 
@@ -283,7 +283,7 @@ export default function NfTable() {
                 <tr>
                   <td colSpan={columns.length} className="py-24 px-6 text-center">
                     <div className="flex flex-col items-center justify-center gap-4">
-                      <div className="w-16 h-16 rounded-full bg-zinc-900/50 border border-zinc-800 flex items-center justify-center text-zinc-700">
+                      <div className="w-16 h-16 rounded-full bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 flex items-center justify-center text-zinc-700">
                         <FileText size={32} />
                       </div>
                       <p className="text-zinc-400 font-medium">Nenhum registro sincronizado</p>

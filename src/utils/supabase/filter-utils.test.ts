@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
-import { escapeFilterValue } from './filter-utils.ts';
+import { escapeFilterValue } from './filter-utils';
 
 test('escapeFilterValue', async (t) => {
   await t.test('wraps simple string in double quotes', () => {

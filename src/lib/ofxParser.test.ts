@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert';
-import { categorize, CATEGORY_MAP } from './ofxParser.ts';
+import { categorize, CATEGORY_MAP } from './ofxParser';
 
 describe('ofxParser - categorize', () => {
   test('should categorize keywords correctly', () => {
