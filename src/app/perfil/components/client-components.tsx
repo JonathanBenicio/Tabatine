@@ -1,28 +1,21 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { LogOut, Send, CheckCircle2, RefreshCw, Bell, AlertCircle } from 'lucide-react';
 import { toggleReceiveLogsAction } from '../actions';
-import { createClient } from '@/utils/supabase/client';
+import { logout } from '@/app/auth/actions';
 
 export function LogoutButton() {
-  const router = useRouter();
-  const supabase = createClient();
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/auth/login');
-  };
-
   return (
-    <button 
-      onClick={handleLogout}
-      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium text-rose-400 hover:bg-rose-500/10 transition-colors"
-    >
-      <LogOut size={16} />
-      Sair da Conta
-    </button>
+    <form action={logout} className="w-full">
+      <button 
+        type="submit"
+        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium text-rose-400 hover:bg-rose-500/10 transition-colors"
+      >
+        <LogOut size={16} />
+        Sair da Conta
+      </button>
+    </form>
   );
 }
 

@@ -51,3 +51,12 @@ export async function requestPasswordReset(formData: FormData) {
 
   redirect('/auth/forgot-password?success=Email+enviado+com+sucesso')
 }
+
+export async function logout() {
+  const supabase = await createClient()
+  await supabase.auth.signOut()
+  
+  // Clear layout cache and redirect to login
+  revalidatePath('/', 'layout')
+  redirect('/auth/login')
+}

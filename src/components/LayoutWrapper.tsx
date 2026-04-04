@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { NotificationCenter } from './NotificationCenter';
 import { ThemeToggle } from './ThemeToggle';
+import { logout } from '@/app/auth/actions';
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -243,16 +244,16 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
             <Settings className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />
             {!isSidebarCollapsed && <span className="text-sm font-medium">Configurações</span>}
           </Link>
-          <button 
-            onClick={() => {
-              // Lógica de logout pode ser adicionada aqui
-            }}
-            title={isSidebarCollapsed ? "Sair" : undefined} 
-            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl text-rose-400/70 hover:text-rose-400 hover:bg-rose-500/10 transition-all group`}
-          >
-            <LogOut className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />
-            {!isSidebarCollapsed && <span className="text-sm font-medium text-left">Sair</span>}
-          </button>
+          <form action={logout} className="w-full">
+            <button 
+              type="submit"
+              title={isSidebarCollapsed ? "Sair" : undefined} 
+              className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl text-rose-400/70 hover:text-rose-400 hover:bg-rose-500/10 transition-all group`}
+            >
+              <LogOut className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />
+              {!isSidebarCollapsed && <span className="text-sm font-medium text-left">Sair</span>}
+            </button>
+          </form>
         </div>
       </aside>
 
