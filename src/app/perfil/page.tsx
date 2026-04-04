@@ -1,103 +1,27 @@
-'use client';
-
-import React, { useEffect, useState } from 'react';
-import { createClient } from '@/utils/supabase/client';
+import React from 'react';
+import { createClient } from '@/utils/supabase/server';
 import { 
-  User, 
   Mail, 
   ShieldCheck, 
   Send, 
-  RefreshCw, 
-  LogOut, 
-  Bell, 
-  AlertCircle,
-  CheckCircle2,
-  ExternalLink,
-  Shield
+  AlertCircle
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { redirect } from 'next/navigation';
+import { LogoutButton, TelegramIntegration, ReceiveLogsToggle } from './components/client-components';
 
-export default function PerfilPage() {
-  const supabase = createClient();
-  const router = useRouter();
+export default async function PerfilPage() {
+  const supabase = await createClient();
   
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [profile, setProfile] = useState<any>(null);
-  const [user, setUser] = useState<any>(null);
-  const [telegramLoading, setTelegramLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          router.push('/auth/login');
-          return;
-        }
-        setUser(user);
-
-        const { data: profile } = await supabase
-          .from('perfis')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        setProfile(profile);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, [supabase, router]);
-
-  const handleTelegramLink = async () => {
-    setTelegramLoading(true);
-    setError(null);
-    try {
-      const resp = await fetch('/api/telegram/generate-link', { method: 'POST' });
-      const data = await resp.json();
-      if (data.link) {
-        window.open(data.link, '_blank');
-      } else {
-        setError(data.error || 'Erro ao gerar link.');
-      }
-    } catch (err) {
-      setError('Erro de conexão.');
-    } finally {
-      setTelegramLoading(false);
-    }
-  };
-
-  const toggleReceiveLogs = async () => {
-    if (!profile) return;
-    setSaving(true);
-    try {
-      const newValue = !profile.receive_logs;
-      const { error } = await supabase
-        .from('perfis')
-        .update({ receive_logs: newValue, updated_at: new Date().toISOString() })
-        .eq('id', user.id);
-
-      if (error) throw error;
-      setProfile({ ...profile, receive_logs: newValue });
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <RefreshCw className="w-8 h-8 text-blue-500 animate-spin" />
-      </div>
-    );
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    redirect('/auth/login');
   }
+
+  const { data: profile } = await supabase
+    .from('perfis')
+    .select('*')
+    .eq('id', user.id)
+    .single();
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
@@ -125,13 +49,7 @@ export default function PerfilPage() {
               {user?.email}
             </p>
             <div className="mt-6 w-full pt-6 border-t border-zinc-800/50">
-               <button 
-                onClick={() => supabase.auth.signOut().then(() => router.push('/auth/login'))}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium text-rose-400 hover:bg-rose-500/10 transition-colors"
-               >
-                 <LogOut size={16} />
-                 Sair da Conta
-               </button>
+               <LogoutButton />
             </div>
           </div>
 
@@ -163,82 +81,10 @@ export default function PerfilPage() {
             </div>
 
             <div className="relative">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500">
-                    <Send size={24} />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white">Telegram Integration</h3>
-                    <p className="text-sm text-zinc-500">Receba alertas em tempo real no seu celular.</p>
-                  </div>
-                </div>
+              <TelegramIntegration profile={profile} />
 
-                {profile?.telegram_chat_id ? (
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
-                    <CheckCircle2 size={14} />
-                    Conectado
-                  </span>
-                ) : (
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-zinc-800 text-zinc-500 border border-zinc-700">
-                    Desconectado
-                  </span>
-                )}
-              </div>
-
-              <div className="space-y-6">
-                <div className="bg-zinc-950/50 rounded-2xl p-6 border border-zinc-800/30">
-                  {profile?.telegram_chat_id ? (
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-bold text-white">Chat ID vinculado</p>
-                        <p className="text-xs text-zinc-500 mt-1 font-mono">{profile.telegram_chat_id}</p>
-                      </div>
-                      <button 
-                        onClick={handleTelegramLink}
-                        disabled={telegramLoading}
-                        className="text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
-                      >
-                        {telegramLoading ? <RefreshCw size={12} className="animate-spin" /> : <RefreshCw size={12} />}
-                        Alterar Vínculo
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4 text-center py-4">
-                      <p className="text-sm text-zinc-400 max-w-sm mx-auto">
-                        Para começar a receber notificações, você precisa vincular sua conta ao nosso Bot oficial.
-                      </p>
-                      <button 
-                        onClick={handleTelegramLink}
-                        disabled={telegramLoading}
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-500/20 active:scale-95"
-                      >
-                        {telegramLoading ? <RefreshCw size={18} className="animate-spin" /> : <Send size={18} />}
-                        Vincular Conta Agora
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between px-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-zinc-800/50 flex items-center justify-center text-zinc-400">
-                      <Bell size={18} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-white">Logs do Sistema</p>
-                      <p className="text-xs text-zinc-500 tracking-tight">Receba erros e avisos técnicos em tempo real.</p>
-                    </div>
-                  </div>
-                  
-                  <button 
-                    onClick={toggleReceiveLogs}
-                    disabled={saving || !profile?.telegram_chat_id}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${profile?.receive_logs ? 'bg-blue-600' : 'bg-zinc-700'} ${(!profile?.telegram_chat_id || saving) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                  >
-                    <span className={`${profile?.receive_logs ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
-                  </button>
-                </div>
+              <div className="space-y-6 mt-6">
+                <ReceiveLogsToggle profile={profile} userId={user.id} />
               </div>
             </div>
           </div>
@@ -255,13 +101,7 @@ export default function PerfilPage() {
                 </div>
              </div>
           </div>
-
-          {error && (
-            <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center gap-3 text-rose-400 animate-in slide-in-from-top-4">
-              <AlertCircle size={20} />
-              <p className="text-xs font-medium">{error}</p>
-            </div>
-          )}
+          
         </div>
       </div>
     </div>
