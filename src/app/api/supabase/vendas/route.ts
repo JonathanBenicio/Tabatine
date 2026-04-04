@@ -29,18 +29,18 @@ export async function GET(req: Request) {
     // Map frontend field name to DB column name
     // Map frontend field name to DB column name for filtering/sorting
     const VENDA_COLUMN_MAP: Record<string, string> = {
-      data: 'DataInclusao',
-      pedido: 'NumeroPedido',
-      numeroPedido: 'NumeroPedido',
-      cliente: 'Clientes.Nome',
-      vendedor: 'Vendedores.Nome',
-      valorTotal: 'ValorTotal',
-      etapa: 'Etapa',
-      nf: 'NotasFiscais.NumeroNf',
-      formaPg: 'MeioPagamento',
-      banco: 'ContasCorrente.Descricao',
-      vencimentoStatus: 'Etapa',
-      produto: 'ItensPedido.Produtos.Descricao',
+      data: 'data_inclusao',
+      pedido: 'numero_pedido',
+      numeroPedido: 'numero_pedido',
+      cliente: 'clientes.nome_fantasia',
+      vendedor: 'vendedores.nome',
+      valorTotal: 'valor_total',
+      etapa: 'etapa',
+      nf: 'notas_fiscais.numero_nf',
+      formaPg: 'meio_pagamento',
+      banco: 'contas_corrente.descricao',
+      vencimentoStatus: 'etapa',
+      produto: 'itens_pedido.produtos.descricao',
     };
     const sortField = VENDA_COLUMN_MAP[sortFieldFront] || sortFieldFront;
 
@@ -54,7 +54,7 @@ export async function GET(req: Request) {
         value 
       }));
 
-    const searchFilterIds: { cliente?: number[]; vendedor?: number[]; banco?: number[] } = {};
+    const searchFilterIds: { cliente?: string[]; vendedor?: string[]; banco?: string[] } = {};
 
     if (search || activeFilters.some(f => ['cliente', 'vendedor', 'banco'].includes(f.field))) {
       const escapedSearch = escapeFilterValue(`%${search}%`);
@@ -62,67 +62,67 @@ export async function GET(req: Request) {
       // Lookup Clientes matching search or specific client filter
       const clientFilter = activeFilters.find(f => f.field === 'cliente');
       if (search || clientFilter) {
-        let clientQuery = supabase.from('Clientes').select('Id');
+        let clientQuery = supabase.from('clientes').select('id');
         if (clientFilter) {
-          clientQuery = clientQuery.ilike('Nome', `%${clientFilter.value}%`);
+          clientQuery = clientQuery.ilike('nome_fantasia', `%${clientFilter.value}%`);
         } else {
-          clientQuery = clientQuery.or(`RazaoSocial.ilike.${escapedSearch},NomeFantasia.ilike.${escapedSearch},Nome.ilike.${escapedSearch}`);
+          clientQuery = clientQuery.or(`razao_social.ilike.${escapedSearch},nome_fantasia.ilike.${escapedSearch},nome.ilike.${escapedSearch}`);
         }
         const { data: cData } = await clientQuery;
-        if (cData) searchFilterIds.cliente = cData.map(c => (c as any).Id);
+        if (cData) searchFilterIds.cliente = cData.map(c => (c as any).id);
       }
 
       // Lookup Vendedores matching search or specific vendor filter
       const vendorFilter = activeFilters.find(f => f.field === 'vendedor');
       if (search || vendorFilter) {
-        let vendorQuery = supabase.from('Vendedores').select('Id');
+        let vendorQuery = supabase.from('vendedores').select('id');
         if (vendorFilter) {
-          vendorQuery = vendorQuery.ilike('Nome', `%${vendorFilter.value}%`);
+          vendorQuery = vendorQuery.ilike('nome', `%${vendorFilter.value}%`);
         } else {
-          vendorQuery = vendorQuery.ilike('Nome', escapedSearch);
+          vendorQuery = vendorQuery.ilike('nome', escapedSearch);
         }
         const { data: vData } = await vendorQuery;
-        if (vData) searchFilterIds.vendedor = vData.map(v => (v as any).Id);
+        if (vData) searchFilterIds.vendedor = vData.map(v => (v as any).id);
       }
 
       // Lookup Bancos matching banco filter
       const bancoFilter = activeFilters.find(f => f.field === 'banco');
       if (bancoFilter) {
-        const { data: bData } = await supabase.from('ContasCorrente').select('Id').ilike('Descricao', `%${bancoFilter.value}%`);
-        if (bData) searchFilterIds.banco = bData.map(b => (b as any).Id);
+        const { data: bData } = await supabase.from('contas_corrente').select('id').ilike('descricao', `%${bancoFilter.value}%`);
+        if (bData) searchFilterIds.banco = bData.map(b => (b as any).id);
       }
     }
 
     let query = supabase
-      .from('PedidosVenda')
+      .from('pedidos_venda')
       .select(`
         *,
-        Clientes (*),
-        Vendedores (*),
-        ContasCorrente (*),
-        FormasPagamento (*),
-        ItensPedido (*, Produtos (*)),
-        PedidoParcelas (*),
-        NotasFiscais (*)
+        clientes (*),
+        vendedores (*),
+        contas_corrente (*),
+        formas_pagamento (*),
+        itens_pedido (*, produtos (*)),
+        pedido_parcelas (*),
+        notas_fiscais (*)
       `, { count: 'exact' });
 
     if (omieId) {
-      query = query.eq('OmieId', parseInt(omieId));
+      query = query.eq('omie_id', parseInt(omieId));
     } else {
-      if (clienteOmieId) query = query.eq('Clientes.OmieId', parseInt(clienteOmieId));
-      if (vendedorOmieId) query = query.eq('Vendedores.OmieId', parseInt(vendedorOmieId));
-      if (contaCorrenteId) query = query.eq('ContasCorrente.OmieId', parseInt(contaCorrenteId));
+      if (clienteOmieId) query = query.eq('clientes.omie_id', parseInt(clienteOmieId));
+      if (vendedorOmieId) query = query.eq('vendedores.omie_id', parseInt(vendedorOmieId));
+      if (contaCorrenteId) query = query.eq('contas_corrente.omie_id', parseInt(contaCorrenteId));
 
-      if (startDate) query = query.gte('DataInclusao', startDate);
-      if (endDate) query = query.lte('DataInclusao', endDate);
+      if (startDate) query = query.gte('data_inclusao', startDate);
+      if (endDate) query = query.lte('data_inclusao', endDate);
 
       // Apply search across matches or NumeroPedido
       if (search) {
         const escapedSearch = escapeFilterValue(`%${search}%`);
-        const orConditions = [`NumeroPedido.ilike.${escapedSearch}`];
+        const orConditions = [`numero_pedido.ilike.${escapedSearch}`];
         // Use root column ClienteId and VendedorId with the IDs we found
-        if (searchFilterIds.cliente?.length) orConditions.push(`ClienteId.in.(${searchFilterIds.cliente.join(',')})`);
-        if (searchFilterIds.vendedor?.length) orConditions.push(`VendedorId.in.(${searchFilterIds.vendedor.join(',')})`);
+        if (searchFilterIds.cliente?.length) orConditions.push(`cliente_id.in.(${searchFilterIds.cliente.join(',')})`);
+        if (searchFilterIds.vendedor?.length) orConditions.push(`vendedor_id.in.(${searchFilterIds.vendedor.join(',')})`);
         query = query.or(orConditions.join(','));
       }
 
@@ -130,14 +130,14 @@ export async function GET(req: Request) {
       const EMPTY_UUID = '00000000-0000-0000-0000-000000000000';
       activeFilters.forEach(({ field, value }) => {
         if (field === 'cliente') {
-           if (searchFilterIds.cliente?.length) query = query.in('ClienteId', searchFilterIds.cliente);
-           else if (value) query = query.eq('ClienteId', EMPTY_UUID); // Force empty result if filter typed but no match found
+           if (searchFilterIds.cliente?.length) query = query.in('cliente_id', searchFilterIds.cliente);
+           else if (value) query = query.eq('cliente_id', EMPTY_UUID); // Force empty result if filter typed but no match found
         } else if (field === 'vendedor') {
-           if (searchFilterIds.vendedor?.length) query = query.in('VendedorId', searchFilterIds.vendedor);
-           else if (value) query = query.eq('VendedorId', EMPTY_UUID);
+           if (searchFilterIds.vendedor?.length) query = query.in('vendedor_id', searchFilterIds.vendedor);
+           else if (value) query = query.eq('vendedor_id', EMPTY_UUID);
         } else if (field === 'banco') {
-           if (searchFilterIds.banco?.length) query = query.in('ContaCorrenteId', searchFilterIds.banco);
-           else if (value) query = query.eq('ContaCorrenteId', EMPTY_UUID);
+           if (searchFilterIds.banco?.length) query = query.in('conta_corrente_id', searchFilterIds.banco);
+           else if (value) query = query.eq('conta_corrente_id', EMPTY_UUID);
         } else {
            const dbColumn = VENDA_COLUMN_MAP[field] || field;
            const numericFields = ['valorTotal', 'valorVenda', 'frete', 'percComissao', 'qtdItens', 'qtdParcelas'];
@@ -157,160 +157,159 @@ export async function GET(req: Request) {
     );
 
     if (error) {
-      console.error('Supabase error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      throw error;
     }
 
     const num = (v: any) => v === null || v === undefined ? 0 : Number(v);
 
     const mappedData = (data || []).map((order: any) => {
-      const itens = order.ItensPedido || [];
-      const nf = (order.NotasFiscais || [])[0];
+      const itens = order.itens_pedido || [];
+      const nf = (order.notas_fiscais || [])[0];
 
       return {
         cabecalho: {
-          codigo_pedido: order.OmieId,
-          numero_pedido: order.NumeroPedido,
-          etapa: order.Etapa,
-          data_pedido: order.DataInclusao || order.CreatedAt,
-          data_previsao: order.DataPrevisao,
-          codigo_cliente: order.Clientes?.OmieId,
-          codigo_parcela: order.CodigoParcela,
+          codigo_pedido: order.omie_id,
+          numero_pedido: order.numero_pedido,
+          etapa: order.etapa,
+          data_pedido: order.data_inclusao || order.created_at,
+          data_previsao: order.data_previsao,
+          codigo_cliente: order.clientes?.omie_id,
+          codigo_parcela: order.codigo_parcela,
           // RECUPERANDO A DESCRIÇÃO DA FORMA DE PAGAMENTO
-          meio_pagamento: order.FormasPagamento?.Descricao || order.MeioPagamento || '',
+          meio_pagamento: order.formas_pagamento?.descricao || order.meio_pagamento || '',
           quantidade_itens: itens.length,
-          qtde_parcelas: order.QuantidadeParcelas || 0,
-          faturado: order.Faturado ? 'S' : 'N',
-          devolvido: order.Devolvido ? 'S' : 'N'
+          qtde_parcelas: order.quantidade_parcelas || 0,
+          faturado: order.faturado ? 'S' : 'N',
+          devolvido: order.devolvido ? 'S' : 'N'
         },
         det: itens.map((item: any) => ({
           produto: {
-            codigo: item.Produtos?.CodigoProduto,
-            descricao: item.Produtos?.Descricao,
-            unidade: item.UnidadeMedida || item.Produtos?.UnidadeMedida || 'UN',
-            valor_unitario: num(item.ValorUnitario),
-            quantidade: num(item.Quantidade),
-            valor_total: num(item.ValorTotal),
-            percentual_desconto: num(item.PercentualDesconto),
-            valor_desconto: num(item.ValorDesconto),
-            ncm: item.Produtos?.Ncm,
-            cfop: item.Cfop || '--',
+            codigo: item.produtos?.codigo_produto,
+            descricao: item.produtos?.descricao,
+            unidade: item.unidade_medida || item.produtos?.unidade_medida || 'UN',
+            valor_unitario: num(item.valor_unitario),
+            quantidade: num(item.quantidade),
+            valor_total: num(item.valor_total),
+            percentual_desconto: num(item.percentual_desconto),
+            valor_desconto: num(item.valor_desconto),
+            ncm: item.produtos?.ncm,
+            cfop: item.cfop || '--',
           },
           imposto: {
             icms: {
-              valor_icms: num(item.ValorIcms),
-              base_calculo: num(item.BaseIcms),
-              aliquota: num(item.AliqIcms),
-              cst: item.CstIcms
+              valor_icms: num(item.valor_icms),
+              base_calculo: num(item.base_icms),
+              aliquota: num(item.aliq_icms),
+              cst: item.cst_icms
             },
             ipi: {
-              valor_ipi: num(item.ValorIpi),
-              base_calculo: num(item.BaseIpi),
-              aliquota: num(item.AliqIpi),
-              cst: item.CstIpi
+              valor_ipi: num(item.valor_ipi),
+              base_calculo: num(item.base_ipi),
+              aliquota: num(item.aliq_ipi),
+              cst: item.cst_ipi
             },
             pis_padrao: {
-              valor_pis: num(item.ValorPis),
-              base_calculo: num(item.BasePis),
-              aliquota: num(item.AliqPis),
-              cst: item.CstPis
+              valor_pis: num(item.valor_pis),
+              base_calculo: num(item.base_pis),
+              aliquota: num(item.aliq_pis),
+              cst: item.cst_pis
             },
             cofins_padrao: {
-              valor_cofins: num(item.ValorCofins),
-              base_calculo: num(item.BaseCofins),
-              aliquota: num(item.AliqCofins),
-              cst: item.CstCofins
+              valor_cofins: num(item.valor_cofins),
+              base_calculo: num(item.base_cofins),
+              aliquota: num(item.aliq_cofins),
+              cst: item.cst_cofins
             },
             ibs: {
-              valor_ibs: num(item.ValorIbs),
-              aliquota_ibs_uf: num(item.AliqIbs),
-              base_ibs_cbs: num(item.BaseIbsCbs)
+              valor_ibs: num(item.valor_ibs),
+              aliquota_ibs_uf: num(item.aliq_ibs),
+              base_ibs_cbs: num(item.base_ibs_cbs)
             },
             cbs: {
-              valor_cbs: num(item.ValorCbs),
-              aliquota_cbs: num(item.AliqCbs),
-              base_ibs_cbs: num(item.BaseIbsCbs)
+              valor_cbs: num(item.valor_cbs),
+              aliquota_cbs: num(item.aliq_cbs),
+              base_ibs_cbs: num(item.base_ibs_cbs)
             }
           },
           ide: {
-            codigo_item: item.OmieId
+            codigo_item: item.omie_id
           }
         })),
         lista_parcelas: {
-          parcela: (order.PedidoParcelas || []).map((p: any) => ({
-            numero_parcela: p.NumeroParcela,
-            valor: num(p.Valor),
-            data_vencimento: p.DataVencimento,
-            percentual: num(p.Percentual),
-            categoria: p.Categoria || '',
-            nsu: p.Nsu || '',
-            meio_pagamento: p.MeiosPagamento?.Descricao || ''
+          parcela: (order.pedido_parcelas || []).map((p: any) => ({
+            numero_parcela: p.numero_parcela,
+            valor: num(p.valor),
+            data_vencimento: p.data_vencimento,
+            percentual: num(p.percentual),
+            categoria: p.categoria || '',
+            nsu: p.nsu || '',
+            meio_pagamento: ''
           }))
         },
         informacoes_adicionais: {
-          codVend: order.Vendedores?.OmieId,
-          vendedor_nome: order.Vendedores?.Nome,
-          codigo_conta_corrente: order.ContasCorrente?.OmieId,
+          codVend: order.vendedores?.omie_id,
+          vendedor_nome: order.vendedores?.nome,
+          codigo_conta_corrente: order.contas_corrente?.omie_id,
           // RECUPERANDO A DESCRIÇÃO DO BANCO/CONTA CORRENTE
-          conta_corrente_nome: order.ContasCorrente?.Descricao || '',
-          perc_comissao: num(order.ComissaoVendedor),
-          contato: order.Contato,
-          numero_pedido_cliente: order.NumeroPedidoCliente || '',
-          consumidor_final: order.ConsumidorFinal || '',
+          conta_corrente_nome: order.contas_corrente?.descricao || '',
+          perc_comissao: num(order.comissao_vendedor),
+          contato: order.contato,
+          numero_pedido_cliente: order.numero_pedido_cliente || '',
+          consumidor_final: order.consumidor_final || '',
           codProj: 0
         },
         infoCadastro: {
-          dFat: nf?.DataEmissao || '',
-          dInc: order.DataInclusao || order.CreatedAt,
-          uInc: order.UsuarioInclusao,
-          dAlt: order.UpdatedAt,
-          uAlt: order.UsuarioAlteracao,
+          dFat: nf?.data_emissao || '',
+          dInc: order.data_inclusao || order.created_at,
+          uInc: order.usuario_inclusao,
+          dAlt: order.updated_at,
+          uAlt: order.usuario_alteracao,
           // RECUPERANDO O NÚMERO DA NOTA FISCAL
-          numero_nfe: nf?.NumeroNf || '',
-          serie_nfe: nf?.Serie || '',
-          valor_total_nfe: num(nf?.ValorTotal),
-          chave_nfe: nf?.ChaveAcesso || '',
-          cancelado: order.Cancelado ? 'S' : 'N',
-          autorizado: order.Autorizado ? 'S' : 'N',
-          denegado: order.Denegado ? 'S' : 'N',
-          cliente_nome: order.Clientes?.RazaoSocial || order.Clientes?.NomeFantasia
+          numero_nfe: nf?.numero_nf || '',
+          serie_nfe: nf?.serie || '',
+          valor_total_nfe: num(nf?.valor_total),
+          chave_nfe: nf?.chave_acesso || '',
+          cancelado: order.cancelado ? 'S' : 'N',
+          autorizado: order.autorizado ? 'S' : 'N',
+          denegado: order.denegado ? 'S' : 'N',
+          cliente_nome: order.clientes?.razao_social || order.clientes?.nome_fantasia
         },
         total_pedido: {
-          valor_total_pedido: num(order.ValorTotal),
-          valor_mercadorias: num(order.ValorMercadorias),
-          valor_descontos: num(order.ValorDesconto || 0),
-          valor_icms: num(order.ValorIcms),
-          valor_IPI: num(order.ValorIpi),
-          valor_pis: num(order.ValorPis),
-          valor_cofins: num(order.ValorCofins),
-          base_calculo_icms: num(order.BaseCalculoIcms),
-          valor_iss: num(order.ValorIss || 0),
-          valor_ir: num(order.ValorIr || 0),
-          valor_csll: num(order.ValorCsll || 0),
-          valor_inss: num(order.ValorInss || 0),
-          valor_ibs: num(order.ValorIbs || 0),
-          valor_cbs: num(order.ValorCbs || 0),
+          valor_total_pedido: num(order.valor_total),
+          valor_mercadorias: num(order.valor_mercadorias),
+          valor_descontos: num(order.valor_desconto || 0),
+          valor_icms: num(order.valor_icms),
+          valor_IPI: num(order.valor_ipi),
+          valor_pis: num(order.valor_pis),
+          valor_cofins: num(order.valor_cofins),
+          base_calculo_icms: num(order.base_calculo_icms),
+          valor_iss: num(order.valor_iss || 0),
+          valor_ir: num(order.valor_ir || 0),
+          valor_csll: num(order.valor_csll || 0),
+          valor_inss: num(order.valor_inss || 0),
+          valor_ibs: num(order.valor_ibs || 0),
+          valor_cbs: num(order.valor_cbs || 0),
         },
         frete: {
-          valor_frete: num(order.ValorFrete),
-          quantidade_volumes: num(order.QuantidadeVolumes),
-          codigo_transportadora: order.Transportadora,
-          peso_bruto: num(order.PesoBruto),
-          peso_liquido: num(order.PesoLiquido),
-          previsao_entrega: order.PrevisaoEntrega || '',
-          modalidade: order.FreteModalidade || '',
-          codigo_rastreio: order.CodigoRastreio || '',
-          link_rastreio: order.LinkRastreio || '',
-          veiculo_proprio: order.VeiculoProprio || '',
-          placa: order.Placa || '',
-          valor_seguro: num(order.ValorSeguro || 0),
-          outras_despesas: num(order.ValorOutrasDespesas || 0)
+          valor_frete: num(order.valor_frete),
+          quantidade_volumes: num(order.quantidade_volumes),
+          codigo_transportadora: order.transportadora,
+          peso_bruto: num(order.peso_bruto),
+          peso_liquido: num(order.peso_liquido),
+          previsao_entrega: order.previsao_entrega || '',
+          modalidade: order.frete_modalidade || '',
+          codigo_rastreio: order.codigo_rastreio || '',
+          link_rastreio: order.link_rastreio || '',
+          veiculo_proprio: order.veiculo_proprio || '',
+          placa: order.placa || '',
+          valor_seguro: num(order.valor_seguro || 0),
+          outras_despesas: num(order.valor_outras_despesas || 0)
         },
         observacoes: {
-          obs_venda: order.ObservacoesVenda,
-          obs_interna: order.ObservacoesInternas,
-          obs_nf: order.DadosAdicionaisNf || nf?.InformacoesComplementares,
-          obs_nf_fisco: nf?.InformacoesFisco
+          obs_venda: order.observacoes_venda,
+          obs_interna: order.observacoes_internas,
+          obs_nf: order.dados_adicionais_nf || nf?.informacoes_complementares,
+          obs_nf_fisco: nf?.informacoes_fisco
         }
       };
     });    

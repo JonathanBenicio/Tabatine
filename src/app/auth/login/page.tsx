@@ -3,14 +3,15 @@ import { login } from '../actions';
 import Link from 'next/link';
 import { SubmitButton } from '@/components/SubmitButton';
 
-export default function LoginPage({
+export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined }
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  const errorMessage = searchParams?.error as string | undefined;
-  const successMessage = searchParams?.msg as string | undefined;
-  const nextUrl = searchParams?.next as string | undefined;
+  const params = await searchParams;
+  const errorMessage = params?.error as string | undefined;
+  const successMessage = params?.msg as string | undefined;
+  const nextUrl = params?.next as string | undefined;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-4">

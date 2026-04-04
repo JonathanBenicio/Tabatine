@@ -14,6 +14,7 @@ export interface ContaCorrente {
   pdv_enviar: string
   codigo_integracao?: string
   omie_updated_at?: string
+  id?: string
 }
 
 interface ContasCorrentesStoreState {

@@ -19,18 +19,18 @@ export function mapSupabaseToProduto(p: any): Produto {
   }
 
   return {
-    codigo_produto: p.OmieId || 0,
-    codigo_produto_integracao: p.CodigoProdutoIntegracao || '',
-    codigo: p.CodigoProduto || '',
-    descricao: p.Descricao || 'Sem Descrição',
-    unidade: p.UnidadeMedida || 'UN',
-    valor_unitario: Number(p.PrecoUnitario || 0),
-    ncm: p.Ncm || '',
-    ean: p.Ean || '',
-    peso_bruto: Number(p.PesoBruto || 0),
-    peso_liquido: Number(p.PesoLiquido || 0),
-    familia_produto: p.FamiliaProduto || '',
-    excluido: p.Ativo ? 'N' : 'S'
+    codigo_produto: p.omie_id || 0,
+    codigo_produto_integracao: p.id || '', // id uuid agora é a chave principal
+    codigo: p.codigo_produto || '',
+    descricao: p.descricao || 'Sem Descrição',
+    unidade: p.unidade_medida || 'UN',
+    valor_unitario: Number(p.preco_unitario || 0),
+    ncm: p.ncm || '',
+    ean: p.ean || '',
+    peso_bruto: Number(p.peso_bruto || 0),
+    peso_liquido: Number(p.peso_liquido || 0),
+    familia_produto: p.familia_produto || '',
+    excluido: p.ativo ? 'N' : 'S'
   };
 }
 

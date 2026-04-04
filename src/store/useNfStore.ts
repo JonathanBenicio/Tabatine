@@ -58,6 +58,7 @@ export interface NfCadastroFlat {
   itens: any[]
   titulos: any[]
   omieData?: any
+  id?: string
   [key: string]: any
 }
 

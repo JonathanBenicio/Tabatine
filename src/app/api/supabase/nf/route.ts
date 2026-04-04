@@ -24,16 +24,16 @@ export async function GET(req: Request) {
     const to = from + limit - 1;
 
     let query = supabase
-      .from('NotasFiscais')
+      .from('notas_fiscais')
       .select(`
         *,
-        Clientes!inner (*),
-        PedidosVenda (OmieId),
-        ItensNotaFiscal (
+        clientes!inner (*),
+        pedidos_venda (omie_id),
+        itens_nota_fiscal (
           *,
-          Produtos (*)
+          produtos (*)
         ),
-        NotaFiscalTitulos (*)
+        nota_fiscal_titulos (*)
       `, { count: 'exact' });
 
     let dataToMap: any[] = [];
@@ -41,13 +41,13 @@ export async function GET(req: Request) {
 
     // Handle single item fetch if id is provided
     if (id) {
-      const { data: singleData, error: singleError } = await query.eq('OmieId', parseInt(id)).single();
+      const { data: singleData, error: singleError } = await query.eq('omie_id', parseInt(id)).single();
       if (singleError && singleError.code !== 'PGRST116') throw singleError;
       dataToMap = singleData ? [singleData] : [];
       finalCount = singleData ? 1 : 0;
     } else {
       if (clienteOmieId) {
-        query = query.eq('Clientes.OmieId', parseInt(clienteOmieId));
+        query = query.eq('clientes.omie_id', parseInt(clienteOmieId));
       }
 
       // 1. Search Logic (100% SDK)
@@ -56,17 +56,17 @@ export async function GET(req: Request) {
 
         // Step A: Find IDs of clients matching the search term
         const { data: clientesMatch } = await supabase
-          .from('Clientes')
-          .select('Id')
-          .or(`RazaoSocial.ilike.${escapedSearch},NomeFantasia.ilike.${escapedSearch}`);
+          .from('clientes')
+          .select('id')
+          .or(`razao_social.ilike.${escapedSearch},nome_fantasia.ilike.${escapedSearch}`);
 
-        const clienteIds = (clientesMatch || []).map(c => c.Id);
+        const clienteIds = (clientesMatch || []).map(c => c.id);
 
         // Step B: Apply OR filter on main table (NF Number, Access Key OR matching ClientId)
         if (clienteIds.length > 0) {
-          query = query.or(`NumeroNf.ilike.${escapedSearch},ChaveAcesso.ilike.${escapedSearch},ClienteId.in.(${clienteIds.join(',')})`);
+          query = query.or(`numero_nf.ilike.${escapedSearch},chave_acesso.ilike.${escapedSearch},cliente_id.in.(${clienteIds.join(',')})`);
         } else {
-          query = query.or(`NumeroNf.ilike.${escapedSearch},ChaveAcesso.ilike.${escapedSearch}`);
+          query = query.or(`numero_nf.ilike.${escapedSearch},chave_acesso.ilike.${escapedSearch}`);
         }
       }
 
@@ -74,11 +74,11 @@ export async function GET(req: Request) {
         const yearInt = parseInt(year);
         const startOfYear = `${yearInt}-01-01T00:00:00Z`;
         const endOfYear = `${yearInt}-12-31T23:59:59Z`;
-        query = query.gte('DataEmissao', startOfYear).lte('DataEmissao', endOfYear);
+        query = query.gte('data_emissao', startOfYear).lte('data_emissao', endOfYear);
       }
 
       const { data: listData, error: listError, count } = await query
-        .order('DataEmissao', { ascending: false })
+        .order('data_emissao', { ascending: false })
         .range(from, to);
 
       if (listError) throw listError;
@@ -88,115 +88,116 @@ export async function GET(req: Request) {
 
     // Map Supabase structure to something compatible with the store's logic
     const mappedData = dataToMap.map((nf: any) => {
-      const dataEmiFormatada = nf.DataEmissao?.split('T')[0]?.split('-').reverse().join('/');
+      const dataEmiFormatada = nf.data_emissao?.split('T')[0]?.split('-').reverse().join('/');
       
       // Status derivado do campo texto sincronizado do Omie (Status: AUTORIZADA/CANCELADA/DENEGADA)
-      const statusTexto = nf.Status || '';
+      const statusTexto = nf.status || '';
       let statusLabel = '';
       if (statusTexto === 'CANCELADA') statusLabel = 'Cancelado';
-      else if (statusTexto === 'DENEGADA' || nf.Denegada) statusLabel = 'Denegado';
+      else if (statusTexto === 'DENEGADA' || nf.denegada) statusLabel = 'Denegado';
       else if (statusTexto === 'AUTORIZADA') statusLabel = 'Autorizado';
       else statusLabel = statusTexto || 'Pendente';
 
       return {
         compl: {
-          nIdNF: nf.OmieId,
-          nNF: nf.NumeroNf,
-          cChaveNFe: nf.ChaveAcesso,
+          nIdNF: nf.omie_id,
+          nNF: nf.numero_nf,
+          cChaveNFe: nf.chave_acesso,
           dEmi: dataEmiFormatada,
-          hEmi: nf.HoraEmissao,
-          xNatureza: nf.NaturezaOperacao || 'Venda de Mercadoria',
-          cInfCpl: nf.InformacoesComplementares,
-          cInfAdFisco: nf.InformacoesFisco,
-          nIdPedido: nf.PedidosVenda?.OmieId,
+          hEmi: nf.hora_emissao,
+          xNatureza: nf.natureza_operacao || 'Venda de Mercadoria',
+          cInfCpl: nf.informacoes_complementares,
+          cInfAdFisco: nf.informacoes_fisco,
+          nIdPedido: nf.pedidos_venda?.omie_id,
         },
         pedido: {
-          nCodPedido: nf.PedidosVenda?.OmieId,
-          cNumeroPedido: nf.PedidosVenda?.NumeroPedidoCliente || '', 
+          nCodPedido: nf.pedidos_venda?.omie_id,
+          cNumeroPedido: nf.pedidos_venda?.numero_pedido_cliente || '', 
         },
         ide: {
           dEmi: dataEmiFormatada, // Crucial for useNfStore
-          hEmi: nf.HoraEmissao,
-          dReg: nf.CreatedAt?.split('T')[0]?.split('-').reverse().join('/'),
-          hReg: nf.CreatedAt?.split('T')[1]?.substring(0, 5),
+          hEmi: nf.hora_emissao,
+          dReg: nf.created_at?.split('T')[0]?.split('-').reverse().join('/'),
+          hReg: nf.created_at?.split('T')[1]?.substring(0, 5),
           cStatus: statusLabel,
-          nNF: nf.NumeroNf,
-          serie: nf.Serie || '1',
-          mod: nf.Modelo || '55', 
-          tpNF: nf.TipoOperacao,
-          finNFe: nf.Finalidade,
-          cAmbiente: nf.Ambiente,
-          cDeneg: nf.Denegada ? 'S' : 'N',
+          nNF: nf.numero_nf,
+          serie: nf.serie || '1',
+          mod: nf.modelo || '55', 
+          tpNF: nf.tipo_operacao,
+          finNFe: nf.finalidade,
+          cAmbiente: nf.ambiente,
+          cDeneg: nf.denegada ? 'S' : 'N',
         },
         nfDestInt: {
-          xNome: nf.Clientes?.RazaoSocial || nf.Clientes?.NomeFantasia,
-          nCodCli: nf.Clientes?.OmieId,
-          cnpj_cpf: nf.Clientes?.CnpjCpf,
+          xNome: nf.clientes?.razao_social || nf.clientes?.nome_fantasia,
+          nCodCli: nf.clientes?.omie_id,
+          cnpj_cpf: nf.clientes?.cnpj_cpf,
         },
         nfEmitInt: {},
         info: {
-          cImpAPI: nf.ImportadoApi ? 'S' : 'N'
+          cImpAPI: nf.importado_api ? 'S' : 'N'
         },
         total: {
           ICMSTot: {
-            vNF: nf.ValorTotal,
-            vBC: nf.IcmsBaseCalculo || 0,
-            vICMS: nf.IcmsValor || 0,
-            vIPI: nf.ValorIpi || 0,
-            vPIS: nf.ValorPis || 0,
-            vCOFINS: nf.ValorCofins || 0,
-            vProd: nf.ValorProd || 0,
-            vFrete: nf.ValorFrete || 0,
-            vSeg: nf.ValorSeguro || 0,
-            vDesc: nf.ValorDesconto || 0,
-            vOutro: nf.ValorOutrasDespesas || 0,
+            vNF: nf.valor_total,
+            vBC: nf.icms_base_calculo || 0,
+            vICMS: nf.icms_valor || 0,
+            vIPI: nf.valor_ipi || 0,
+            vPIS: nf.valor_pis || 0,
+            vCOFINS: nf.valor_cofins || 0,
+            vProd: nf.valor_prod || 0,
+            vFrete: nf.valor_frete || 0,
+            vSeg: nf.valor_seguro || 0,
+            vDesc: nf.valor_desconto || 0,
+            vOutro: nf.valor_outras_despesas || 0,
           },
           ISSQNtot: {
-            vISS: nf.ValorIss || 0,
-            vBC: nf.IssqnBaseCalculo || 0,
+            vISS: nf.valor_iss || 0,
+            vBC: nf.issqn_base_calculo || 0,
           },
           Retencoes: {
-            vIRRF: nf.ValorIr || 0,
-            vCSLL: nf.ValorCsll || 0,
-            vPIS: nf.ValorPisRetido || 0,
-            vCOFINS: nf.ValorCofinsRetido || 0,
+            vIRRF: nf.valor_ir || 0,
+            vCSLL: nf.valor_csll || 0,
+            vPIS: nf.valor_pis_retido || 0,
+            vCOFINS: nf.valor_cofins_retido || 0,
           }
         },
-        det: (nf.ItensNotaFiscal || []).map((item: any) => ({
+        det: (nf.itens_nota_fiscal || []).map((item: any) => ({
           prod: {
-            cProd: item.Produtos?.CodigoProduto,
-            xProd: item.Produtos?.Descricao,
-            uCom: item.Produtos?.UnidadeMedida,
-            qCom: item.Quantidade,
-            vUnCom: item.ValorUnitario,
-            vProd: item.ValorTotal,
-            vTotItem: item.ValorTotal,
-            NCM: item.Ncm || item.Produtos?.Ncm || '---',
-            CFOP: item.Cfop || '5102', // Fallback para venda padrão
+            cProd: item.produtos?.codigo_produto,
+            xProd: item.produtos?.descricao,
+            uCom: item.produtos?.unidade_medida,
+            qCom: item.quantidade,
+            vUnCom: item.valor_unitario,
+            vProd: item.valor_total,
+            vTotItem: item.valor_total,
+            NCM: item.ncm || item.produtos?.ncm || '---',
+            CFOP: item.cfop || '5102', // Fallback para venda padrão
           },
           imposto: {
             ICMS: {
-              vBC: item.BaseIcms,
-              pICMS: item.AliqIcms,
-              CST: item.CstIcms
+              vBC: item.base_icms,
+              pICMS: item.aliq_icms,
+              CST: item.cst_icms
             },
             IPI: {
-              vBC: item.BaseIpi,
-              pIPI: item.AliqIpi,
-              vIPI: item.ValorIpi,
-              CST: item.CstIpi
+              vBC: item.base_ipi,
+              pIPI: item.aliq_ipi,
+              vIPI: item.valor_ipi,
+              CST: item.cst_ipi
             },
-            PIS: { vPIS: item.ValorPis },
-            COFINS: { vCOFINS: item.ValorCofins }
+            PIS: { vPIS: item.valor_pis },
+            COFINS: { vCOFINS: item.valor_cofins }
           }
         })),
-        titulos: (nf.NotaFiscalTitulos || []).map((t: any) => ({
-          nParcela: t.NumeroParcela,
-          nValorTitulo: t.Valor,
-          dDtVenc: t.DataVencimento?.split('T')[0]?.split('-').reverse().join('/'),
-          nCodTitulo: t.OmieIdTitulo || 0,
+        titulos: (nf.nota_fiscal_titulos || []).map((t: any) => ({
+          nParcela: t.numero_parcela,
+          nValorTitulo: t.valor,
+          dDtVenc: t.data_vencimento?.split('T')[0]?.split('-').reverse().join('/'),
+          nCodTitulo: t.omie_id_titulo || 0,
         }))
       };
+
     });
 
     return NextResponse.json({
