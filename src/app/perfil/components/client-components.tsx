@@ -109,19 +109,25 @@ export function TelegramIntegration({ profile }: { profile: any }) {
   );
 }
 
-export function ReceiveLogsToggle({ profile, userId }: { profile: any, userId: string }) {
+export function ReceiveLogsToggle({ profile }: { profile: any }) {
   const [receiving, setReceiving] = useState(profile?.receive_logs || false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const toggle = async () => {
     if (!profile) return;
+    const previousState = receiving;
+    
+    // Otimista: Já inverte na tela imediatamente
+    setReceiving(!previousState);
     setSaving(true);
     setError(null);
     try {
-      const response = await toggleReceiveLogsAction(userId, receiving);
+      const response = await toggleReceiveLogsAction(previousState);
       setReceiving(response.receive_logs);
     } catch (err: any) {
+      // Reverte se a API falhar
+      setReceiving(previousState);
       setError(err.message);
     } finally {
       setSaving(false);

@@ -84,7 +84,7 @@ export default async function PerfilPage() {
               <TelegramIntegration profile={profile} />
 
               <div className="space-y-6 mt-6">
-                <ReceiveLogsToggle profile={profile} userId={user.id} />
+                <ReceiveLogsToggle profile={profile} />
               </div>
             </div>
           </div>
