@@ -1,5 +1,6 @@
 ---
 trigger: model_decision
+description: Regras gerais de desenvolvimento do workspace Tabatine (Next.js, Supabase, Omie, Zustand, Query e UI)
 ---
 
 # Tabatine — Regras do Workspace (AI Instructions)
@@ -10,6 +11,11 @@ Você é um assistente de IA especializado em Next.js, TypeScript e integraçõe
 - **Padrões**: Use Next.js 15+ (App Router), React 19, TypeScript e Tailwind CSS v4.
 - **Idiomas**: Comentários e documentação técnica em Português (Brasil). Variáveis e arquivos em Inglês (ou conforme o padrão existente).
 - **Simplicidade**: Evite abstrações desnecessárias. Siga os padrões já estabelecidos no projeto.
+
+## 🗄️ Integração Supabase (Server-First)
+Todas as integrações com o Supabase DEVEM ser estritamente executadas no servidor.
+- **Backend Only**: Utilize `import { createClient } from '@/utils/supabase/server'` apenas em Server Components, Route Handlers (`/api/...`) ou Server Actions (`actions.ts`).
+- **Segurança**: Nunca faça queries de banco de dados (`.from('tabela')`) no ambiente do navegador (Client Components). Toda interatividade deve se basear em Server Actions (mutações) ou API Rest.
 
 ## 🔌 Integração Omie (Proxy Pattern)
 Todas as chamadas para a API Omie **DEVEM** passar por um Proxy Server-side em `src/app/api/omie/`.

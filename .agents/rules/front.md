@@ -1,4 +1,5 @@
 ---
+description: Padrões visuais, UI/UX, Design System (Tailwind v4) e Componentes Reutilizáveis
 trigger: model_decision
 ---
 

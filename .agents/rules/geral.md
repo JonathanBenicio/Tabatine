@@ -1,4 +1,5 @@
 ---
+description: Regras de Negócio e Arquitetura Global da Tabatine (Integração API Omie via Proxy Server-side)
 trigger: model_decision
 ---
 
