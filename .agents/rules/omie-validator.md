@@ -1,4 +1,5 @@
 ---
+description: Regras rígidas de Validação, Limites de Consumo e Paginação da API Omie
 trigger: model_decision
 ---
 
