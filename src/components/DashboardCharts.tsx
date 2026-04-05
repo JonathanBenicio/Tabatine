@@ -374,7 +374,7 @@ export default function DashboardCharts() {
         {/* Gráfico de Pizza (Status) */}
         <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/50 p-6 backdrop-blur-xl">
           <h3 className="text-lg font-semibold text-white mb-1">Pedidos por Status</h3>
-          <p className="text-xs text-zinc-500 mb-6">Distribuição Financeira — {weekLabel}</p>
+          <p className="text-xs text-zinc-500 mb-6">Distribuição por quantidade — {weekLabel}</p>
           <div className="h-[300px] w-full flex flex-col items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -387,6 +387,7 @@ export default function DashboardCharts() {
                   paddingAngle={5}
                   dataKey="value"
                   stroke="none"
+                  label={({ percent }) => percent ? `${(percent * 100).toFixed(0)}%` : ''}
                 >
                   {chartStatus.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.name] || COLORS[index % COLORS.length]} />
@@ -395,6 +396,12 @@ export default function DashboardCharts() {
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '12px' }}
                   itemStyle={{ color: '#fff' }}
+                  formatter={(value: any, name: any) => {
+                    const total = chartStatus.reduce((acc, curr) => acc + curr.value, 0);
+                    const valNum = Number(value || 0);
+                    const percent = total > 0 ? ((valNum / total) * 100).toFixed(1) : '0';
+                    return [`${valNum} ${valNum === 1 ? 'pedido' : 'pedidos'} (${percent}%)`, String(name || '')];
+                  }}
                 />
                 <Legend verticalAlign="bottom" height={36} iconType="circle" />
               </PieChart>

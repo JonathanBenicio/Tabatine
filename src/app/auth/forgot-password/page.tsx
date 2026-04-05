@@ -3,13 +3,14 @@ import { requestPasswordReset } from '../actions';
 import Link from 'next/link';
 import { SubmitButton } from '@/components/SubmitButton';
 
-export default function ForgotPasswordPage({
+export default async function ForgotPasswordPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined }
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  const errorMessage = searchParams?.error as string | undefined;
-  const successMessage = searchParams?.success as string | undefined;
+  const params = await searchParams;
+  const errorMessage = params?.error as string | undefined;
+  const successMessage = params?.success as string | undefined;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-4">

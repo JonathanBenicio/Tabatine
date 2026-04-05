@@ -7,8 +7,9 @@ import { SubmitButton } from '@/components/SubmitButton'
 export default async function ResetPasswordPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined }
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
+  const params = await searchParams;
   const supabase = await createClient()
 
   // Ensure the user actually has a valid session
@@ -18,7 +19,7 @@ export default async function ResetPasswordPage({
     redirect('/auth/login?error=Necessario+autenticar')
   }
 
-  const errorMessage = searchParams?.error as string | undefined
+  const errorMessage = params?.error as string | undefined
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-4">
@@ -43,7 +44,7 @@ export default async function ResetPasswordPage({
         )}
 
         <form action={updatePassword} className="space-y-4">
-          <input type="hidden" name="next" value={searchParams?.next || '/dashboard'} />
+          <input type="hidden" name="next" value={params?.next || '/dashboard'} />
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-zinc-400 mb-1.5">
               Nova Senha

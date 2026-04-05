@@ -22,12 +22,12 @@ export async function GET(req: Request) {
     const to = from + limit - 1;
 
     let query = supabase
-      .from('Clientes')
+      .from('clientes')
       .select('*', { count: 'exact' });
 
     // Handle single item fetch if omieId is provided
     if (omieId) {
-      const { data, error } = await query.eq('OmieId', parseInt(omieId)).single();
+      const { data, error } = await query.eq('omie_id', parseInt(omieId)).single();
       if (error && error.code !== 'PGRST116') throw error;
       
       return NextResponse.json({
@@ -40,11 +40,11 @@ export async function GET(req: Request) {
 
     if (search) {
       const escapedSearch = escapeFilterValue(`%${search}%`);
-      query = query.or(`RazaoSocial.ilike.${escapedSearch},NomeFantasia.ilike.${escapedSearch},CnpjCpf.ilike.${escapedSearch}`);
+      query = query.or(`razao_social.ilike.${escapedSearch},nome_fantasia.ilike.${escapedSearch},cnpj_cpf.ilike.${escapedSearch}`);
     }
 
     const { data, error, count } = await query
-      .order('RazaoSocial', { ascending: true })
+      .order('razao_social', { ascending: true })
       .range(from, to);
 
     if (error) throw error;

@@ -18,14 +18,14 @@ export function mapSupabaseToVendedor(v: any): Vendedor {
   }
 
   return {
-    codigo: v.OmieId || 0,
-    codInt: v.CodInt || '',
-    nome: v.Nome || '---',
-    email: v.Email || '',
-    comissao: v.Comissao || 0,
-    inativo: v.Inativo ? 'S' : 'N',
-    fatura_pedido: v.FaturaPedido || 'N',
-    visualiza_pedido: v.VisualizaPedido || 'N'
+    codigo: v.omie_id || 0,
+    codInt: v.id || '', // id uuid agora é a chave principal e pode ser mapeada para codInt se necessário, ou omitida
+    nome: v.nome || '---',
+    email: v.email || '',
+    comissao: v.comissao || 0,
+    inativo: v.inativo ? 'S' : 'N',
+    fatura_pedido: v.fatura_pedido || 'N',
+    visualiza_pedido: v.visualiza_pedido || 'N'
   };
 }
 

@@ -21,24 +21,24 @@ export function mapSupabaseToCliente(c: any): ClienteCadastro {
   }
 
   return {
-    codigo_cliente_omie: c.OmieId || 0,
-    codigo_cliente_integracao: c.CodigoClienteIntegracao || '',
-    razao_social: c.RazaoSocial || 'Sem Razão Social',
-    nome_fantasia: c.NomeFantasia || '',
-    cnpj_cpf: c.CnpjCpf || '',
-    telefone1_ddd: '', // Split logic if needed
-    telefone1_numero: c.Telefone || '',
-    email: c.Email || '',
-    cidade: c.Cidade || '',
-    estado: c.Estado || '',
-    bairro: c.Bairro || '',
-    endereco: c.Endereco || '',
-    endereco_numero: c.EnderecoNumero || '',
-    endereco_complemento: c.EnderecoComplemento || '',
-    inscricao_estadual: c.InscricaoEstadual || '',
-    inscricao_municipal: c.InscricaoMunicipal || '',
-    optante_simples_nacional: c.OptanteSimplesNacional || false,
-    tags: [] // Tags sync pending
+    codigo_cliente_omie: c.omie_id || 0,
+    codigo_cliente_integracao: c.id || '', // id uuid agora é a chave principal
+    razao_social: c.razao_social || 'Sem Razão Social',
+    nome_fantasia: c.nome_fantasia || '',
+    cnpj_cpf: c.cnpj_cpf || '',
+    telefone1_ddd: '', 
+    telefone1_numero: c.telefone || '',
+    email: c.email || '',
+    cidade: c.cidade || '',
+    estado: c.estado || '',
+    bairro: c.bairro || '',
+    endereco: c.endereco || '',
+    endereco_numero: c.endereco_numero || '',
+    endereco_complemento: c.endereco_complemento || '',
+    inscricao_estadual: c.inscricao_estadual || '',
+    inscricao_municipal: c.inscricao_municipal || '',
+    optante_simples_nacional: c.optante_simples_nacional || false,
+    tags: []
   };
 }
 

@@ -110,6 +110,7 @@ function RecentOrdersSection({ vendedorOmieId }: { vendedorOmieId: number }) {
   );
 }
 
+
 // ── Main Page ──────────────────────────────────────────────
 
 export default function VendedorDetailsPage() {
@@ -298,6 +299,7 @@ export default function VendedorDetailsPage() {
                 </div>
              </div>
           </SectionCard>
+
 
           {/* ── AUDITORIA RÁPIDA ── */}
           <SectionCard icon={ShieldCheck} iconColor="text-zinc-500" title="Permissões">

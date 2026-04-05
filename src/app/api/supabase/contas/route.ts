@@ -21,12 +21,12 @@ export async function GET(req: Request) {
     const to = from + limit - 1;
     
     let query = supabase
-      .from('ContasCorrente')
-      .select('*, Bancos(CodigoBanco)', { count: 'exact' });
+      .from('contas_corrente')
+      .select('*, bancos(codigo_banco)', { count: 'exact' });
 
     // Handle single item fetch if omieId is provided
     if (omieId) {
-      const { data, error } = await query.eq('OmieId', parseInt(omieId)).single();
+      const { data, error } = await query.eq('omie_id', parseInt(omieId)).single();
       if (error && error.code !== 'PGRST116') throw error;
       
       return NextResponse.json({ 
@@ -38,11 +38,11 @@ export async function GET(req: Request) {
     }
 
     if (search) {
-      query = query.or(`Descricao.ilike.%${search}%`);
+      query = query.ilike('descricao', `%${search}%`);
     }
 
     const { data, error, count } = await query
-      .order('Descricao', { ascending: true })
+      .order('descricao', { ascending: true })
       .range(from, to);
 
     if (error) throw error;

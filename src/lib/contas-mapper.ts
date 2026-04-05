@@ -21,18 +21,19 @@ export function mapSupabaseToContaCorrente(c: any): ContaCorrente {
   }
 
   return {
-    nCodCC: c.OmieId || 0,
-    descricao: c.Descricao || '---',
-    codigo_banco: c.Bancos?.CodigoBanco || '',
-    codigo_agencia: c.Agencia || '', // Placeholder or mapped if available
-    numero_conta_corrente: c.NumeroConta || '', // Placeholder or mapped if available
-    tipo: c.Tipo || '',
-    tipo_conta_corrente: c.TipoContaCorrente || '', // Some records might have this
-    inativo: c.Inativa ? 'S' : 'N',
-    saldo_inicial: c.SaldoInicial || 0,
-    pdv_enviar: c.PdvEnviar || 'N',
-    codigo_integracao: c.CodigoIntegracao || '',
-    omie_updated_at: c.OmieUpdatedAt || ''
+    nCodCC: c.omie_id || 0,
+    id: c.id,
+    descricao: c.descricao || '---',
+    codigo_banco: c.bancos?.codigo_banco || '',
+    codigo_agencia: c.agencia || '', 
+    numero_conta_corrente: c.numero_conta || '', 
+    tipo: c.tipo || '',
+    tipo_conta_corrente: c.tipo_conta_corrente || '', 
+    inativo: c.inativa === 'S' || c.inativa === true ? 'S' : 'N',
+    saldo_inicial: c.saldo_inicial || 0,
+    pdv_enviar: c.pdv_enviar || 'N',
+    codigo_integracao: c.codigo_integracao || '',
+    omie_updated_at: c.omie_updated_at || ''
   };
 }
 

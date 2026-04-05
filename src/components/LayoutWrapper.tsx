@@ -19,10 +19,12 @@ import {
   Menu,
   X,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  UserCircle
 } from 'lucide-react';
 import { NotificationCenter } from './NotificationCenter';
 import { ThemeToggle } from './ThemeToggle';
+import { logout } from '@/app/auth/actions';
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -234,15 +236,24 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
 
         {/* Bottom Actions */}
         <div className="p-4 border-t border-zinc-800/50 space-y-2">
-          <ThemeToggle isSidebarCollapsed={isSidebarCollapsed} />
+          <Link href="/perfil" title={isSidebarCollapsed ? "Meu Perfil" : undefined} className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl ${pathname === '/perfil' ? 'bg-blue-500/10 text-blue-400' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'} transition-all group`}>
+            <UserCircle className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />
+            {!isSidebarCollapsed && <span className="text-sm font-medium">Meu Perfil</span>}
+          </Link>
           <Link href="#" title={isSidebarCollapsed ? "Configurações" : undefined} className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50 transition-all group`}>
             <Settings className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />
             {!isSidebarCollapsed && <span className="text-sm font-medium">Configurações</span>}
           </Link>
-          <Link href="#" title={isSidebarCollapsed ? "Sair" : undefined} className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl text-rose-400/70 hover:text-rose-400 hover:bg-rose-500/10 transition-all group`}>
-            <LogOut className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />
-            {!isSidebarCollapsed && <span className="text-sm font-medium">Sair</span>}
-          </Link>
+          <form action={logout} className="w-full">
+            <button 
+              type="submit"
+              title={isSidebarCollapsed ? "Sair" : undefined} 
+              className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl text-rose-400/70 hover:text-rose-400 hover:bg-rose-500/10 transition-all group`}
+            >
+              <LogOut className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />
+              {!isSidebarCollapsed && <span className="text-sm font-medium text-left">Sair</span>}
+            </button>
+          </form>
         </div>
       </aside>
 
@@ -273,12 +284,12 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
             
             <div className="h-8 w-px bg-zinc-800"></div>
 
-            <button className="flex items-center gap-3 group">
+            <Link href="/perfil" className="flex items-center gap-3 group">
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Administrador</p>
-                <p className="text-xs text-zinc-500">admin@empresa.com</p>
+                <p className="text-xs text-zinc-500 tracking-tight">Ver Perfil</p>
               </div>
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-slate-200 to-slate-100 dark:from-zinc-800 dark:to-zinc-700 border border-slate-300 dark:border-zinc-600 flex items-center justify-center p-0.5 relative">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-slate-200 to-slate-100 dark:from-zinc-800 dark:to-zinc-700 border border-slate-300 dark:border-zinc-600 flex items-center justify-center p-0.5 relative ring-0 group-hover:ring-4 group-hover:ring-blue-500/10 transition-all">
                 <img 
                   src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=transparent" 
                   alt="Avatar" 
@@ -286,7 +297,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
                 />
                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-zinc-900"></div>
               </div>
-            </button>
+            </Link>
           </div>
         </header>
 
