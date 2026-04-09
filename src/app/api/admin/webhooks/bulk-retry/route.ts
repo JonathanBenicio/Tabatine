@@ -1,8 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
-const ENGINE_URL = process.env.TABATINE_ENGINE_URL ?? 'http://localhost:5000';
-
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
@@ -11,28 +9,35 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
-  const body = await request.json();
-
   try {
-    const response = await fetch(`${ENGINE_URL}/admin/webhooks/bulk-retry`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
+    const { ids } = await request.json();
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      return NextResponse.json({ error: data.error ?? 'Erro no bulk retry' }, { status: response.status });
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json({ error: 'Lista de IDs inválida' }, { status: 400 });
     }
 
-    return NextResponse.json(data, { status: 202 });
+    const { error } = await supabase
+      .from('webhook_events')
+      .update({ 
+        status: 'Pending',
+        retry_count: 0,
+        next_retry_at: null,
+        last_error_detail: null
+      })
+      .in('id', ids);
+
+    if (error) {
+      throw error;
+    }
+
+    return NextResponse.json({ 
+      enqueued: ids.length,
+      skipped: 0,
+      message: `${ids.length} eventos colocados na fila para re-processamento`
+    }, { status: 200 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erro desconhecido';
     console.error('[API /admin/webhooks/bulk-retry] POST error:', message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: 'Erro ao re-processar eventos no Supabase' }, { status: 500 });
   }
 }

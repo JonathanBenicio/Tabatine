@@ -1,7 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
-
-const ENGINE_URL = process.env.TABATINE_ENGINE_URL ?? 'http://localhost:5000';
+import { mapSupabaseToWebhookDetail } from '@/lib/webhook-mapper';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -17,25 +16,21 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
   }
 
   try {
-    const response = await fetch(`${ENGINE_URL}/admin/webhooks/${id}`, {
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store',
-    });
+    const { data, error } = await supabase
+      .from('webhook_events')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      return NextResponse.json({ error: data.error ?? 'Evento não encontrado' }, { status: response.status });
+    if (error || !data) {
+      return NextResponse.json({ error: 'Evento não encontrado' }, { status: 404 });
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json(mapSupabaseToWebhookDetail(data));
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erro desconhecido';
     console.error(`[API /admin/webhooks/${id}] GET error:`, message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: 'Erro ao buscar dados no Supabase' }, { status: 500 });
   }
 }
 
@@ -49,23 +44,19 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   }
 
   try {
-    const response = await fetch(`${ENGINE_URL}/admin/webhooks/${id}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    const { error } = await supabase
+      .from('webhook_events')
+      .update({ status: 'Dismissed' })
+      .eq('id', id);
 
-    if (response.status === 204) {
-      return new NextResponse(null, { status: 204 });
+    if (error) {
+      throw error;
     }
 
-    const data = await response.json();
-    return NextResponse.json({ error: data.error ?? 'Erro ao descartar evento' }, { status: response.status });
+    return new NextResponse(null, { status: 204 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erro desconhecido';
     console.error(`[API /admin/webhooks/${id}] DELETE error:`, message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: 'Erro ao descartar evento no Supabase' }, { status: 500 });
   }
 }

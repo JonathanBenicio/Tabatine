@@ -1,8 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
-const ENGINE_URL = process.env.TABATINE_ENGINE_URL ?? 'http://localhost:5000';
-
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
@@ -17,24 +15,31 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
   }
 
   try {
-    const response = await fetch(`${ENGINE_URL}/admin/webhooks/${id}/retry`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    const { data, error } = await supabase
+      .from('webhook_events')
+      .update({ 
+        status: 'Pending',
+        retry_count: 0,
+        next_retry_at: null,
+        last_error_detail: null
+      })
+      .eq('id', id)
+      .select()
+      .single();
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      return NextResponse.json({ error: data.error ?? 'Erro ao re-processar evento' }, { status: response.status });
+    if (error) {
+      throw error;
     }
 
-    return NextResponse.json(data, { status: 202 });
+    return NextResponse.json({
+      id,
+      message: 'Evento colocado na fila para re-processamento',
+      newStatus: 'Pending',
+      retryCount: 0
+    }, { status: 200 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erro desconhecido';
     console.error(`[API /admin/webhooks/${id}/retry] POST error:`, message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: 'Erro ao re-processar evento no Supabase' }, { status: 500 });
   }
 }

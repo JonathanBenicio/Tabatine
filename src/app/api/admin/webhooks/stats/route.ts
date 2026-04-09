@@ -1,8 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
 
-const ENGINE_URL = process.env.TABATINE_ENGINE_URL ?? 'http://localhost:5000';
-
 export async function GET() {
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
@@ -12,24 +10,40 @@ export async function GET() {
   }
 
   try {
-    const response = await fetch(`${ENGINE_URL}/admin/webhooks/stats`, {
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-        'Content-Type': 'application/json',
-      },
-      next: { revalidate: 30 },
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayIso = today.toISOString();
+
+    // Executando contagens em paralelo para melhor performance
+    const [
+      pending,
+      processing,
+      failed,
+      deadLetter,
+      completedToday,
+      lastEvent
+    ] = await Promise.all([
+      supabase.from('webhook_events').select('*', { count: 'exact', head: true }).eq('status', 'Pending'),
+      supabase.from('webhook_events').select('*', { count: 'exact', head: true }).eq('status', 'Processing'),
+      supabase.from('webhook_events').select('*', { count: 'exact', head: true }).eq('status', 'Failed'),
+      supabase.from('webhook_events').select('*', { count: 'exact', head: true }).eq('status', 'DeadLetter'),
+      supabase.from('webhook_events').select('*', { count: 'exact', head: true })
+        .in('status', ['Completed', 'Processed'])
+        .gte('processed_at', todayIso),
+      supabase.from('webhook_events').select('created_at').order('created_at', { ascending: false }).limit(1).single()
+    ]);
+
+    return NextResponse.json({
+      pending: pending.count ?? 0,
+      processing: processing.count ?? 0,
+      failed: failed.count ?? 0,
+      deadLetter: deadLetter.count ?? 0,
+      completedToday: completedToday.count ?? 0,
+      lastEventAt: lastEvent.data?.created_at ?? null,
     });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      return NextResponse.json({ error: data.error ?? 'Erro ao buscar estatísticas' }, { status: response.status });
-    }
-
-    return NextResponse.json(data);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erro desconhecido';
     console.error('[API /admin/webhooks/stats] GET error:', message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: 'Erro ao calcular estatísticas no Supabase' }, { status: 500 });
   }
 }
