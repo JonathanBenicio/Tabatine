@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Vendedor } from '@/store/useVendedoresStore'
+import { mapSupabaseToVendedores } from '@/lib/vendedores-mapper'
 
 interface FetchVendedoresResponse {
   vendedores: Vendedor[]
@@ -24,13 +25,7 @@ export const useVendedoresQuery = (page: number, search: string) => {
         throw new Error(data.error || 'Failed to fetch vendedores')
       }
 
-      const mappedVendedores = (data.vendedores || []).map((v: any) => ({
-        codigo: v.OmieId,
-        nome: v.Nome,
-        email: v.Email,
-        comissao: v.Comissao,
-        inativo: v.Inativo ? 'S' : 'N'
-      }))
+      const mappedVendedores = mapSupabaseToVendedores(data.vendedores);
 
       return {
         vendedores: mappedVendedores,

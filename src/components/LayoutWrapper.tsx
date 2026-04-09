@@ -21,7 +21,8 @@ import {
   ChevronLeft,
   ChevronRight,
   UserCircle,
-  Webhook
+  Webhook,
+  Home
 } from 'lucide-react';
 import { NotificationCenter } from './NotificationCenter';
 import { ThemeToggle } from './ThemeToggle';
@@ -96,163 +97,132 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-2">
-          {!isSidebarCollapsed && <p className="px-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">Menu Principal</p>}
-          
-          <Link
-              href="/dashboard"
-              title={isSidebarCollapsed ? "Dashboard" : undefined}
-              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/dashboard' ? 'bg-purple-500/10 text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'}`}
-            >
-              {pathname === '/dashboard' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-500 rounded-r-md"></div>}
-              <LayoutDashboard className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'} ${pathname === '/dashboard' ? 'text-purple-400' : 'group-hover:text-purple-400 transition-colors'}`} />
-              {!isSidebarCollapsed && (
-                <>
-                  <span className="text-sm font-medium whitespace-nowrap">Dashboard</span>
-
-                </>
-              )}
-            </Link>
-          
-          <Link
+        <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-6 custom-scrollbar">
+          {/* Dashboard Group */}
+          <NavGroup title="Principal" isCollapsed={isSidebarCollapsed}>
+            <NavItem
               href="/"
-              title={isSidebarCollapsed ? "Notas Fiscais" : undefined}
-              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/' ? 'bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'}`}
-            >
-              {pathname === '/' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-r-md"></div>}
-              <FileText className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'} ${pathname === '/' ? 'text-blue-400' : 'group-hover:text-blue-400 transition-colors'}`} />
-              {!isSidebarCollapsed && (
-                <>
-                  <span className="text-sm font-medium whitespace-nowrap">Notas Fiscais</span>
+              icon={Home}
+              label="Home"
+              isCollapsed={isSidebarCollapsed}
+              isActive={pathname === '/'}
+              activeColor="blue"
+            />
+            <NavItem
+              href="/dashboard"
+              icon={LayoutDashboard}
+              label="Dashboard"
+              isCollapsed={isSidebarCollapsed}
+              isActive={pathname === '/dashboard'}
+              activeColor="purple"
+            />
+          </NavGroup>
 
-                </>
-              )}
-            </Link>
-
-          <Link
+          {/* Sales Group */}
+          <NavGroup title="Vendas" isCollapsed={isSidebarCollapsed}>
+            <NavItem
               href="/vendas"
-              title={isSidebarCollapsed ? "Relatório Vendas" : undefined}
-              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/vendas' ? 'bg-orange-100 dark:bg-orange-500/10 text-orange-700 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'}`}
-            >
-              {pathname === '/vendas' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500 rounded-r-md"></div>}
-              <TrendingUp className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'} ${pathname === '/vendas' ? 'text-orange-400' : 'group-hover:text-orange-400 transition-colors'}`} />
-              {!isSidebarCollapsed && (
-                <>
-                  <span className="text-sm font-medium whitespace-nowrap">Relatório Vendas</span>
-                  <span className="ml-auto px-2 py-0.5 rounded-md bg-orange-500/20 text-orange-400 text-[10px] uppercase font-bold">Novo</span>
-                </>
-              )}
-            </Link>
+              icon={TrendingUp}
+              label="Pedidos"
+              isCollapsed={isSidebarCollapsed}
+              isActive={pathname === '/vendas'}
+              activeColor="orange"
+            />
+            <NavItem
+              href="/nf"
+              icon={FileText}
+              label="Notas Fiscais"
+              isCollapsed={isSidebarCollapsed}
+              isActive={pathname === '/nf'}
+              activeColor="blue"
+            />
+          </NavGroup>
 
-          <Link
-              href="/notificacoes"
-              title={isSidebarCollapsed ? "Notificações" : undefined}
-              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/notificacoes' ? 'bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'}`}
-            >
-              {pathname === '/notificacoes' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-r-md"></div>}
-              <Bell className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'} ${pathname === '/notificacoes' ? 'text-blue-400' : 'group-hover:text-blue-400 transition-colors'}`} />
-              {!isSidebarCollapsed && (
-                <>
-                  <span className="text-sm font-medium whitespace-nowrap">Notificações</span>
-                  <span className="ml-auto w-2 h-2 rounded-full bg-blue-500"></span>
-                </>
-              )}
-            </Link>
-
-          <Link
-              href="/clientes"
-              title={isSidebarCollapsed ? "Clientes" : undefined}
-              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/clientes' ? 'bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'}`}
-            >
-              {pathname === '/clientes' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-r-md"></div>}
-              <Users className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'} ${pathname === '/clientes' ? 'text-blue-400' : 'group-hover:text-blue-400 transition-colors'}`} />
-              {!isSidebarCollapsed && (
-                <>
-                  <span className="text-sm font-medium whitespace-nowrap">Clientes</span>
-
-                </>
-              )}
-            </Link>
-
-          <Link
-              href="/vendedores"
-              title={isSidebarCollapsed ? "Vendedores" : undefined}
-              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/vendedores' ? 'bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'}`}
-            >
-              {pathname === '/vendedores' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-r-md"></div>}
-              <ArrowRight className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'} ${pathname === '/vendedores' ? 'text-blue-400' : 'group-hover:text-blue-400 transition-colors'}`} />
-              {!isSidebarCollapsed && (
-                <>
-                  <span className="text-sm font-medium whitespace-nowrap">Vendedores</span>
-
-                </>
-              )}
-            </Link>
-          
-          <Link
-              href="/produtos"
-              title={isSidebarCollapsed ? "Produtos" : undefined}
-              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/produtos' ? 'bg-indigo-100 dark:bg-indigo-500/10 text-indigo-700 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'}`}
-            >
-              {pathname === '/produtos' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-r-md"></div>}
-              <Package className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'} ${pathname === '/produtos' ? 'text-indigo-400' : 'group-hover:text-indigo-400 transition-colors'}`} />
-              {!isSidebarCollapsed && (
-                <>
-                  <span className="text-sm font-medium whitespace-nowrap">Produtos</span>
-
-                </>
-              )}
-            </Link>
-
-          <Link
-              href="/conciliacao"
-              title={isSidebarCollapsed ? "Conciliação" : undefined}
-              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/conciliacao' ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'}`}
-            >
-              {pathname === '/conciliacao' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 rounded-r-md"></div>}
-              <Banknote className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'} ${pathname === '/conciliacao' ? 'text-emerald-400' : 'group-hover:text-emerald-400 transition-colors'}`} />
-              {!isSidebarCollapsed && (
-                <>
-                  <span className="text-sm font-medium whitespace-nowrap">Conciliação</span>
-
-                </>
-              )}
-            </Link>
-
-          <Link
+          {/* Finance Group */}
+          <NavGroup title="Financeiro" isCollapsed={isSidebarCollapsed}>
+            <NavItem
+              href="/financeiro/pagar"
+              icon={Banknote}
+              label="Contas a Pagar"
+              isCollapsed={isSidebarCollapsed}
+              isActive={pathname === '/financeiro/pagar'}
+              activeColor="emerald"
+            />
+            <NavItem
+              href="/financeiro/receber"
+              icon={Banknote}
+              label="Contas a Receber"
+              isCollapsed={isSidebarCollapsed}
+              isActive={pathname === '/financeiro/receber'}
+              activeColor="emerald"
+            />
+            <NavItem
               href="/contas-correntes"
-              title={isSidebarCollapsed ? "Bancos" : undefined}
-              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/contas-correntes' ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'}`}
-            >
-              {pathname === '/contas-correntes' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 rounded-r-md"></div>}
-              <Building2 className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'} ${pathname === '/contas-correntes' ? 'text-emerald-400' : 'group-hover:text-emerald-400 transition-colors'}`} />
-              {!isSidebarCollapsed && (
-                <>
-                  <span className="text-sm font-medium whitespace-nowrap">Bancos</span>
+              icon={Building2}
+              label="Bancos"
+              isCollapsed={isSidebarCollapsed}
+              isActive={pathname === '/contas-correntes'}
+              activeColor="emerald"
+            />
+            <NavItem
+              href="/conciliacao"
+              icon={TrendingUp}
+              label="Conciliação"
+              isCollapsed={isSidebarCollapsed}
+              isActive={pathname === '/conciliacao'}
+              activeColor="emerald"
+            />
+          </NavGroup>
 
-                </>
-              )}
-            </Link>
+          {/* Registers Group */}
+          <NavGroup title="Cadastros" isCollapsed={isSidebarCollapsed}>
+            <NavItem
+              href="/clientes"
+              icon={Users}
+              label="Clientes"
+              isCollapsed={isSidebarCollapsed}
+              isActive={pathname === '/clientes'}
+              activeColor="blue"
+            />
+            <NavItem
+              href="/produtos"
+              icon={Package}
+              label="Produtos"
+              isCollapsed={isSidebarCollapsed}
+              isActive={pathname === '/produtos'}
+              activeColor="indigo"
+            />
+            <NavItem
+              href="/vendedores"
+              icon={ArrowRight}
+              label="Vendedores"
+              isCollapsed={isSidebarCollapsed}
+              isActive={pathname === '/vendedores'}
+              activeColor="blue"
+            />
+          </NavGroup>
 
-          {/* Separador Admin */}
-          {!isSidebarCollapsed && (
-            <p className="px-3 text-xs font-semibold text-zinc-600 uppercase tracking-wider mt-4 mb-2">Administração</p>
-          )}
-
-          <Link
+          {/* Admin Group */}
+          <NavGroup title="Administração" isCollapsed={isSidebarCollapsed}>
+            <NavItem
               href="/admin/webhooks"
-              title={isSidebarCollapsed ? "Webhooks DLQ" : undefined}
-              className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${pathname === '/admin/webhooks' ? 'bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'}`}
-            >
-              {pathname === '/admin/webhooks' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-rose-500 rounded-r-md"></div>}
-              <Webhook className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'} ${pathname === '/admin/webhooks' ? 'text-rose-400' : 'group-hover:text-rose-400 transition-colors'}`} />
-              {!isSidebarCollapsed && (
-                <>
-                  <span className="text-sm font-medium whitespace-nowrap">Webhooks DLQ</span>
-                  <span className="ml-auto px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-400 text-[10px] uppercase font-bold">Admin</span>
-                </>
-              )}
-            </Link>
+              icon={Webhook}
+              label="Webhooks DLQ"
+              isCollapsed={isSidebarCollapsed}
+              isActive={pathname === '/admin/webhooks'}
+              activeColor="rose"
+              badge="Admin"
+            />
+            <NavItem
+              href="/notificacoes"
+              icon={Bell}
+              label="Notificações"
+              isCollapsed={isSidebarCollapsed}
+              isActive={pathname === '/notificacoes'}
+              activeColor="blue"
+              indicator
+            />
+          </NavGroup>
         </nav>
 
         {/* Bottom Actions */}
@@ -330,3 +300,66 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
     </div>
   );
 }
+
+// Helper Components
+interface NavItemProps {
+  href: string;
+  icon: React.ElementType;
+  label: string;
+  isCollapsed: boolean;
+  isActive: boolean;
+  activeColor: 'blue' | 'purple' | 'orange' | 'emerald' | 'rose' | 'indigo';
+  badge?: string;
+  indicator?: boolean;
+}
+
+function NavItem({ href, icon: Icon, label, isCollapsed, isActive, activeColor, badge, indicator }: NavItemProps) {
+  const colorMap = {
+    blue: { bg: 'bg-blue-100 dark:bg-blue-500/10', text: 'text-blue-700 dark:text-white', icon: 'text-blue-400', bar: 'bg-blue-500' },
+    purple: { bg: 'bg-purple-100 dark:bg-purple-500/10', text: 'text-purple-700 dark:text-white', icon: 'text-purple-400', bar: 'bg-purple-500' },
+    orange: { bg: 'bg-orange-100 dark:bg-orange-500/10', text: 'text-orange-700 dark:text-white', icon: 'text-orange-400', bar: 'bg-orange-500' },
+    emerald: { bg: 'bg-emerald-100 dark:bg-emerald-500/10', text: 'text-emerald-700 dark:text-white', icon: 'text-emerald-400', bar: 'bg-emerald-500' },
+    rose: { bg: 'bg-rose-100 dark:bg-rose-500/10', text: 'text-rose-700 dark:text-white', icon: 'text-rose-400', bar: 'bg-rose-500' },
+    indigo: { bg: 'bg-indigo-100 dark:bg-indigo-500/10', text: 'text-indigo-700 dark:text-white', icon: 'text-indigo-400', bar: 'bg-indigo-500' },
+  };
+
+  const colors = colorMap[activeColor];
+
+  return (
+    <Link
+      href={href}
+      title={isCollapsed ? label : undefined}
+      className={`flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl transition-all group relative overflow-hidden ${isActive ? `${colors.bg} ${colors.text}` : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'}`}
+    >
+      {isActive && <div className={`absolute left-0 top-0 bottom-0 w-1 ${colors.bar} rounded-r-md`}></div>}
+      <Icon className={`w-5 h-5 ${isCollapsed ? '' : 'mr-3'} ${isActive ? colors.icon : 'group-hover:text-current transition-colors'}`} />
+      {!isCollapsed && (
+        <>
+          <span className="text-sm font-medium whitespace-nowrap">{label}</span>
+          {badge && (
+            <span className={`ml-auto px-2 py-0.5 rounded-md ${colors.bg} ${colors.icon} text-[10px] uppercase font-bold`}>
+              {badge}
+            </span>
+          )}
+          {indicator && <span className="ml-auto w-2 h-2 rounded-full bg-blue-500"></span>}
+        </>
+      )}
+    </Link>
+  );
+}
+
+function NavGroup({ title, children, isCollapsed }: { title: string; children: React.ReactNode; isCollapsed: boolean }) {
+  return (
+    <div className="space-y-1">
+      {!isCollapsed && (
+        <p className="px-3 text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.15em] mb-2">
+          {title}
+        </p>
+      )}
+      <div className="space-y-1">
+        {children}
+      </div>
+    </div>
+  );
+}
+
