@@ -29,6 +29,7 @@ import {
   createColumnHelper,
 } from '@tanstack/react-table';
 import { exportToCSV } from '@/utils/export-utils';
+import { DataTable } from './ui/DataTable';
 
 const columnHelper = createColumnHelper<Produto>();
 
@@ -366,82 +367,27 @@ export default function ProdutosTable() {
 
 
       {/* Table Container */}
-      <div className="bg-zinc-900/30 border border-zinc-800/50 rounded-2xl overflow-hidden backdrop-blur-sm shadow-xl">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
-            <thead>
-              {table.getHeaderGroups().map(headerGroup => (
-                <tr key={headerGroup.id} className="border-b border-zinc-800/50 bg-zinc-900/50">
-                  {headerGroup.headers.map(header => (
-                    <th 
-                      key={header.id} 
-                      className={`px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider select-none ${header.column.getCanSort() ? 'cursor-pointer hover:bg-zinc-800/50 transition-colors' : ''} ${header.column.columnDef.meta?.align === 'right' ? 'text-right' : header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''}`}
-                      onClick={header.column.getToggleSortingHandler()}
-                    >
-                      <div className={`flex items-center gap-2 ${header.column.columnDef.meta?.align === 'right' ? 'justify-end' : header.column.columnDef.meta?.align === 'center' ? 'justify-center' : ''}`}>
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                        {header.column.getCanSort() && (
-                          <div className="text-zinc-600 transition-colors">
-                            {{
-                              asc: <ArrowUp className="w-3 h-3 text-blue-400" />,
-                              desc: <ArrowDown className="w-3 h-3 text-blue-400" />,
-                            }[header.column.getIsSorted() as string] ?? <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100" />}
-                          </div>
-                        )}
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody className="divide-y divide-zinc-800/50">
-              {isLoading && !data ? (
-                Array.from({ length: 10 }).map((_, i) => (
-                  <tr key={i} className="animate-pulse">
-                    {columns.map((_, colIdx) => (
-                      <td key={colIdx} className="px-6 py-5">
-                        <div className="h-4 bg-zinc-800/50 rounded-md w-full"></div>
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              ) : table.getRowModel().rows.length > 0 ? (
-                table.getRowModel().rows.map(row => (
-                  <tr key={row.id} className="group hover:bg-white/[0.02] transition-colors">
-                    {row.getVisibleCells().map(cell => (
-                      <td key={cell.id} className="px-6 py-5">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={columns.length} className="px-6 py-24 text-center">
-                    <div className="flex flex-col items-center justify-center gap-3">
-                       <Package size={40} className="text-zinc-700" />
-                       <p className="text-sm font-medium text-zinc-500">Nenhum produto encontrado na base.</p>
-                       <button onClick={() => {setSearchTerm(''); setFilters({});}} className="text-xs text-blue-400 font-bold hover:underline">Limpar filtros e pesquisa</button>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+      <DataTable 
+        table={table}
+        isLoading={isLoading && !data}
+        emptyMessage="Nenhum produto encontrado na base."
+        emptyIcon={Package}
+        onEmptyAction={() => {setSearchTerm(''); setFilters({});}}
+        emptyActionLabel="Limpar filtros e pesquisa"
+        hoverColor="blue"
+      />
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-zinc-800/50 bg-zinc-900/30 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-zinc-500 font-medium tracking-wide">
-            Mostrando <span className="text-white font-bold">{table.getRowModel().rows.length}</span> de <span className="text-white font-bold">{data?.totalRegistros || 0}</span> produtos
-          </p>
-          <Pagination
-            currentPage={currentPage}
-            totalPaginas={data?.totalPaginas || 1}
-            onPageChange={setCurrentPage}
-            loading={isLoading}
-          />
-        </div>
+      {/* Footer Area */}
+      <div className="bg-zinc-900/30 border-t border-zinc-800/50 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p className="text-xs text-zinc-500 font-medium tracking-wide">
+          Mostrando <span className="text-white font-bold">{table.getRowModel().rows.length}</span> de <span className="text-white font-bold">{data?.totalRegistros || 0}</span> produtos
+        </p>
+        <Pagination
+          currentPage={currentPage}
+          totalPaginas={data?.totalPaginas || 1}
+          onPageChange={setCurrentPage}
+          loading={isLoading}
+        />
       </div>
 
       {error && (

@@ -16,6 +16,7 @@ import {
   flexRender,
   createColumnHelper,
 } from '@tanstack/react-table';
+import { DataTable } from './ui/DataTable';
 
 const columnHelper = createColumnHelper<TituloFinanceiro>();
 
@@ -199,65 +200,20 @@ export default function FinanceiroTable({ type }: FinanceiroTableProps) {
       )}
 
       {/* Table Container */}
-      <div className="group relative rounded-3xl border border-zinc-800/50 bg-zinc-950/20 backdrop-blur-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              {table.getHeaderGroups().map(headerGroup => (
-                <tr key={headerGroup.id} className="border-b border-zinc-800/50 bg-zinc-900/20">
-                  {headerGroup.headers.map(header => (
-                    <th 
-                      key={header.id} 
-                      className={`py-5 px-6 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] font-sans ${header.column.columnDef.meta?.align === 'right' ? 'text-right' : ''}`}
-                    >
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody className="divide-y divide-zinc-800/30">
-              {isLoading && !data ? (
-                [...Array(6)].map((_, i) => (
-                  <tr key={i} className="animate-pulse">
-                    {[...Array(8)].map((_, j) => (
-                      <td key={j} className="py-5 px-6"><div className="h-4 bg-zinc-800/50 rounded-md w-full"></div></td>
-                    ))}
-                  </tr>
-                ))
-              ) : table.getRowModel().rows.length === 0 ? (
-                <tr>
-                  <td colSpan={columns.length} className="py-24 px-6 text-center">
-                    <div className="flex flex-col items-center justify-center gap-4">
-                      <div className="w-16 h-16 rounded-full bg-zinc-900/50 border border-zinc-800 flex items-center justify-center text-zinc-700">
-                        <Banknote size={32} />
-                      </div>
-                      <p className="text-zinc-600 font-medium tracking-tight">Nenhum título financeiro encontrado</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                table.getRowModel().rows.map(row => (
-                  <tr key={row.id} className="group/row hover:bg-white/[0.02] transition-colors">
-                    {row.getVisibleCells().map(cell => (
-                      <td key={cell.id} className="py-5 px-6">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+      <DataTable 
+        table={table}
+        isLoading={isLoading && !data}
+        emptyMessage="Nenhum título financeiro encontrado"
+        emptyIcon={Banknote}
+        hoverColor="emerald"
+      />
 
-        <Pagination 
-          currentPage={currentPage}
-          totalPaginas={data?.totalPaginas || 1}
-          onPageChange={setCurrentPage}
-          loading={isLoading}
-        />
-      </div>
+      <Pagination 
+        currentPage={currentPage}
+        totalPaginas={data?.totalPaginas || 1}
+        onPageChange={setCurrentPage}
+        loading={isLoading}
+      />
     </div>
   );
 }

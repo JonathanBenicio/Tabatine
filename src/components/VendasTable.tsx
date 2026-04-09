@@ -32,6 +32,7 @@ import {
   createColumnHelper,
 } from '@tanstack/react-table';
 import { exportToCSV } from '@/utils/export-utils';
+import { DataTable } from './ui/DataTable';
 
 const columnHelper = createColumnHelper<VendaPlana>();
 
@@ -578,171 +579,50 @@ export default function VendasTable() {
       )}
 
       {/* Table Container */}
-      <div className="group relative rounded-3xl border border-zinc-800/50 bg-zinc-950/20 backdrop-blur-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-        <div className="overflow-x-auto">
-          <table className="w-max min-w-full text-left border-collapse">
-            <thead>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id} className="border-b border-zinc-800/50 bg-zinc-900/20">
-                  {headerGroup.headers.map(header => {
-                    const isPinned = header.column.getIsPinned();
-                    
-                    const pinningStyles: React.CSSProperties = isPinned ? {
-                      position: 'sticky',
-                      left: isPinned === 'left' ? `${header.column.getStart('left')}px` : undefined,
-                      right: isPinned === 'right' ? `${header.column.getAfter('right')}px` : undefined, 
-                      zIndex: 30,
-                      backgroundColor: 'rgb(24, 24, 27)', // zinc-900
-                    } : {
-                      // Se o cabeçalho não for fixo lateralmente, ele ainda deve ser fixo no topo
-                      position: 'sticky',
-                      top: 0,
-                      zIndex: 10,
-                      backgroundColor: 'rgb(24, 24, 27)',
-                    };
+      <DataTable 
+        table={table}
+        isLoading={isLoading && !data}
+        emptyMessage="Nenhuma venda localizada"
+        emptyIcon={Package}
+        onEmptyAction={() => {setSearchTerm(''); setFilters({});}}
+        emptyActionLabel="Limpar filtros e pesquisa"
+        hoverColor="orange"
+      />
 
-                    return (
-                      <th 
-                        key={header.id} 
-                        colSpan={header.colSpan}
-                        className={`py-4 px-5 text-[9px] font-black text-zinc-500 uppercase tracking-widest font-sans whitespace-nowrap select-none transition-colors 
-                          ${header.column.getCanSort() ? 'cursor-pointer hover:bg-orange-500/5 hover:text-orange-400' : ''} 
-                          ${isPinned ? 'shadow-[2px_0_10px_rgba(0,0,0,0.5)] z-40' : ''}`}
-                        style={{ 
-                          width: header.getSize() !== 150 ? header.getSize() : undefined,
-                          ...pinningStyles
-                        }}
-                      >
-                        <div className="flex flex-col gap-2">
-                          <div 
-                            className="flex items-center gap-2" 
-                            onClick={header.column.getToggleSortingHandler()}
-                          >
-                            {flexRender(header.column.columnDef.header, header.getContext())}
-                            {header.column.getCanSort() && (
-                              <div className="text-orange-500/50 transition-colors">
-                                {{
-                                  asc: <ArrowUp className="w-3 h-3 text-orange-400" />,
-                                  desc: <ArrowDown className="w-3 h-3 text-orange-400" />,
-                                }[header.column.getIsSorted() as string] ?? <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100" />}
-                              </div>
-                            )}
-                          </div>
-                          
-                          {/* Column Filter */}
-                          {header.column.getCanFilter() && showColumnFilters && (
-                            <div className="relative group/filter mt-1 animate-in fade-in slide-in-from-top-1 duration-200">
-                              <Search size={10} className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within/filter:text-orange-500 transition-colors" />
-                              <input
-                                type="text"
-                                value={(header.column.getFilterValue() ?? '') as string}
-                                onChange={e => header.column.setFilterValue(e.target.value)}
-                                placeholder="Filtrar..."
-                                onClick={e => e.stopPropagation()}
-                                className="w-full bg-zinc-950/50 border border-zinc-800 rounded-md py-1.5 pl-7 pr-2 text-[9px] font-medium text-zinc-400 placeholder:text-zinc-700 outline-none focus:border-orange-500/30 transition-all focus:bg-zinc-900"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </th>
-                    );
-                  })}
-                </tr>
-              ))}
-            </thead>
-            <tbody className="divide-y divide-zinc-800/30">
-              {isLoading && !data ? (
-                /* Skeleton rows */
-                [...Array(6)].map((_, i) => (
-                  <tr key={i} className="animate-pulse">
-                     {columns.map((_, col) => (
-                        <td key={col} className="py-5 px-5">
-                          <div className="h-4 bg-zinc-800/50 rounded-md w-full min-w-[70px]"></div>
-                        </td>
-                     ))}
-                  </tr>
-                ))
-              ) : table.getRowModel().rows.length === 0 ? (
-                <tr>
-                  <td colSpan={columns.length} className="py-24 px-6 text-center">
-                    <div className="flex flex-col items-center justify-center gap-4 group/icon">
-                      <div className="w-16 h-16 rounded-full bg-zinc-900/50 border border-zinc-800 flex items-center justify-center text-zinc-700 group-hover/icon:text-zinc-500 transition-colors">
-                        <Package size={32} />
-                      </div>
-                      <p className="text-zinc-400 font-medium">Nenhuma venda localizada</p>
-                      <button onClick={() => {setSearchTerm(''); setFilters({});}} className="text-xs text-orange-400 font-bold hover:underline">Limpar filtros e pesquisa</button>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                table.getRowModel().rows.map(row => (
-                  <tr 
-                    key={row.id} 
-                    className="group/row hover:bg-orange-500/[0.03] transition-all duration-300"
-                  >
-                    {row.getVisibleCells().map(cell => {
-                      const isPinned = cell.column.getIsPinned();
-                      const pinningStyles: React.CSSProperties = isPinned ? {
-                        position: 'sticky',
-                        left: isPinned === 'left' ? `${cell.column.getStart('left')}px` : undefined,
-                        right: isPinned === 'right' ? `${cell.column.getAfter('right')}px` : undefined,
-                        zIndex: 10,
-                        backgroundColor: 'rgba(9, 9, 11, 0.95)', // bg-zinc-950 com opacidade
-                        backdropFilter: 'blur(8px)',
-                      } : {};
-
-                      return (
-                        <td 
-                          key={cell.id} 
-                          className={`py-4 px-5 whitespace-nowrap border-b border-zinc-800/10 ${isPinned ? 'shadow-[2px_0_5px_rgba(0,0,0,0.3)]' : ''}`}
-                          style={pinningStyles}
-                        >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="px-6 py-4 border-t border-zinc-800/50 bg-zinc-900/30 flex flex-col sm:flex-row items-center justify-between gap-4">
-           <div className="flex items-center gap-6">
-              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
-                Mostrando <span className="text-white">{table.getRowModel().rows.length}</span> de <span className="text-white">{data?.totalRegistros || 0}</span> pedidos
-              </p>
-              
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Linhas:</span>
-                <select 
-                  value={pageSize}
-                  onChange={e => setPageSize(Number(e.target.value))}
-                  className="bg-zinc-950 border border-zinc-800 rounded-lg px-2 py-1 text-[10px] font-bold text-zinc-400 outline-none focus:border-orange-500/50 transition-colors"
-                >
-                  {[10, 20, 50, 100].map(size => (
-                    <option key={size} value={size}>{size}</option>
-                  ))}
-                </select>
-              </div>
-           </div>
-          <Pagination 
-            currentPage={currentPage}
-            totalPaginas={data?.totalPaginas || 1}
-            onPageChange={setCurrentPage}
-            loading={isLoading}
-          />
-        </div>
-
-        {/* Loading Overlay */}
-        {isLoading && data && (
-          <div className="absolute inset-0 bg-zinc-950/40 backdrop-blur-[2px] flex flex-col justify-center items-center z-20">
-            <RefreshCw className="w-10 h-10 text-orange-500 animate-spin" />
-            <p className="text-[10px] font-bold text-orange-400 uppercase tracking-[0.2em] mt-4">Calculando Matriz...</p>
-          </div>
-        )}
+      <div className="px-6 py-4 border-t border-zinc-800/50 bg-zinc-900/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+         <div className="flex items-center gap-6">
+            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
+              Mostrando <span className="text-white">{table.getRowModel().rows.length}</span> de <span className="text-white">{data?.totalRegistros || 0}</span> pedidos
+            </p>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Linhas:</span>
+              <select 
+                value={pageSize}
+                onChange={e => setPageSize(Number(e.target.value))}
+                className="bg-zinc-950 border border-zinc-800 rounded-lg px-2 py-1 text-[10px] font-bold text-zinc-400 outline-none focus:border-orange-500/50 transition-colors"
+              >
+                {[10, 20, 50, 100].map(size => (
+                  <option key={size} value={size}>{size}</option>
+                ))}
+              </select>
+            </div>
+         </div>
+        <Pagination 
+          currentPage={currentPage}
+          totalPaginas={data?.totalPaginas || 1}
+          onPageChange={setCurrentPage}
+          loading={isLoading}
+        />
       </div>
+
+      {/* Loading Overlay */}
+      {isLoading && data && (
+        <div className="absolute inset-0 bg-zinc-950/40 backdrop-blur-[2px] flex flex-col justify-center items-center z-20">
+          <RefreshCw className="w-10 h-10 text-orange-500 animate-spin" />
+          <p className="text-[10px] font-bold text-orange-400 uppercase tracking-[0.2em] mt-4">Calculando Matriz...</p>
+        </div>
+      )}
     </div>
   );
 }
