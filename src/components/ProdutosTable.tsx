@@ -29,6 +29,9 @@ import {
   createColumnHelper,
 } from '@tanstack/react-table';
 import { exportToCSV } from '@/utils/export-utils';
+import { TableContainer } from './ui/TableContainer';
+import { TableSearch } from './ui/TableSearch';
+import { TableSummaryCard } from './ui/TableSummaryCard';
 
 const columnHelper = createColumnHelper<Produto>();
 
@@ -66,14 +69,14 @@ export default function ProdutosTable() {
       header: 'Produto',
       cell: info => (
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-zinc-800/50 flex items-center justify-center text-zinc-400 group-hover:bg-blue-500/10 group-hover:text-blue-400 transition-all border border-zinc-800/50">
+          <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-zinc-800/50 flex items-center justify-center text-slate-400 dark:text-zinc-400 group-hover:bg-blue-500/10 group-hover:text-blue-500 transition-all border border-slate-200 dark:border-zinc-800/50">
             <Package className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-zinc-200 group-hover:text-white transition-colors">{info.getValue()}</p>
+            <p className="text-sm font-semibold text-slate-700 dark:text-zinc-200 group-hover:text-slate-950 dark:group-hover:text-white transition-colors">{info.getValue()}</p>
             <div className="flex items-center gap-2 mt-1">
-               <Tag className="w-3 h-3 text-zinc-600" />
-               <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-tight">Omie Ref: {info.row.original.codigo_produto}</span>
+               <Tag className="w-3 h-3 text-slate-400 dark:text-zinc-600" />
+               <span className="text-[10px] text-slate-500 dark:text-zinc-500 font-medium uppercase tracking-tight">Omie Ref: {info.row.original.codigo_produto}</span>
             </div>
           </div>
         </div>
@@ -84,11 +87,11 @@ export default function ProdutosTable() {
       cell: info => (
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
-             <Hash className="w-3.5 h-3.5 text-zinc-600" />
-             <span className="text-sm font-mono text-zinc-400 whitespace-nowrap">{info.getValue() || '--'}</span>
+             <Hash className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-600" />
+             <span className="text-sm font-mono text-slate-600 dark:text-zinc-400 whitespace-nowrap">{info.getValue() || '--'}</span>
           </div>
           {info.row.original.ean && (
-            <span className="text-[10px] text-zinc-500 font-mono">EAN: {info.row.original.ean}</span>
+            <span className="text-[10px] text-slate-500 dark:text-zinc-500 font-mono">EAN: {info.row.original.ean}</span>
           )}
         </div>
       ),
@@ -96,7 +99,7 @@ export default function ProdutosTable() {
     columnHelper.accessor('familia_produto', {
       header: 'Família',
       cell: info => (
-        <span className="text-xs text-zinc-400 truncate max-w-[120px] block italic">
+        <span className="text-xs text-slate-500 dark:text-zinc-400 truncate max-w-[120px] block italic">
           {info.getValue() || '--'}
         </span>
       ),
@@ -104,7 +107,7 @@ export default function ProdutosTable() {
     columnHelper.accessor('unidade', {
       header: 'Unidade',
       cell: info => (
-        <span className="px-2.5 py-1 rounded-md bg-zinc-800/50 border border-zinc-800 text-xs font-medium text-zinc-400">
+        <span className="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-800 text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
           {info.getValue()}
         </span>
       ),
@@ -112,7 +115,7 @@ export default function ProdutosTable() {
     columnHelper.accessor('valor_unitario', {
       header: 'Preço',
       cell: info => (
-        <span className="text-sm font-bold text-emerald-400">
+        <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
           {formatCurrency(info.getValue())}
         </span>
       ),
@@ -121,7 +124,7 @@ export default function ProdutosTable() {
     columnHelper.accessor('ncm', {
       header: 'NCM',
       cell: info => (
-        <span className="text-sm text-zinc-500 font-medium">
+        <span className="text-sm text-slate-500 dark:text-zinc-500 font-medium">
           {info.getValue() || '--'}
         </span>
       ),
@@ -130,7 +133,7 @@ export default function ProdutosTable() {
       header: 'Status',
       cell: info => (
         <div className="flex items-center justify-center">
-          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${info.getValue() === 'N' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
+          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${info.getValue() === 'N' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'}`}>
             {info.getValue() === 'N' ? 'Ativo' : 'Excluído'}
           </span>
         </div>
@@ -144,7 +147,7 @@ export default function ProdutosTable() {
         <div className="flex items-center justify-center">
           <button 
             onClick={() => router.push(`/produtos/${info.row.original.codigo_produto}`)}
-            className="p-2 text-zinc-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all"
+            className="p-2 text-slate-400 dark:text-zinc-500 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all"
             title="Ver Detalhes"
           >
             <Eye size={16} />
@@ -202,49 +205,30 @@ export default function ProdutosTable() {
     <div className="space-y-6">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-blue-500/30 transition-all">
-          <div className="flex justify-between items-start mb-4">
-            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Total Produtos</span>
-            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
-              <Package size={16} />
-            </div>
-          </div>
-          <div>
-            <p className="text-3xl font-bold text-white tracking-tighter">{data?.totalRegistros || 0}</p>
-            <div className="flex items-center gap-1 mt-1">
-              <span className="text-[10px] text-zinc-500">Base Sincronizada</span>
-            </div>
-          </div>
-        </div>
+        <TableSummaryCard
+          title="Total Produtos"
+          value={data?.totalRegistros || 0}
+          subtitle="Base Sincronizada"
+          icon={Package}
+          iconColor="blue"
+        />
 
-        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-emerald-500/30 transition-all">
-          <div className="flex justify-between items-start mb-4">
-            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Ativos</span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-          </div>
-          <div>
-            <p className="text-3xl font-bold text-emerald-400 tracking-tighter">
-              {data?.produtos?.filter(p => p.excluido === 'N').length || 0}
-            </p>
-            <div className="flex items-center gap-1 mt-1">
-              <span className="text-[10px] text-zinc-500">Na página atual</span>
-            </div>
-          </div>
-        </div>
+        <TableSummaryCard
+          title="Ativos"
+          value={data?.produtos?.filter(p => p.excluido === 'N').length || 0}
+          subtitle="Na página atual"
+          icon={CheckCircle2}
+          iconColor="emerald"
+        />
       </div>
 
       {/* Header Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-          <input
-            type="text"
-            placeholder="Pesquisar por nome ou SKU..."
-            className="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl py-2.5 pl-10 pr-4 text-sm text-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+        <div className="flex-1 max-w-md">
+          <TableSearch
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={setSearchTerm}
+            placeholder="Pesquisar por nome ou SKU..."
           />
         </div>
 
@@ -259,23 +243,23 @@ export default function ProdutosTable() {
             </button>
             
             {showVisibility && (
-              <div className="absolute right-0 mt-2 w-48 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl p-3 z-50 animate-in fade-in zoom-in-95 duration-200">
-                 <div className="flex items-center justify-between mb-2 pb-2 border-b border-zinc-800">
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Colunas</span>
-                    <button onClick={() => setShowVisibility(false)}><X size={14} className="text-zinc-500 hover:text-white" /></button>
+              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-2xl p-3 z-50 animate-in fade-in zoom-in-95 duration-200">
+                 <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-100 dark:border-zinc-800">
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-500 uppercase tracking-widest">Colunas</span>
+                    <button onClick={() => setShowVisibility(false)}><X size={14} className="text-slate-400 dark:text-zinc-500 hover:text-slate-900 dark:hover:text-white" /></button>
                  </div>
                  <div className="space-y-1.5">
                     {table.getAllLeafColumns().map(column => {
                       if (column.id === 'actions') return null;
                       return (
-                        <label key={column.id} className="flex items-center gap-3 px-2 py-1.5 hover:bg-zinc-800/50 rounded-lg cursor-pointer transition-colors group">
+                        <label key={column.id} className="flex items-center gap-3 px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-zinc-800/50 rounded-lg cursor-pointer transition-colors group">
                            <input
                              type="checkbox"
                              checked={column.getIsVisible()}
                              onChange={column.getToggleVisibilityHandler()}
-                             className="w-4 h-4 rounded border-zinc-700 bg-zinc-950 text-blue-500 focus:ring-offset-zinc-900 focus:ring-blue-500"
+                             className="w-4 h-4 rounded border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-blue-500 focus:ring-offset-white dark:focus:ring-offset-zinc-900 focus:ring-blue-500"
                            />
-                           <span className="text-xs text-zinc-400 group-hover:text-zinc-200 capitalize">{column.id.replace('_', ' ')}</span>
+                           <span className="text-xs text-slate-600 dark:text-zinc-400 group-hover:text-slate-900 dark:group-hover:text-zinc-200 capitalize">{column.id.replace('_', ' ')}</span>
                         </label>
                       );
                     })}
@@ -290,24 +274,24 @@ export default function ProdutosTable() {
                 setShowFilters(!showFilters);
                 setShowVisibility(false);
               }}
-              className={`flex items-center gap-2 px-4 py-2.5 border rounded-xl text-sm font-medium transition-all ${showFilters ? 'bg-blue-500/10 border-blue-500/50 text-blue-400' : 'bg-zinc-900/50 border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+              className={`flex items-center gap-2 px-4 py-2.5 border rounded-xl text-sm font-medium transition-all ${showFilters ? 'bg-blue-500/10 border-blue-500/50 text-blue-600 dark:text-blue-400' : 'bg-slate-100/50 dark:bg-zinc-900/50 border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-zinc-800'}`}
             >
               <Filter className="w-4 h-4" />
               <span className="hidden sm:inline">Filtros</span>
             </button>
 
             {showFilters && (
-              <div className="absolute right-0 mt-2 w-[320px] bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-6 z-50 animate-in fade-in zoom-in-95 duration-200">
-                 <div className="flex items-center justify-between mb-6 pb-2 border-b border-zinc-800">
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Filtros Avançados</span>
-                    <button onClick={() => setShowFilters(false)} className="text-zinc-500 hover:text-white"><X size={16} /></button>
+              <div className="absolute right-0 mt-2 w-[320px] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-6 z-50 animate-in fade-in zoom-in-95 duration-200">
+                 <div className="flex items-center justify-between mb-6 pb-2 border-b border-slate-100 dark:border-zinc-800">
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-500 uppercase tracking-widest">Filtros Avançados</span>
+                    <button onClick={() => setShowFilters(false)} className="text-slate-400 dark:text-zinc-500 hover:text-slate-900 dark:hover:text-white"><X size={16} /></button>
                  </div>
                  
                  <div className="space-y-6">
                     <div className="space-y-3">
-                       <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest pl-1">Família</label>
+                       <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-500 uppercase tracking-widest pl-1">Família</label>
                        <select 
-                         className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-zinc-300 outline-none focus:border-blue-500/50 appearance-none cursor-pointer"
+                         className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-slate-700 dark:text-zinc-300 outline-none focus:border-blue-500/50 appearance-none cursor-pointer"
                          value={filters.familia || ''}
                          onChange={(e) => setFilters({ ...filters, familia: e.target.value || undefined })}
                        >
@@ -317,9 +301,9 @@ export default function ProdutosTable() {
                     </div>
 
                     <div className="space-y-3">
-                       <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest pl-1">Status</label>
+                       <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-500 uppercase tracking-widest pl-1">Status</label>
                        <select 
-                         className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-zinc-300 outline-none focus:border-blue-500/50 appearance-none cursor-pointer"
+                         className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-slate-700 dark:text-zinc-300 outline-none focus:border-blue-500/50 appearance-none cursor-pointer"
                          value={filters.status || ''}
                          onChange={(e) => setFilters({ ...filters, status: e.target.value || undefined })}
                        >
@@ -330,14 +314,14 @@ export default function ProdutosTable() {
                     </div>
                  </div>
 
-                 <div className="flex items-center justify-end gap-4 pt-6 mt-6 border-t border-zinc-800/50">
+                 <div className="flex items-center justify-end gap-4 pt-6 mt-6 border-t border-slate-100 dark:border-zinc-800/50">
                     <button 
                       onClick={() => {
                         setFilters({});
                         setSearchTerm('');
                         setShowFilters(false);
                       }}
-                      className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest hover:text-white transition-colors"
+                      className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest hover:text-slate-900 dark:hover:text-white transition-colors"
                     >
                       Limpar Filtros
                     </button>
@@ -348,7 +332,7 @@ export default function ProdutosTable() {
 
           <button 
             onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2.5 bg-zinc-900/50 border border-zinc-800 rounded-xl text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all"
+            className="flex items-center gap-2 px-4 py-2.5 bg-slate-100/50 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-zinc-800 transition-all"
           >
             <FileDown className="w-4 h-4" />
             <span className="hidden sm:inline">Exportar</span>
@@ -366,83 +350,82 @@ export default function ProdutosTable() {
 
 
       {/* Table Container */}
-      <div className="bg-zinc-900/30 border border-zinc-800/50 rounded-2xl overflow-hidden backdrop-blur-sm shadow-xl">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
-            <thead>
-              {table.getHeaderGroups().map(headerGroup => (
-                <tr key={headerGroup.id} className="border-b border-zinc-800/50 bg-zinc-900/50">
-                  {headerGroup.headers.map(header => (
-                    <th 
-                      key={header.id} 
-                      className={`px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider select-none ${header.column.getCanSort() ? 'cursor-pointer hover:bg-zinc-800/50 transition-colors' : ''} ${header.column.columnDef.meta?.align === 'right' ? 'text-right' : header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''}`}
-                      onClick={header.column.getToggleSortingHandler()}
-                    >
-                      <div className={`flex items-center gap-2 ${header.column.columnDef.meta?.align === 'right' ? 'justify-end' : header.column.columnDef.meta?.align === 'center' ? 'justify-center' : ''}`}>
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                        {header.column.getCanSort() && (
-                          <div className="text-zinc-600 transition-colors">
-                            {{
-                              asc: <ArrowUp className="w-3 h-3 text-blue-400" />,
-                              desc: <ArrowDown className="w-3 h-3 text-blue-400" />,
-                            }[header.column.getIsSorted() as string] ?? <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100" />}
-                          </div>
-                        )}
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody className="divide-y divide-zinc-800/50">
-              {isLoading && !data ? (
-                Array.from({ length: 10 }).map((_, i) => (
-                  <tr key={i} className="animate-pulse">
-                    {columns.map((_, colIdx) => (
-                      <td key={colIdx} className="px-6 py-5">
-                        <div className="h-4 bg-zinc-800/50 rounded-md w-full"></div>
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              ) : table.getRowModel().rows.length > 0 ? (
-                table.getRowModel().rows.map(row => (
-                  <tr key={row.id} className="group hover:bg-white/[0.02] transition-colors">
-                    {row.getVisibleCells().map(cell => (
-                      <td key={cell.id} className="px-6 py-5">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={columns.length} className="px-6 py-24 text-center">
-                    <div className="flex flex-col items-center justify-center gap-3">
-                       <Package size={40} className="text-zinc-700" />
-                       <p className="text-sm font-medium text-zinc-500">Nenhum produto encontrado na base.</p>
-                       <button onClick={() => {setSearchTerm(''); setFilters({});}} className="text-xs text-blue-400 font-bold hover:underline">Limpar filtros e pesquisa</button>
+      <TableContainer
+        header={
+          <thead>
+            {table.getHeaderGroups().map(headerGroup => (
+              <tr key={headerGroup.id} className="border-b border-slate-200/60 dark:border-zinc-800/50 bg-slate-50/50 dark:bg-zinc-900/50">
+                {headerGroup.headers.map(header => (
+                  <th 
+                    key={header.id} 
+                    className={`px-6 py-4 text-xs font-bold text-slate-500 dark:text-zinc-500 uppercase tracking-wider select-none ${header.column.getCanSort() ? 'cursor-pointer hover:bg-slate-100/50 dark:hover:bg-zinc-800/50 transition-colors' : ''} ${header.column.columnDef.meta?.align === 'right' ? 'text-right' : header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''}`}
+                    onClick={header.column.getToggleSortingHandler()}
+                  >
+                    <div className={`flex items-center gap-2 ${header.column.columnDef.meta?.align === 'right' ? 'justify-end' : header.column.columnDef.meta?.align === 'center' ? 'justify-center' : ''}`}>
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.column.getCanSort() && (
+                        <div className="text-slate-400 dark:text-zinc-600 transition-colors">
+                          {{
+                            asc: <ArrowUp className="w-3 h-3 text-blue-500" />,
+                            desc: <ArrowDown className="w-3 h-3 text-blue-500" />,
+                          }[header.column.getIsSorted() as string] ?? <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100" />}
+                        </div>
+                      )}
                     </div>
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+        }
+        footer={
+          <div className="px-6 py-4 border-t border-slate-200/60 dark:border-zinc-800/50 bg-slate-50/20 dark:bg-zinc-900/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-xs text-slate-500 dark:text-zinc-500 font-medium tracking-wide">
+              Mostrando <span className="text-slate-900 dark:text-white font-bold">{table.getRowModel().rows.length}</span> de <span className="text-slate-600 dark:text-zinc-400">{data?.totalRegistros || 0}</span> produtos
+            </p>
+            <Pagination
+              currentPage={currentPage}
+              totalPaginas={data?.totalPaginas || 1}
+              onPageChange={setCurrentPage}
+              loading={isLoading}
+            />
+          </div>
+        }
+      >
+        <tbody className="divide-y divide-slate-200/60 dark:divide-zinc-800/50">
+          {isLoading && !data ? (
+            Array.from({ length: 10 }).map((_, i) => (
+              <tr key={i} className="animate-pulse">
+                {columns.map((_, colIdx) => (
+                  <td key={colIdx} className="px-6 py-5">
+                    <div className="h-4 bg-slate-100 dark:bg-zinc-800/50 rounded-md w-full"></div>
                   </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-zinc-800/50 bg-zinc-900/30 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-zinc-500 font-medium tracking-wide">
-            Mostrando <span className="text-white font-bold">{table.getRowModel().rows.length}</span> de <span className="text-white font-bold">{data?.totalRegistros || 0}</span> produtos
-          </p>
-          <Pagination
-            currentPage={currentPage}
-            totalPaginas={data?.totalPaginas || 1}
-            onPageChange={setCurrentPage}
-            loading={isLoading}
-          />
-        </div>
-      </div>
+                ))}
+              </tr>
+            ))
+          ) : table.getRowModel().rows.length > 0 ? (
+            table.getRowModel().rows.map(row => (
+              <tr key={row.id} className="group hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
+                {row.getVisibleCells().map(cell => (
+                  <td key={cell.id} className="px-6 py-5">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={columns.length} className="px-6 py-24 text-center">
+                <div className="flex flex-col items-center justify-center gap-3">
+                   <Package size={40} className="text-slate-200 dark:text-zinc-700" />
+                   <p className="text-sm font-medium text-slate-500 dark:text-zinc-500">Nenhum produto encontrado na base.</p>
+                   <button onClick={() => {setSearchTerm(''); setFilters({});}} className="text-xs text-blue-500 font-bold hover:underline">Limpar filtros e pesquisa</button>
+                </div>
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </TableContainer>
 
       {error && (
         <div className="p-4 bg-rose-500/5 border border-rose-500/20 rounded-2xl flex items-center gap-3 text-rose-400 animate-in slide-in-from-top-2">

@@ -288,98 +288,91 @@ export default function DashboardCharts() {
       
       {/* Cards de Insights */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <div className="rounded-2xl border border-white/60 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-900/50 p-6 backdrop-blur-xl shadow-lg shadow-teal-900/5 dark:shadow-none transition-all hover:bg-white/70 dark:hover:bg-zinc-800/50 group">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-slate-500 dark:text-zinc-400">Faturamento</h3>
-            <div className="p-2 bg-blue-100 dark:bg-blue-500/10 rounded-lg group-hover:bg-blue-200 dark:group-hover:bg-blue-500/20 transition-colors">
-              <DollarSign className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">{formatCurrency(totalValorSemana)}</p>
-        </div>
-
-        <div className="rounded-2xl border border-white/60 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-900/50 p-6 backdrop-blur-xl shadow-lg shadow-teal-900/5 dark:shadow-none transition-all hover:bg-white/70 dark:hover:bg-zinc-800/50 group">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-slate-500 dark:text-zinc-400">Pedidos</h3>
-            <div className="p-2 bg-emerald-100 dark:bg-emerald-500/10 rounded-lg group-hover:bg-emerald-200 dark:group-hover:bg-emerald-500/20 transition-colors">
-              <ShoppingCart className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">{totalVendasSemana}</p>
-        </div>
-
-        <div className="rounded-2xl border border-white/60 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-900/50 p-6 backdrop-blur-xl shadow-lg shadow-teal-900/5 dark:shadow-none transition-all hover:bg-white/70 dark:hover:bg-zinc-800/50 group">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-slate-500 dark:text-zinc-400">Ticket Médio</h3>
-            <div className="p-2 bg-purple-100 dark:bg-purple-500/10 rounded-lg group-hover:bg-purple-200 dark:group-hover:bg-purple-500/20 transition-colors">
-              <Activity className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">{formatCurrency(ticketMedio)}</p>
-        </div>
-
-        <div className="rounded-2xl border border-white/60 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-900/50 p-6 backdrop-blur-xl shadow-lg shadow-teal-900/5 dark:shadow-none transition-all hover:bg-white/70 dark:hover:bg-zinc-800/50 group">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-slate-500 dark:text-zinc-400">Melhor Dia</h3>
-            <div className="p-2 bg-orange-100 dark:bg-orange-500/10 rounded-lg group-hover:bg-orange-200 dark:group-hover:bg-orange-500/20 transition-colors">
-              <TrendingUp className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">{bestDay.valor > 0 ? bestDay.name : '--'}</p>
-          {bestDay.valor > 0 && <p className="text-xs text-slate-400 dark:text-zinc-500 mt-1">{formatCurrency(bestDay.valor)}</p>}
-        </div>
-
-        <div className="rounded-2xl border border-white/60 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-900/50 p-6 backdrop-blur-xl shadow-lg shadow-teal-900/5 dark:shadow-none transition-all hover:bg-white/70 dark:hover:bg-zinc-800/50 group">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-slate-500 dark:text-zinc-400">Comissão</h3>
-            <div className="p-2 bg-pink-100 dark:bg-pink-500/10 rounded-lg group-hover:bg-pink-200 dark:group-hover:bg-pink-500/20 transition-colors">
-              <TrendingUp className="w-5 h-5 text-pink-600 dark:text-pink-400" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">{formatCurrency(totalComissaoSemana)}</p>
-        </div>
+        <TableSummaryCard 
+          label="Faturamento"
+          value={totalValorSemana}
+          isCurrency
+          icon={DollarSign}
+          variant="blue"
+          isLoading={loading}
+        />
+        <TableSummaryCard 
+          label="Pedidos"
+          value={totalVendasSemana}
+          icon={ShoppingCart}
+          variant="emerald"
+          isLoading={loading}
+        />
+        <TableSummaryCard 
+          label="Ticket Médio"
+          value={ticketMedio}
+          isCurrency
+          icon={Activity}
+          variant="purple"
+          isLoading={loading}
+        />
+        <TableSummaryCard 
+          label="Melhor Dia"
+          value={bestDay.valor > 0 ? bestDay.name : '--'}
+          sublabel={bestDay.valor > 0 ? formatCurrency(bestDay.valor) : undefined}
+          icon={TrendingUp}
+          variant="orange"
+          isLoading={loading}
+        />
+        <TableSummaryCard 
+          label="Comissão"
+          value={totalComissaoSemana}
+          isCurrency
+          icon={TrendingUp}
+          variant="pink"
+          isLoading={loading}
+        />
       </div>
 
       {/* Gráficos Principais */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Faturamento por Dia (Segunda → Domingo) */}
-        <div className="lg:col-span-2 rounded-2xl border border-white/60 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-900/50 p-6 backdrop-blur-xl shadow-lg shadow-teal-900/5 dark:shadow-none">
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-1">Faturamento por Dia</h3>
-          <p className="text-xs text-slate-500 dark:text-zinc-500 mb-6">Segunda a Domingo — {weekLabel}</p>
+        <div className="lg:col-span-2 rounded-2xl border border-white/60 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-900/50 p-6 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none">
+          <h3 className="text-lg font-black text-slate-900 dark:text-white mb-1 tracking-tight">Faturamento por Dia</h3>
+          <p className="text-[10px] font-bold text-slate-500 dark:text-zinc-500 mb-6 uppercase tracking-widest leading-none">Segunda a Domingo — {weekLabel}</p>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartFaturamentoDia} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#0f766e" stopOpacity={1}/>
-                    <stop offset="100%" stopColor="#14b8a6" stopOpacity={0.8}/>
-                  </linearGradient>
-                  <linearGradient id="barGradientDark" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#8b5cf6" stopOpacity={1}/>
-                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.5}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" strokeOpacity={0.5} vertical={false} />
-                <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `R$ ${(val/1000).toFixed(0)}k`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" strokeOpacity={0.2} vertical={false} />
+                <XAxis dataKey="name" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} tick={{ fontWeight: 600 }} />
+                <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `R$ ${(val/1000).toFixed(0)}k`} />
                 <Tooltip 
-                  cursor={{ fill: 'var(--foreground)', opacity: 0.05 }}
-                  contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--card-border)', borderRadius: '12px', color: 'var(--foreground)', backdropFilter: 'blur(12px)' }}
-                  itemStyle={{ color: 'var(--foreground)' }}
+                  cursor={{ fill: 'rgba(0,0,0,0.04)', radius: 8 }}
+                  contentStyle={{ 
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)', 
+                    borderColor: 'rgba(255, 255, 255, 0.5)', 
+                    borderRadius: '16px', 
+                    padding: '12px',
+                    boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                    borderWidth: '1px',
+                    backdropFilter: 'blur(10px)'
+                  }}
+                  itemStyle={{ color: '#0f172a', fontWeight: 700, fontSize: '12px' }}
+                  labelStyle={{ color: '#64748b', fontWeight: 800, fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '0.1em' }}
                   formatter={(value: any) => [formatCurrency(Number(value ?? 0)), 'Faturamento']}
                 />
-                <Bar dataKey="valor" fill="url(#barGradient)" radius={[6, 6, 0, 0]} maxBarSize={48} className="dark:hidden" />
-                <Bar dataKey="valor" fill="url(#barGradientDark)" radius={[6, 6, 0, 0]} maxBarSize={48} className="hidden dark:block" />
+                <Bar dataKey="valor" fill="url(#barGradient)" radius={[8, 8, 0, 0]} maxBarSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Gráfico de Pizza (Status) */}
-        <div className="rounded-2xl border border-white/60 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-900/50 p-6 backdrop-blur-xl shadow-lg shadow-teal-900/5 dark:shadow-none">
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-1">Pedidos por Status</h3>
-          <p className="text-xs text-slate-500 dark:text-zinc-500 mb-6">Distribuição por quantidade — {weekLabel}</p>
+        <div className="rounded-2xl border border-white/60 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-900/50 p-6 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none">
+          <h3 className="text-lg font-black text-slate-900 dark:text-white mb-1 tracking-tight">Status</h3>
+          <p className="text-[10px] font-bold text-slate-500 dark:text-zinc-500 mb-6 uppercase tracking-widest leading-none">Distribuição de Pedidos</p>
           <div className="h-[300px] w-full flex flex-col items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -387,20 +380,28 @@ export default function DashboardCharts() {
                   data={chartStatus}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
+                  innerRadius={65}
+                  outerRadius={85}
+                  paddingAngle={8}
                   dataKey="value"
                   stroke="none"
-                  label={({ percent }) => percent ? `${(percent * 100).toFixed(0)}%` : ''}
+                  label={({ percent }) => percent > 0.1 ? `${(percent * 100).toFixed(0)}%` : ''}
                 >
                   {chartStatus.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.name] || COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip 
-                  contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--card-border)', borderRadius: '12px', color: 'var(--foreground)', backdropFilter: 'blur(12px)' }}
-                  itemStyle={{ color: 'var(--foreground)' }}
+                   contentStyle={{ 
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)', 
+                    borderColor: 'rgba(255, 255, 255, 0.5)', 
+                    borderRadius: '16px', 
+                    padding: '12px',
+                    boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                    borderWidth: '1px',
+                    backdropFilter: 'blur(10px)'
+                  }}
+                  itemStyle={{ color: '#0f172a', fontWeight: 700, fontSize: '12px' }}
                   formatter={(value: any, name: any) => {
                     const total = chartStatus.reduce((acc, curr) => acc + curr.value, 0);
                     const valNum = Number(value || 0);
