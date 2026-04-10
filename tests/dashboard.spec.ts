@@ -61,8 +61,8 @@ test.describe('Dashboard de Desempenho', () => {
     await expect(weekLabel).toBeVisible();
     
     // Usa seletor baseado no ícone chevron (ChevronLeft/ChevronRight) que é mais estável
-    const prevBtn = page.locator('button').filter({ has: page.locator('svg.lucide-chevron-left, .lucide-chevron-left') });
-    const nextBtn = page.locator('button').filter({ has: page.locator('svg.lucide-chevron-right, .lucide-chevron-right') });
+    const prevBtn = page.locator('button').filter({ has: page.locator('svg.lucide-chevron-left, .lucide-chevron-left') }).last();
+    const nextBtn = page.locator('button').filter({ has: page.locator('svg.lucide-chevron-right, .lucide-chevron-right') }).last();
     
     await prevBtn.click();
     await page.waitForTimeout(500);

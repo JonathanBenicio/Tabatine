@@ -18,7 +18,7 @@ test.describe('Gestão de Clientes', () => {
     await page.waitForTimeout(1000);
     
     // Verifica se a tabela mostra resultados ou o estado vazio (para evitar falha se o banco estiver limpo)
-    await expect(page.locator('tbody tr').first().or(page.getByText(/nenhum cliente encontrado/i))).toBeVisible();
+    await expect(page.locator('tbody tr').first().or(page.getByText(/nenhum cliente encontrado/i).first()).first()).toBeVisible();
   });
 
   test('deve navegar para o perfil do cliente ao clicar em visualizar', async ({ page }) => {
@@ -34,7 +34,7 @@ test.describe('Gestão de Clientes', () => {
     await viewButton.click();
 
     await expect(page).toHaveURL(/\/clientes\/\d+/);
-    await expect(page.getByText(/detalhes do cliente/i | /perfil/i)).toBeVisible();
+    await expect(page.getByText(/detalhes do cliente|perfil/i).first()).toBeVisible();
   });
 
   test('deve funcionar a paginação', async ({ page }) => {

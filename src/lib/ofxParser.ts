@@ -84,7 +84,7 @@ export function parseOfx(ofxString: string): OfxData {
     const amtRaw = rawTags['TRNAMT'] || '0';
     const id = rawTags['FITID'] || crypto.randomUUID();
     const memo = rawTags['MEMO'] || '';
-    const name = rawTags['NAME'] || 'Sem nome';
+    const name = rawTags['NAME'] || rawTags['PAYEE'] || 'Sem nome';
     const checkNum = rawTags['CHECKNUM'] || '---';
 
     // Format Date: YYYYMMDD... -> YYYY-MM-DD
