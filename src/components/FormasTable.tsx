@@ -1,12 +1,24 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useFormasStore } from '@/store/useFormasStore';
-import { Wallet, Search, CalendarCheck, ChevronRight } from 'lucide-react';
-import { useDebounce } from 'use-debounce';
+import React, { useEffect, useMemo } from 'react';
+import { useFormasStore, FormaPlana } from '@/store/useFormasStore';
+import { Wallet, Eye, RefreshCw, AlertCircle, CalendarClock, Hash, ListOrdered } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+  createColumnHelper,
+} from '@tanstack/react-table';
+import { TableContainer } from './ui/TableContainer';
+import { TableSearch } from './ui/TableSearch';
+import { TableSummaryCard } from './ui/TableSummaryCard';
+import Pagination from './Pagination';
+
+const columnHelper = createColumnHelper<FormaPlana>();
 
 export default function FormasTable() {
+  const router = useRouter();
   const {
     formas,
     loading,
@@ -20,155 +32,204 @@ export default function FormasTable() {
     totalRegistros
   } = useFormasStore();
 
-  const [localSearch, setLocalSearch] = useState(searchTerm);
-  const [debouncedSearch] = useDebounce(localSearch, 500);
-  const router = useRouter();
-
   useEffect(() => {
-    if (debouncedSearch !== searchTerm) {
-      setSearchTerm(debouncedSearch);
-      setCurrentPage(1);
-    }
-  }, [debouncedSearch, searchTerm, setSearchTerm, setCurrentPage]);
+    fetchFormas(currentPage, searchTerm);
+  }, [fetchFormas, currentPage, searchTerm]);
 
-  useEffect(() => {
-    fetchFormas(currentPage, debouncedSearch);
-  }, [fetchFormas, currentPage, debouncedSearch]);
+  const columns = useMemo(() => [
+    columnHelper.accessor('codigo', {
+      header: 'Cód.',
+      cell: info => (
+        <span className="font-mono text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2 rounded-lg border border-blue-500/20">
+          #{info.getValue()}
+        </span>
+      ),
+    }),
+    columnHelper.accessor('descricao', {
+      header: 'Forma de Pagamento',
+      cell: info => (
+        <div 
+          className="flex flex-col gap-0.5 group/link cursor-pointer" 
+          onClick={() => router.push(`/formas-pagamento/${info.row.original.id}`)}
+        >
+          <span className="text-sm font-bold text-slate-700 dark:text-white tracking-tight group-hover/link:text-blue-500 transition-colors">
+            {info.getValue()}
+          </span>
+        </div>
+      ),
+    }),
+    columnHelper.accessor('quantidadeParcelas', {
+      header: 'Parcelas',
+      cell: info => (
+        <div className="flex items-center gap-2 text-slate-500 dark:text-zinc-400">
+          <Hash size={12} className="text-slate-300 dark:text-zinc-600 shrink-0" />
+          <span className="text-xs font-bold">{info.getValue()}x</span>
+        </div>
+      ),
+      meta: { align: 'center' }
+    }),
+    columnHelper.accessor('diasParcelas', {
+      header: 'Intervalo',
+      cell: info => (
+        <div className="flex items-center gap-2 text-slate-500 dark:text-zinc-400">
+          <CalendarClock size={12} className="text-slate-300 dark:text-zinc-600 shrink-0" />
+          <span className="text-xs">{info.getValue() > 0 ? `${info.getValue()} dias` : 'À vista'}</span>
+        </div>
+      ),
+    }),
+    columnHelper.accessor('listaParcelas', {
+      header: 'Regra de Parcelas',
+      cell: info => (
+        <div className="flex items-center gap-2 text-slate-400 dark:text-zinc-500 max-w-[200px]">
+          <ListOrdered size={12} className="shrink-0" />
+          <span className="text-[10px] font-mono truncate">{info.getValue() || '—'}</span>
+        </div>
+      ),
+      meta: { hiddenOnMobile: true }
+    }),
+    columnHelper.display({
+      id: 'actions',
+      header: 'Ações',
+      cell: info => (
+        <div className="flex justify-center opacity-0 group-hover/row:opacity-100 transition-all translate-x-1 group-hover/row:translate-x-0">
+          <button 
+            onClick={() => router.push(`/formas-pagamento/${info.row.original.id}`)}
+            className="p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors shadow-lg shadow-blue-500/20" 
+            title="Ver Detalhes"
+          >
+            <Eye size={14} />
+          </button>
+        </div>
+      ),
+      meta: { align: 'center' }
+    }),
+  ], [router]);
 
-  const handlePageChange = (newPage: number) => {
-    if (newPage < 1 || newPage > totalPaginas) return;
-    setCurrentPage(newPage);
-  };
+  const table = useReactTable({
+    data: formas,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="w-full space-y-6 animate-in fade-in duration-500">
+      {/* Header Area */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
-            <Wallet className="w-8 h-8 text-blue-400" />
-            Formas de Pagamento
-          </h1>
-          <p className="text-slate-400 mt-1">Consulte as formas e parcelamentos disponíveis no ERP.</p>
+          <div className="flex items-center gap-3 mb-1">
+            <div className="p-2 bg-blue-500/10 rounded-lg text-blue-600 dark:text-blue-400">
+              <Wallet size={20} />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+              Formas de Pagamento
+            </h2>
+          </div>
+          <p className="text-slate-500 dark:text-zinc-500 text-sm max-w-md">Consulte os métodos e regras de parcelamento do ERP.</p>
+        </div>
+
+        <div className="flex items-center gap-3 w-full lg:w-auto">
+          <TableSearch
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Pesquisar formas..."
+            isLoading={loading}
+          />
+          <button 
+            onClick={() => fetchFormas(currentPage, searchTerm)} 
+            disabled={loading}
+            className="p-3 bg-white/50 dark:bg-zinc-900/40 border border-slate-200 dark:border-zinc-800 hover:border-blue-500/50 rounded-2xl text-slate-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all active:scale-95 disabled:opacity-50 group backdrop-blur-sm shadow-sm"
+            title="Atualizar dados"
+          >
+            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-700'}`} />
+          </button>
         </div>
       </div>
 
-      <div className="bg-slate-900/50 border border-slate-700/50 backdrop-blur-xl rounded-2xl overflow-hidden shadow-2xl">
-        <div className="p-4 border-b border-slate-700/50 flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-800/20">
-          <div className="relative w-full sm:w-96">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-slate-400" />
-            </div>
-            <input
-              type="text"
-              className="block w-full pl-10 pr-3 py-2 border border-slate-600 rounded-lg bg-slate-800/80 text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all sm:text-sm"
-              placeholder="Buscar por descrição ou código..."
-              value={localSearch}
-              onChange={(e) => setLocalSearch(e.target.value)}
-            />
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <TableSummaryCard
+          label="Total de Formas"
+          value={totalRegistros}
+          sublabel="Cadastradas no Sistema"
+          icon={Wallet}
+          variant="blue"
+          isLoading={loading && formas.length === 0}
+        />
+        <TableSummaryCard
+          label="Parceladas"
+          value={formas.filter(f => f.quantidadeParcelas > 1).length}
+          sublabel="Métodos com parcelamento"
+          icon={ListOrdered}
+          variant="emerald"
+          isLoading={loading && formas.length === 0}
+        />
+      </div>
+
+      {/* Error State */}
+      {error && (
+        <div className="p-4 rounded-2xl bg-rose-500/5 border border-rose-500/20 flex gap-4 text-rose-400 animate-in slide-in-from-top-2 duration-300">
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          <div className="text-sm">
+            <p className="font-bold tracking-tight">Erro ao carregar formas</p>
+            <p className="opacity-70 mt-0.5">{error}</p>
           </div>
-          <p className="text-sm text-slate-500 shrink-0">{totalRegistros} registros</p>
         </div>
+      )}
 
-        {error && (
-          <div className="p-6 text-center text-red-400 bg-red-400/10">
-            Erro ao carregar formas de pagamento: {error}
-          </div>
-        )}
-
-        <div className="overflow-x-auto min-h-[400px]">
-          {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
-            </div>
-          ) : formas.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-slate-400">
-              <Wallet className="h-12 w-12 mb-4 opacity-50" />
-              <p className="text-lg font-medium">Nenhuma forma de pagamento encontrada</p>
-            </div>
-          ) : (
-            <table className="min-w-full divide-y divide-slate-700/50">
-              <thead className="bg-slate-800/40">
-                <tr>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">
-                    Código / Descrição
-                  </th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wide hidden sm:table-cell">
-                    Parcelas
-                  </th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wide hidden md:table-cell">
-                    Dias entre Parcelas
-                  </th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wide hidden lg:table-cell">
-                    Lista de Parcelas
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-700/50 bg-slate-800/10">
-                {formas.map((forma) => (
-                  <tr
-                    key={forma.id}
-                    onClick={() => router.push(`/formas-pagamento/${forma.id}`)}
-                    className="hover:bg-slate-700/30 transition-colors cursor-pointer group"
+      {/* Table Container */}
+      <TableContainer
+        isLoading={loading && formas.length === 0}
+        isEmpty={formas.length === 0}
+        emptyMessage="Nenhuma forma de pagamento encontrada"
+        emptyIcon={Wallet}
+        pagination={
+          <Pagination 
+            currentPage={currentPage}
+            totalPaginas={totalPaginas}
+            onPageChange={setCurrentPage}
+            loading={loading}
+          />
+        }
+      >
+        <table className="w-full text-left border-collapse">
+          <thead>
+            {table.getHeaderGroups().map(headerGroup => (
+              <tr key={headerGroup.id} className="border-b border-slate-200/50 dark:border-zinc-800/50 bg-slate-100/50 dark:bg-zinc-900/20">
+                {headerGroup.headers.map(header => (
+                  <th 
+                    key={header.id} 
+                    className={`py-5 px-6 text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] font-sans ${header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''}`}
                   >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="font-mono text-xs font-medium text-blue-400 bg-blue-400/10 px-1.5 py-0.5 rounded w-fit">
-                          {forma.codigo}
-                        </span>
-                        <span className="text-sm font-medium text-white">{forma.descricao}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
-                      <div className="flex items-center gap-2 text-sm text-slate-300">
-                        <CalendarCheck className="w-4 h-4 text-slate-400" />
-                        {forma.quantidadeParcelas}x
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
-                      <span className="text-sm text-slate-300">
-                        {forma.diasParcelas > 0 ? `${forma.diasParcelas} dias` : '—'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 hidden lg:table-cell">
-                      <span className="text-xs font-mono text-slate-400 max-w-xs truncate block">
-                        {forma.listaParcelas || '—'}
-                      </span>
-                    </td>
-                    <td className="px-3 py-4 text-right">
-                      <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-emerald-400 transition-colors ml-auto" />
-                    </td>
-                  </tr>
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                  </th>
                 ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+              </tr>
+            ))}
+          </thead>
+          <tbody className="divide-y divide-slate-200/50 dark:divide-zinc-800/30">
+            {table.getRowModel().rows.map(row => (
+              <tr 
+                key={row.id} 
+                className="group/row hover:bg-slate-100/50 dark:hover:bg-blue-500/[0.02] transition-all duration-300"
+              >
+                {row.getVisibleCells().map(cell => (
+                  <td key={cell.id} className="py-5 px-6">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-        {!loading && formas.length > 0 && (
-          <div className="bg-slate-800/40 px-6 py-4 border-t border-slate-700/50 flex items-center justify-between">
-            <div className="text-sm text-slate-400">
-              Página <span className="font-medium text-white">{currentPage}</span> de{' '}
-              <span className="font-medium text-white">{totalPaginas}</span>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="px-4 py-2 bg-slate-700/50 disabled:opacity-50 hover:bg-slate-700 text-sm font-medium text-white rounded-lg transition-colors border border-slate-600/50"
-              >
-                Anterior
-              </button>
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage >= totalPaginas}
-                className="px-4 py-2 bg-slate-700/50 disabled:opacity-50 hover:bg-slate-700 text-sm font-medium text-white rounded-lg transition-colors border border-slate-600/50"
-              >
-                Próxima
-              </button>
-            </div>
+        {/* Sync Status Overlay */}
+        {loading && formas.length > 0 && (
+          <div className="absolute bottom-4 right-4 px-4 py-2 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md rounded-xl border border-blue-500/20 shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2">
+            <RefreshCw className="w-4 h-4 text-blue-500 animate-spin" />
+            <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">Sincronizando...</span>
           </div>
         )}
-      </div>
+      </TableContainer>
     </div>
   );
 }

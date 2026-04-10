@@ -19,18 +19,18 @@ export function DetailPageHeader({ backHref, title, subtitle, badges }: DetailPa
     <div className="flex items-center gap-4 mb-2">
       <button
         onClick={() => router.push(backHref)}
-        className="p-3 bg-zinc-900/50 hover:bg-zinc-800 border border-zinc-800 rounded-xl text-zinc-400 hover:text-white transition-all active:scale-95 group"
+        className="p-3 bg-white dark:bg-zinc-900/50 hover:bg-slate-50 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-all active:scale-95 group shadow-sm dark:shadow-none"
         aria-label="Voltar"
       >
         <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
       </button>
       <div className="flex-1">
         <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="text-3xl font-bold text-white">{title}</h1>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{title}</h1>
           {badges}
         </div>
         {subtitle && (
-          <p className="text-zinc-500 mt-1 text-sm">{subtitle}</p>
+          <p className="text-slate-500 dark:text-zinc-500 mt-1 text-sm">{subtitle}</p>
         )}
       </div>
     </div>

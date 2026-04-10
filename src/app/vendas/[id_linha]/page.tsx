@@ -5,12 +5,15 @@ import { useVendasStore, VendaPlana } from '@/store/useVendasStore';
 import { useLookupStore } from '@/store/useLookupStore';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  ArrowLeft, Package, User, Calendar, CreditCard, TrendingUp,
-  AlertCircle, RefreshCw, Truck, FileText, Receipt,
-  Hash, Scale, ClipboardList, Copy, Check,
-  BarChart3, Percent, DollarSign, ShieldCheck
+  ArrowLeft, Package, DollarSign, Percent, Truck, Receipt,
+  RefreshCw, AlertCircle, ClipboardList, User, CreditCard, Calendar, FileText, Check, Copy, ShieldCheck
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import { SectionCard } from '@/components/ui/SectionCard';
+import { InfoRow } from '@/components/ui/InfoRow';
+import { DetailPageHeader } from '@/components/ui/DetailPageHeader';
+import { DetailLoading } from '@/components/ui/DetailLoading';
+import { DetailNotFound } from '@/components/ui/DetailNotFound';
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -31,37 +34,14 @@ const fmtPerc = (val: number | undefined) => `${(val || 0).toFixed(2)}%`;
 
 const fmtWeight = (val: number | undefined) => `${(val || 0).toFixed(3)} kg`;
 
-// ── Reusable Components ────────────────────────────────────
+// ── Local Components ───────────────────────────────────────
 
-function SectionCard({ icon: Icon, iconColor, title, children }: {
-  icon: any; iconColor: string; title: string; children: React.ReactNode;
-}) {
-  return (
-    <div className="p-6 rounded-2xl bg-zinc-900/30 border border-zinc-800/50 backdrop-blur-xl">
-      <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-        <Icon className={iconColor} size={20} />
-        {title}
-      </h2>
-      {children}
-    </div>
-  );
-}
-
-function InfoRow({ label, value, className = 'text-zinc-300' }: { label: string; value: React.ReactNode; className?: string }) {
-  return (
-    <div className="flex justify-between items-center py-3 border-b border-zinc-800/30 last:border-0">
-      <span className="text-xs text-zinc-500 shrink-0">{label}</span>
-      <span className={`text-sm font-medium text-right ml-4 ${className}`}>{value}</span>
-    </div>
-  );
-}
-
-function DataField({ label, value, className = 'text-zinc-300', large = false }: {
+function DataField({ label, value, className = 'text-slate-600 dark:text-zinc-300', large = false }: {
   label: string; value: React.ReactNode; className?: string; large?: boolean;
 }) {
   return (
     <div className="space-y-1">
-      <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">{label}</span>
+      <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 tracking-wider">{label}</span>
       <p className={`${large ? 'text-xl font-black' : 'font-medium'} ${className}`}>{value}</p>
     </div>
   );
@@ -71,14 +51,14 @@ function StatCard({ icon: Icon, iconBg, label, value, subValue }: {
   icon: any; iconBg: string; label: string; value: string; subValue?: string;
 }) {
   return (
-    <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/50 flex items-center gap-4">
-      <div className={`p-3 rounded-xl ${iconBg}`}>
+    <div className="p-4 rounded-xl bg-white/70 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800/50 flex items-center gap-4 shadow-sm dark:shadow-none">
+      <div className={`p-3 rounded-xl ${iconBg} shadow-inner`}>
         <Icon size={20} className="text-white" />
       </div>
       <div>
-        <p className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">{label}</p>
-        <p className="text-lg font-black text-white">{value}</p>
-        {subValue && <p className="text-[10px] text-zinc-500">{subValue}</p>}
+        <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 tracking-wider">{label}</p>
+        <p className="text-lg font-black text-slate-900 dark:text-white">{value}</p>
+        {subValue && <p className="text-[10px] text-slate-500 dark:text-zinc-500">{subValue}</p>}
       </div>
     </div>
   );
@@ -88,32 +68,31 @@ function StatusBadge({ status }: { status: string }) {
   if (!status) return null;
 
   const statusMap: Record<string, { label: string; bg: string }> = {
-    '10': { label: 'Pedido', bg: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-    '20': { label: 'Separar', bg: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' },
-    '30': { label: 'Faturar', bg: 'bg-purple-500/10 text-purple-400 border-purple-500/20' },
-    '50': { label: 'Faturado', bg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-    '60': { label: 'Entregue', bg: 'bg-teal-500/10 text-teal-400 border-teal-500/20' },
-    '70': { label: 'Cancelado', bg: 'bg-rose-500/10 text-rose-400 border-rose-500/20' },
-    '80': { label: 'Devolvido', bg: 'bg-red-500/10 text-red-400 border-red-500/20' },
-    '100': { label: 'Autorizada', bg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' }, // SEFAZ 100 Autorizado o uso da NF-e
-    '006': { label: 'Autorizada', bg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' }, // Omie Status 006 is often Autorizada
-    'AUTORIZADA': { label: 'Autorizada', bg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-    'EMITIDA': { label: 'Emitida', bg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-    'CANCELADA': { label: 'Cancelada', bg: 'bg-rose-500/10 text-rose-400 border-rose-500/20' },
-    'DENEGADA': { label: 'Denegada', bg: 'bg-rose-500/10 text-rose-400 border-rose-500/20' },
-    'PENDENTE': { label: 'Pendente', bg: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
-    'PAGO': { label: 'Pago', bg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+    '10': { label: 'Pedido', bg: 'bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/20' },
+    '20': { label: 'Separar', bg: 'bg-yellow-100 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-500/20' },
+    '30': { label: 'Faturar', bg: 'bg-purple-100 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-500/20' },
+    '50': { label: 'Faturado', bg: 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20' },
+    '60': { label: 'Entregue', bg: 'bg-teal-100 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 border-teal-200 dark:border-teal-500/20' },
+    '70': { label: 'Cancelado', bg: 'bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/20' },
+    '80': { label: 'Devolvido', bg: 'bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-500/20' },
+    '100': { label: 'Autorizada', bg: 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20' },
+    '006': { label: 'Autorizada', bg: 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20' },
+    'AUTORIZADA': { label: 'Autorizada', bg: 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20' },
+    'EMITIDA': { label: 'Emitida', bg: 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20' },
+    'CANCELADA': { label: 'Cancelada', bg: 'bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/20' },
+    'DENEGADA': { label: 'Denegada', bg: 'bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/20' },
+    'PENDENTE': { label: 'Pendente', bg: 'bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20' },
+    'PAGO': { label: 'Pago', bg: 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20' },
   };
 
-  const mapped = statusMap[status] || { label: status, bg: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' };
+  const mapped = statusMap[status] || { label: status, bg: 'bg-slate-100 dark:bg-zinc-500/10 text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-zinc-500/20' };
   
-  // If the status is naturally text exactly like the label (e.g. 'AUTORIZADA' vs 'Autorizada'), don't duplicate it
   const displayLabel = (statusMap[status] && status.toUpperCase() !== mapped.label.toUpperCase()) 
-    ? `${status} - ${mapped.label}` 
+    ? `${status} · ${mapped.label}` 
     : mapped.label;
 
   return (
-    <span className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${mapped.bg}`}>
+    <span className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-colors ${mapped.bg}`}>
       {displayLabel}
     </span>
   );
@@ -123,23 +102,23 @@ function StatusBadge({ status }: { status: string }) {
 
 function TaxRow({ name, color, data }: { name: string; color: string; data: { aliquota: number; base: number; valor: number; cst: string } }) {
   return (
-    <div className={`p-4 rounded-xl border ${color} space-y-3`}>
+    <div className={`p-4 rounded-xl border transition-all ${color} space-y-3 shadow-sm dark:shadow-none`}>
       <div className="flex items-center justify-between">
-        <span className="text-sm font-bold text-white">{name}</span>
-        <span className="text-[10px] font-mono text-zinc-500">CST: {data.cst}</span>
+        <span className="text-sm font-bold text-slate-900 dark:text-white">{name}</span>
+        <span className="text-[10px] font-mono text-slate-400 dark:text-zinc-500">CST: {data.cst}</span>
       </div>
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <span className="text-[10px] text-zinc-500 block">Alíquota</span>
-          <span className="text-sm font-bold text-zinc-300">{fmtPerc(data.aliquota)}</span>
+          <span className="text-[10px] text-slate-500 dark:text-zinc-500 block">Alíquota</span>
+          <span className="text-sm font-bold text-slate-600 dark:text-zinc-300">{fmtPerc(data.aliquota)}</span>
         </div>
         <div>
-          <span className="text-[10px] text-zinc-500 block">Base</span>
-          <span className="text-sm font-bold text-zinc-300">{fmt(data.base)}</span>
+          <span className="text-[10px] text-slate-500 dark:text-zinc-500 block">Base</span>
+          <span className="text-sm font-bold text-slate-600 dark:text-zinc-300">{fmt(data.base)}</span>
         </div>
         <div>
-          <span className="text-[10px] text-zinc-500 block">Valor</span>
-          <span className="text-sm font-bold text-emerald-400">{fmt(data.valor)}</span>
+          <span className="text-[10px] text-slate-500 dark:text-zinc-500 block">Valor</span>
+          <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{fmt(data.valor)}</span>
         </div>
       </div>
     </div>
@@ -222,30 +201,16 @@ export default function VendaDetailsPage() {
   // ── Loading / Not Found ──
 
   if (loading && !venda) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center min-h-[50vh]">
-        <RefreshCw className="w-10 h-10 text-orange-500 animate-spin mb-4" />
-        <p className="text-zinc-500 font-mono animate-pulse">Buscando detalhes do pedido...</p>
-      </div>
-    );
+    return <DetailLoading message="Buscando detalhes do pedido..." />;
   }
 
   if (notFound || (!loading && !venda)) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
-        <AlertCircle className="w-16 h-16 text-rose-500 mb-6 opacity-80" />
-        <h2 className="text-2xl font-bold text-white mb-2">Venda não encontrada</h2>
-        <p className="text-zinc-400 max-w-md mb-8">
-          Não foi possível localizar os detalhes da venda solicitada. Ela pode ter sido removida ou o ID é inválido.
-        </p>
-        <button 
-          onClick={() => router.push('/vendas')}
-          className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl transition-colors font-medium flex items-center gap-2"
-        >
-          <ArrowLeft size={18} />
-          Voltar para Vendas
-        </button>
-      </div>
+      <DetailNotFound 
+        entityName="Venda"
+        backLabel="Voltar para Vendas"
+        backHref="/vendas" 
+      />
     );
   }
 
@@ -257,24 +222,17 @@ export default function VendaDetailsPage() {
     <div className="w-full max-w-6xl mx-auto space-y-8 animate-in fade-in zoom-in duration-500 pb-20">
       
       {/* ═══ HEADER ═══ */}
-      <div className="flex items-center gap-4 mb-2">
-        <button 
-          onClick={() => router.push('/vendas')}
-          className="p-3 bg-zinc-900/50 hover:bg-zinc-800 border border-zinc-800 rounded-xl text-zinc-400 hover:text-white transition-all active:scale-95 group"
-        >
-          <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-        </button>
-        <div className="flex-1">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-3xl font-bold text-white">Pedido #{venda.pedido}</h1>
+      <DetailPageHeader 
+        backHref="/vendas"
+        title={`Pedido #${venda.pedido}`}
+        subtitle={`Criado em ${fmtDate(venda.dataPedido)} · Previsão ${fmtDate(venda.dataPrevisao)} · ${venda.qtdItens} ${venda.qtdItens === 1 ? 'item' : 'itens'}`}
+        badges={
+          <>
             <StatusBadge status={venda.etapa} />
             <StatusBadge status={venda.statusNfe} />
-          </div>
-          <p className="text-zinc-500 mt-1 text-sm">
-            Criado em {fmtDate(venda.dataPedido)} · Previsão {fmtDate(venda.dataPrevisao)} · {venda.qtdItens} {venda.qtdItens === 1 ? 'item' : 'itens'}
-          </p>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* ═══ STAT CARDS ═══ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -317,56 +275,56 @@ export default function VendaDetailsPage() {
           <SectionCard icon={Package} iconColor="text-orange-500" title="Detalhes do Produto">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
               <DataField label="Código" value={venda.codigoProduto} />
-              <DataField label="Descrição" value={venda.produto} className="text-white font-semibold" />
+              <DataField label="Descrição" value={venda.produto} className="text-slate-900 dark:text-white font-semibold" />
               <DataField label="NCM" value={venda.ncm} />
               <DataField label="CFOP" value={venda.cfop} />
               <DataField label="Unidade" value={venda.und} />
               <DataField label="Quantidade" value={venda.quantidade} />
-              <DataField label="Valor Unitário" value={fmt(venda.valorVenda)} className="text-emerald-400" />
-              <DataField label="Desconto" value={`${fmtPerc(venda.percDesconto)} (${fmt(venda.valorDesconto)})`} className="text-amber-400" />
-              <DataField label="Valor Total Item" value={fmt(venda.valorTotal)} className="text-emerald-400" large />
+              <DataField label="Valor Unitário" value={fmt(venda.valorVenda)} className="text-emerald-600 dark:text-emerald-400" />
+              <DataField label="Desconto" value={`${fmtPerc(venda.percDesconto)} (${fmt(venda.valorDesconto)})`} className="text-amber-600 dark:text-amber-400" />
+              <DataField label="Valor Total Item" value={fmt(venda.valorTotal)} className="text-emerald-600 dark:text-emerald-400" large />
             </div>
           </SectionCard>
 
           {/* ── IMPOSTOS ── */}
           <SectionCard icon={Receipt} iconColor="text-violet-500" title="Impostos">
             <div className="space-y-3">
-              <TaxRow name="ICMS" color="bg-violet-500/5 border-violet-500/10" data={venda.impostos.icms} />
-              <TaxRow name="PIS" color="bg-sky-500/5 border-sky-500/10" data={venda.impostos.pis} />
-              <TaxRow name="COFINS" color="bg-teal-500/5 border-teal-500/10" data={venda.impostos.cofins} />
-              {venda.impostos.ipi && venda.impostos.ipi.valor > 0 && <TaxRow name="IPI" color="bg-rose-500/5 border-rose-500/10" data={venda.impostos.ipi} />}
-              {venda.impostos.ibs.valor > 0 && <TaxRow name="IBS" color="bg-indigo-500/5 border-indigo-500/10" data={venda.impostos.ibs} />}
-              {venda.impostos.cbs.valor > 0 && <TaxRow name="CBS" color="bg-cyan-500/5 border-cyan-500/10" data={venda.impostos.cbs} />}
+              <TaxRow name="ICMS" color="bg-violet-100/30 dark:bg-violet-500/5 border-violet-200 dark:border-violet-500/10" data={venda.impostos.icms} />
+              <TaxRow name="PIS" color="bg-sky-100/30 dark:bg-sky-500/5 border-sky-200 dark:border-sky-500/10" data={venda.impostos.pis} />
+              <TaxRow name="COFINS" color="bg-teal-100/30 dark:bg-teal-500/5 border-teal-200 dark:border-teal-500/10" data={venda.impostos.cofins} />
+              {venda.impostos.ipi && venda.impostos.ipi.valor > 0 && <TaxRow name="IPI" color="bg-rose-100/30 dark:bg-rose-500/5 border-rose-200 dark:border-rose-500/10" data={venda.impostos.ipi} />}
+              {venda.impostos.ibs.valor > 0 && <TaxRow name="IBS" color="bg-indigo-100/30 dark:bg-indigo-500/5 border-indigo-200 dark:border-indigo-500/10" data={venda.impostos.ibs} />}
+              {venda.impostos.cbs.valor > 0 && <TaxRow name="CBS" color="bg-cyan-100/30 dark:bg-cyan-500/5 border-cyan-200 dark:border-cyan-500/10" data={venda.impostos.cbs} />}
             </div>
 
             {/* Impostos Retidos na Fonte */}
             {(venda.impostos.valor_iss > 0 || venda.impostos.valor_ir > 0 || venda.impostos.valor_csll > 0 || venda.impostos.valor_inss > 0) && (
               <div className="mt-6 space-y-3">
-                <h3 className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider mb-2">Retenções na Fonte</h3>
+                <h3 className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 tracking-wider mb-2">Retenções na Fonte</h3>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
-                    <span className="text-[10px] text-zinc-500 block">ISS Retido</span>
-                    <span className="text-sm font-bold text-amber-400">{fmt(venda.impostos.valor_iss)}</span>
+                  <div className="p-3 rounded-xl bg-amber-100/30 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/10 shadow-sm dark:shadow-none">
+                    <span className="text-[10px] text-slate-500 dark:text-zinc-500 block">ISS Retido</span>
+                    <span className="text-sm font-bold text-amber-700 dark:text-amber-400">{fmt(venda.impostos.valor_iss)}</span>
                   </div>
-                  <div className="p-3 rounded-xl bg-rose-500/5 border border-rose-500/10">
-                    <span className="text-[10px] text-zinc-500 block">IR Retido</span>
-                    <span className="text-sm font-bold text-rose-400">{fmt(venda.impostos.valor_ir)}</span>
+                  <div className="p-3 rounded-xl bg-rose-100/30 dark:bg-rose-500/5 border border-rose-200 dark:border-rose-500/10 shadow-sm dark:shadow-none">
+                    <span className="text-[10px] text-slate-500 dark:text-zinc-500 block">IR Retido</span>
+                    <span className="text-sm font-bold text-rose-700 dark:text-rose-400">{fmt(venda.impostos.valor_ir)}</span>
                   </div>
-                  <div className="p-3 rounded-xl bg-orange-500/5 border border-orange-500/10">
-                    <span className="text-[10px] text-zinc-500 block">CSLL Retida</span>
-                    <span className="text-sm font-bold text-orange-400">{fmt(venda.impostos.valor_csll)}</span>
+                  <div className="p-3 rounded-xl bg-orange-100/30 dark:bg-orange-500/5 border border-orange-200 dark:border-orange-500/10 shadow-sm dark:shadow-none">
+                    <span className="text-[10px] text-slate-500 dark:text-zinc-500 block">CSLL Retida</span>
+                    <span className="text-sm font-bold text-orange-700 dark:text-orange-400">{fmt(venda.impostos.valor_csll)}</span>
                   </div>
-                  <div className="p-3 rounded-xl bg-blue-500/5 border border-blue-500/10">
-                    <span className="text-[10px] text-zinc-500 block">INSS Retido</span>
-                    <span className="text-sm font-bold text-blue-400">{fmt(venda.impostos.valor_inss)}</span>
+                  <div className="p-3 rounded-xl bg-blue-100/30 dark:bg-blue-500/5 border border-blue-200 dark:border-blue-500/10 shadow-sm dark:shadow-none">
+                    <span className="text-[10px] text-slate-500 dark:text-zinc-500 block">INSS Retido</span>
+                    <span className="text-sm font-bold text-blue-700 dark:text-blue-400">{fmt(venda.impostos.valor_inss)}</span>
                   </div>
                 </div>
               </div>
             )}
             {venda.totalPedido.baseIcms > 0 && (
-              <div className="mt-4 p-3 rounded-xl bg-zinc-900/50 border border-zinc-800/50 flex items-center justify-between">
-                <span className="text-xs text-zinc-500">Total ICMS do Pedido</span>
-                <span className="text-sm font-bold text-violet-400">{fmt(venda.totalPedido.valorIcms)}</span>
+              <div className="mt-4 p-3 rounded-xl bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800/50 flex items-center justify-between shadow-sm dark:shadow-none">
+                <span className="text-xs text-slate-500 dark:text-zinc-500">Total ICMS do Pedido</span>
+                <span className="text-sm font-bold text-violet-700 dark:text-violet-400">{fmt(venda.totalPedido.valorIcms)}</span>
               </div>
             )}
           </SectionCard>
@@ -375,46 +333,46 @@ export default function VendaDetailsPage() {
           <SectionCard icon={Truck} iconColor="text-blue-500" title="Frete & Logística">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
               <DataField label="Modalidade" value={venda.freteDetalhado.modalidade} />
-              <DataField label="Valor do Frete" value={fmt(venda.freteDetalhado.valor)} className="text-emerald-400" />
+              <DataField label="Valor do Frete" value={fmt(venda.freteDetalhado.valor)} className="text-emerald-700 dark:text-emerald-400" />
               <DataField label="Transportadora" value={venda.freteDetalhado.transportadora} />
               <DataField label="Peso Bruto" value={fmtWeight(venda.freteDetalhado.pesoBruto)} />
               <DataField label="Peso Líquido" value={fmtWeight(venda.freteDetalhado.pesoLiq)} />
               <DataField label="Volumes" value={venda.freteDetalhado.qtdVolumes.toString()} />
             </div>
             {venda.freteDetalhado.previsaoEntrega !== '--' && (
-              <div className="mt-4 p-3 rounded-xl bg-blue-500/5 border border-blue-500/10 flex items-center justify-between">
-                <span className="text-xs text-blue-400 font-bold">Previsão de Entrega</span>
-                <span className="text-sm font-mono text-zinc-300">{fmtDate(venda.freteDetalhado.previsaoEntrega)}</span>
+              <div className="mt-4 p-3 rounded-xl bg-blue-100/30 dark:bg-blue-500/5 border border-blue-200 dark:border-blue-500/10 flex items-center justify-between shadow-sm dark:shadow-none">
+                <span className="text-xs text-blue-700 dark:text-blue-400 font-bold">Previsão de Entrega</span>
+                <span className="text-sm font-mono text-slate-600 dark:text-zinc-300">{fmtDate(venda.freteDetalhado.previsaoEntrega)}</span>
               </div>
             )}
           </SectionCard>
 
           {/* ── OBSERVAÇÕES ── */}
           {(venda.observacao || venda.observacaoInterna || venda.observacaoNf || venda.observacaoNfFisco || venda.dadosAdicionaisNf) && (
-            <SectionCard icon={ClipboardList} iconColor="text-zinc-400" title="Observações">
+            <SectionCard icon={ClipboardList} iconColor="text-slate-400 dark:text-zinc-400" title="Observações">
               <div className="space-y-4">
                 {venda.observacao && (
-                  <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
-                    <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block mb-2">Observação da Venda</span>
-                    <p className="text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed">{venda.observacao}</p>
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800/50 shadow-sm dark:shadow-none">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 tracking-wider block mb-2">Observação da Venda</span>
+                    <p className="text-sm text-slate-600 dark:text-zinc-300 whitespace-pre-wrap leading-relaxed">{venda.observacao}</p>
                   </div>
                 )}
                 {venda.observacaoInterna && (
-                  <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/10">
-                    <span className="text-[10px] uppercase font-bold text-amber-500/70 tracking-wider block mb-2">Observação Interna</span>
-                    <p className="text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed">{venda.observacaoInterna}</p>
+                  <div className="p-4 rounded-xl bg-amber-100/30 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/10 shadow-sm dark:shadow-none">
+                    <span className="text-[10px] uppercase font-bold text-amber-700/70 dark:text-amber-500/70 tracking-wider block mb-2">Observação Interna</span>
+                    <p className="text-sm text-slate-600 dark:text-zinc-300 whitespace-pre-wrap leading-relaxed">{venda.observacaoInterna}</p>
                   </div>
                 )}
                 {(venda.observacaoNf || venda.dadosAdicionaisNf) && (
-                  <div className="p-4 rounded-xl bg-cyan-500/5 border border-cyan-500/10">
-                    <span className="text-[10px] uppercase font-bold text-cyan-500/70 tracking-wider block mb-2">Observação da NF</span>
-                    <p className="text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed">{venda.observacaoNf || venda.dadosAdicionaisNf}</p>
+                  <div className="p-4 rounded-xl bg-cyan-100/30 dark:bg-cyan-500/5 border border-cyan-200 dark:border-cyan-500/10 shadow-sm dark:shadow-none">
+                    <span className="text-[10px] uppercase font-bold text-cyan-700/70 dark:text-cyan-500/70 tracking-wider block mb-2">Observação da NF</span>
+                    <p className="text-sm text-slate-600 dark:text-zinc-300 whitespace-pre-wrap leading-relaxed">{venda.observacaoNf || venda.dadosAdicionaisNf}</p>
                   </div>
                 )}
                 {venda.observacaoNfFisco && (
-                  <div className="p-4 rounded-xl bg-rose-500/5 border border-rose-500/10">
-                    <span className="text-[10px] uppercase font-bold text-rose-500/70 tracking-wider block mb-2">Observação Fiscal da NF</span>
-                    <p className="text-sm text-zinc-300 whitespace-pre-wrap leading-relaxed">{venda.observacaoNfFisco}</p>
+                  <div className="p-4 rounded-xl bg-rose-100/30 dark:bg-rose-500/5 border border-rose-200 dark:border-rose-500/10 shadow-sm dark:shadow-none">
+                    <span className="text-[10px] uppercase font-bold text-rose-700/70 dark:text-rose-500/70 tracking-wider block mb-2">Observação Fiscal da NF</span>
+                    <p className="text-sm text-slate-600 dark:text-zinc-300 whitespace-pre-wrap leading-relaxed">{venda.observacaoNfFisco}</p>
                   </div>
                 )}
               </div>
@@ -428,21 +386,21 @@ export default function VendaDetailsPage() {
           {/* ── CLIENTE & VENDEDOR ── */}
           <SectionCard icon={User} iconColor="text-blue-500" title="Envolvidos">
             <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
-                <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Cliente / Razão Social</span>
-                <p className="text-white font-bold mt-1">
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800/50 shadow-sm dark:shadow-none">
+                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 tracking-wider">Cliente / Razão Social</span>
+                <p className="text-slate-900 dark:text-white font-bold mt-1">
                   {getClienteNome(venda.cliente)}
                 </p>
               </div>
-              <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
-                <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Vendedor</span>
-                <p className="text-zinc-300 mt-1">
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800/50 shadow-sm dark:shadow-none">
+                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 tracking-wider">Vendedor</span>
+                <p className="text-slate-600 dark:text-zinc-300 mt-1">
                   {getVendedorNome(venda.vendedor)}
                 </p>
               </div>
-              <div className="flex items-center justify-between p-4 rounded-xl bg-indigo-500/5 border border-indigo-500/10">
-                <span className="text-sm font-bold text-indigo-400">Comissão</span>
-                <span className="text-lg font-black text-indigo-300">{fmtPerc(venda.percComissao)}</span>
+              <div className="flex items-center justify-between p-4 rounded-xl bg-indigo-100/30 dark:bg-indigo-500/5 border border-indigo-200 dark:border-indigo-500/10 shadow-sm dark:shadow-none">
+                <span className="text-sm font-bold text-indigo-700 dark:text-indigo-400">Comissão</span>
+                <span className="text-lg font-black text-indigo-600 dark:text-indigo-300">{fmtPerc(venda.percComissao)}</span>
               </div>
             </div>
           </SectionCard>
@@ -450,15 +408,15 @@ export default function VendaDetailsPage() {
           {/* ── FINANCEIRO ── */}
           <SectionCard icon={CreditCard} iconColor="text-emerald-500" title="Financeiro">
             <div className="space-y-0">
-              <InfoRow label="Condição" value={venda.condPagto} className="text-white" />
-              <InfoRow label="Parcelas" value={`${venda.qtdParcelas}x`} className="text-white" />
-              <InfoRow label="Forma" value={<span className="uppercase">{venda.formaPg}</span>} className="text-white" />
+              <InfoRow label="Condição" value={venda.condPagto} className="text-slate-900 dark:text-white" />
+              <InfoRow label="Parcelas" value={`${venda.qtdParcelas}x`} className="text-slate-900 dark:text-white" />
+              <InfoRow label="Forma" value={<span className="uppercase">{venda.formaPg}</span>} className="text-slate-900 dark:text-white" />
               <InfoRow label="Banco / Conta" value={
                 <span className="max-w-[150px] truncate block text-right">
                   {getContaNome(venda.banco)}
                 </span>
-              } className="text-white" />
-              <InfoRow label="Frete" value={fmt(venda.frete)} className="text-white" />
+              } className="text-slate-900 dark:text-white" />
+              <InfoRow label="Frete" value={fmt(venda.frete)} className="text-slate-900 dark:text-white" />
               <InfoRow label="Comissão Status" value={<StatusBadge status={venda.statusComissao} />} />
             </div>
           </SectionCard>
@@ -467,23 +425,23 @@ export default function VendaDetailsPage() {
           <SectionCard icon={Calendar} iconColor="text-amber-500" title={`Parcelas (${venda.todasParcelas.length})`}>
             <div className="space-y-3">
               {venda.todasParcelas.length === 0 ? (
-                <p className="text-sm text-zinc-500 italic">Nenhuma parcela registrada</p>
+                <p className="text-sm text-slate-400 dark:text-zinc-500 italic text-center p-4">Nenhuma parcela registrada</p>
               ) : (
                 venda.todasParcelas.map((parc, idx) => (
-                  <div key={idx} className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
+                  <div key={idx} className="p-3 rounded-xl bg-amber-100/30 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/10 shadow-sm dark:shadow-none">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-bold flex items-center justify-center">
+                        <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-400 text-[10px] font-bold flex items-center justify-center">
                           {parc.numero}
                         </span>
-                        <span className="text-xs font-mono text-zinc-400">{fmtDate(parc.vencimento)}</span>
+                        <span className="text-xs font-mono text-slate-500 dark:text-zinc-400">{fmtDate(parc.vencimento)}</span>
                       </div>
-                      <span className="text-sm font-bold text-amber-400">{fmt(parc.valor)}</span>
+                      <span className="text-sm font-bold text-amber-700 dark:text-amber-400">{fmt(parc.valor)}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-[10px] text-zinc-500">
+                    <div className="flex items-center gap-3 text-[10px] text-slate-400 dark:text-zinc-500">
                       {parc.percentual > 0 && <span>{fmtPerc(parc.percentual)}</span>}
                       {parc.meioPagamento && <span>· {parc.meioPagamento}</span>}
-                      {parc.categoria && <span>· {parc.categoria}</span>}
+                      {parc.categoria && <span className="truncate max-w-[80px]">· {parc.categoria}</span>}
                       {parc.nsu && <span>· NSU: {parc.nsu}</span>}
                     </div>
                   </div>
@@ -498,7 +456,7 @@ export default function VendaDetailsPage() {
               <InfoRow 
                 label="Número NF" 
                 value={venda.nf ? `${venda.nf} (Série ${venda.serieNfe})` : 'Aguardando Emissão'} 
-                className={venda.nf ? 'text-white font-bold' : 'text-zinc-500 italic'} 
+                className={venda.nf ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-400 dark:text-zinc-500 italic'} 
               />
               <InfoRow label="Status" value={<StatusBadge status={venda.statusNfe} />} />
               <InfoRow 
@@ -510,7 +468,7 @@ export default function VendaDetailsPage() {
               <button
                 onClick={handleFetchDanfe}
                 disabled={loadingDanfe}
-                className="mt-4 w-full p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center gap-2 hover:bg-blue-500/20 disabled:opacity-50 transition-all font-bold text-sm"
+                className="mt-4 w-full p-3 rounded-xl bg-blue-100 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 text-blue-700 dark:text-blue-400 flex items-center justify-center gap-2 hover:bg-blue-200 dark:hover:bg-blue-500/20 disabled:opacity-50 transition-all font-bold text-sm shadow-sm dark:shadow-none"
               >
                 {loadingDanfe ? (
                   <RefreshCw size={16} className="animate-spin" />
@@ -522,22 +480,18 @@ export default function VendaDetailsPage() {
             )}
             {venda.chaveNfe && (
               <div className="mt-4">
-                <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block mb-2">Chave de Acesso NFe</span>
+                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 tracking-wider block mb-2">Chave de Acesso NFe</span>
                 <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(venda.chaveNfe);
-                    setCopiedKey(true);
-                    setTimeout(() => setCopiedKey(false), 2000);
-                  }}
-                  className="w-full p-3 rounded-xl bg-zinc-950/80 border border-zinc-800/50 text-left flex items-center gap-2 hover:border-cyan-500/30 transition-colors group"
+                  onClick={handleCopyKey}
+                  className="w-full p-3 rounded-xl bg-slate-100 dark:bg-zinc-950/80 border border-slate-200 dark:border-zinc-800/50 text-left flex items-center gap-2 hover:border-cyan-500/30 transition-colors group shadow-inner dark:shadow-none"
                 >
-                  <code className="text-[10px] text-cyan-400/80 font-mono break-all flex-1">
+                  <code className="text-[10px] text-cyan-700 dark:text-cyan-400/80 font-mono break-all flex-1">
                     {venda.chaveNfe}
                   </code>
                   {copiedKey ? (
-                    <Check size={14} className="text-emerald-400 shrink-0" />
+                    <Check size={14} className="text-emerald-500 dark:text-emerald-400 shrink-0" />
                   ) : (
-                    <Copy size={14} className="text-zinc-600 group-hover:text-cyan-400 shrink-0 transition-colors" />
+                    <Copy size={14} className="text-slate-400 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 shrink-0 transition-colors" />
                   )}
                 </button>
               </div>
@@ -545,7 +499,7 @@ export default function VendaDetailsPage() {
           </SectionCard>
           
           {/* ── AUDITORIA ── */}
-          <SectionCard icon={ShieldCheck} iconColor="text-zinc-500" title="Auditoria">
+          <SectionCard icon={ShieldCheck} iconColor="text-slate-400 dark:text-zinc-500" title="Auditoria">
             <div className="space-y-0">
               <InfoRow label="Criado por" value={venda.usuarioInclusao || '--'} />
               <InfoRow label="Data Criação" value={`${venda.dataInclusao} ${venda.horaInclusao}`} />
@@ -561,8 +515,7 @@ export default function VendaDetailsPage() {
         </div>
       </div>
 
-
-
     </div>
   );
 }
+

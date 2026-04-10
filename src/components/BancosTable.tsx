@@ -1,12 +1,24 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useBancosStore } from '@/store/useBancosStore';
-import { Landmark, Search, ChevronRight } from 'lucide-react';
-import { useDebounce } from 'use-debounce';
+import React, { useEffect, useMemo } from 'react';
+import { useBancosStore, BancoPlano } from '@/store/useBancosStore';
+import { Landmark, Eye, RefreshCw, AlertCircle, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+  createColumnHelper,
+} from '@tanstack/react-table';
+import { TableContainer } from './ui/TableContainer';
+import { TableSearch } from './ui/TableSearch';
+import { TableSummaryCard } from './ui/TableSummaryCard';
+import Pagination from './Pagination';
+
+const columnHelper = createColumnHelper<BancoPlano>();
 
 export default function BancosTable() {
+  const router = useRouter();
   const { 
     bancos, 
     loading, 
@@ -20,151 +32,184 @@ export default function BancosTable() {
     totalRegistros
   } = useBancosStore();
 
-  const [localSearch, setLocalSearch] = useState(searchTerm);
-  const [debouncedSearch] = useDebounce(localSearch, 500);
-  const router = useRouter();
-
   useEffect(() => {
-    if (debouncedSearch !== searchTerm) {
-      setSearchTerm(debouncedSearch);
-      setCurrentPage(1);
-    }
-  }, [debouncedSearch, searchTerm, setSearchTerm, setCurrentPage]);
+    fetchBancos(currentPage, searchTerm);
+  }, [fetchBancos, currentPage, searchTerm]);
 
-  // Initial load or pagination/search change
-  useEffect(() => {
-    fetchBancos(currentPage, debouncedSearch);
-  }, [fetchBancos, currentPage, debouncedSearch]);
+  const columns = useMemo(() => [
+    columnHelper.accessor('codigo', {
+      header: 'Código',
+      cell: info => (
+        <div className="flex items-center">
+          <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-500/20">
+            {info.getValue()}
+          </span>
+        </div>
+      ),
+    }),
+    columnHelper.accessor('nome', {
+      header: 'Nome do Banco',
+      cell: info => (
+        <div 
+          className="flex flex-col gap-0.5 group/link cursor-pointer" 
+          onClick={() => router.push(`/bancos/${info.row.original.id}`)}
+        >
+          <span className="text-sm font-bold text-slate-700 dark:text-white tracking-tight group-hover/link:text-blue-500 transition-colors">
+            {info.getValue()}
+          </span>
+          <span className="text-[10px] text-slate-500 dark:text-zinc-500 font-mono md:hidden">
+            ISPB: {info.row.original.ispb}
+          </span>
+        </div>
+      ),
+    }),
+    columnHelper.accessor('ispb', {
+      header: 'Código ISPB',
+      cell: info => (
+        <span className="text-xs font-medium text-slate-500 dark:text-zinc-400 font-mono">
+          {info.getValue()}
+        </span>
+      ),
+      meta: { hiddenOnMobile: true }
+    }),
+    columnHelper.display({
+      id: 'actions',
+      header: 'Ações',
+      cell: info => (
+        <div className="flex justify-center opacity-0 group-hover/row:opacity-100 transition-all translate-x-1 group-hover/row:translate-x-0">
+          <button 
+            onClick={() => router.push(`/bancos/${info.row.original.id}`)}
+            className="p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors shadow-lg shadow-blue-500/20" 
+            title="Ver Detalhes"
+          >
+            <Eye size={14} />
+          </button>
+        </div>
+      ),
+      meta: { align: 'center' }
+    }),
+  ], [router]);
 
-  const handlePageChange = (newPage: number) => {
-    if (newPage < 1 || newPage > totalPaginas) return;
-    setCurrentPage(newPage);
-  };
+  const table = useReactTable({
+    data: bancos,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="w-full space-y-6 animate-in fade-in duration-500">
+      {/* Header Area */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
-            <Landmark className="w-8 h-8 text-blue-400" />
-            Bancos
-          </h1>
-          <p className="text-slate-400 mt-1">Gerencie os bancos cadastrados via ERP.</p>
+          <div className="flex items-center gap-3 mb-1">
+            <div className="p-2 bg-blue-500/10 rounded-lg text-blue-600 dark:text-blue-400">
+              <Landmark size={20} />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+              Bancos
+            </h2>
+          </div>
+          <p className="text-slate-500 dark:text-zinc-500 text-sm max-w-md">Instituições financeiras cadastradas no ecossistema.</p>
+        </div>
+
+        <div className="flex items-center gap-3 w-full lg:w-auto">
+          <TableSearch
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Pesquisar bancos..."
+            isLoading={loading}
+          />
+          <button 
+            onClick={() => fetchBancos(currentPage)} 
+            disabled={loading}
+            className="p-3 bg-white/50 dark:bg-zinc-900/40 border border-slate-200 dark:border-zinc-800 hover:border-blue-500/50 rounded-2xl text-slate-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all active:scale-95 disabled:opacity-50 group backdrop-blur-sm shadow-sm"
+            title="Atualizar dados"
+          >
+            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-700'}`} />
+          </button>
         </div>
       </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <TableSummaryCard
+          label="Total de Bancos"
+          value={totalRegistros}
+          sublabel="Cadastrados no ERP"
+          icon={Landmark}
+          variant="blue"
+          isLoading={loading && bancos.length === 0}
+        />
+      </div>
+
+      {/* Error State */}
+      {error && (
+        <div className="p-4 rounded-2xl bg-rose-500/5 border border-rose-500/20 flex gap-4 text-rose-400 animate-in slide-in-from-top-2 duration-300">
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          <div className="text-sm">
+            <p className="font-bold tracking-tight">Erro ao carregar bancos</p>
+            <p className="opacity-70 mt-0.5">{error}</p>
+          </div>
+        </div>
+      )}
 
       {/* Table Container */}
-      <div className="bg-slate-900/50 border border-slate-700/50 backdrop-blur-xl rounded-2xl overflow-hidden shadow-2xl">
-        {/* Toolbar */}
-        <div className="p-4 border-b border-slate-700/50 flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-800/20">
-          <div className="relative w-full sm:w-96">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-slate-400" />
-            </div>
-            <input
-              type="text"
-              className="block w-full pl-10 pr-3 py-2 border border-slate-600 rounded-lg bg-slate-800/80 text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all sm:text-sm"
-              placeholder="Buscar por código ou nome..."
-              value={localSearch}
-              onChange={(e) => setLocalSearch(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* Error Handling */}
-        {error && (
-          <div className="p-6 text-center text-red-400 bg-red-400/10">
-            Houve um erro ao carregar os bancos: {error}
-          </div>
-        )}
-
-        {/* Loading / Empty / Data */}
-        <div className="overflow-x-auto min-h-[400px]">
-          {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
-            </div>
-          ) : bancos.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-slate-400">
-              <Landmark className="h-12 w-12 mb-4 opacity-50" />
-              <p className="text-lg font-medium">Nenhum banco encontrado</p>
-              <p className="text-sm">Tente ajustar sua busca.</p>
-            </div>
-          ) : (
-            <table className="min-w-full divide-y divide-slate-700/50">
-              <thead className="bg-slate-800/40">
-                <tr>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">
-                    Código Banco
-                  </th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wide">
-                    Nome
-                  </th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wide hidden md:table-cell">
-                    Código ISPB
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-700/50 bg-slate-800/10">
-                {bancos.map((banco) => (
-                  <tr 
-                    key={banco.id}
-                    onClick={() => router.push(`/bancos/${banco.id}`)}
-                    className="hover:bg-slate-700/30 transition-colors cursor-pointer group"
+      <TableContainer
+        isLoading={loading && bancos.length === 0}
+        isEmpty={bancos.length === 0}
+        emptyMessage="Nenhum banco encontrado"
+        emptyIcon={Landmark}
+        pagination={
+          <Pagination 
+            currentPage={currentPage}
+            totalPaginas={totalPaginas}
+            onPageChange={setCurrentPage}
+            loading={loading}
+          />
+        }
+      >
+        <table className="w-full text-left border-collapse">
+          <thead>
+            {table.getHeaderGroups().map(headerGroup => (
+              <tr key={headerGroup.id} className="border-b border-slate-200/50 dark:border-zinc-800/50 bg-slate-100/50 dark:bg-zinc-900/20">
+                {headerGroup.headers.map(header => (
+                  <th 
+                    key={header.id} 
+                    className={`py-5 px-6 text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] font-sans ${header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''} ${header.column.columnDef.meta?.hiddenOnMobile ? 'hidden md:table-cell' : ''}`}
                   >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <span className="font-mono text-sm font-medium text-blue-400 bg-blue-400/10 px-2 py-1 rounded">
-                          {banco.codigo}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-white">{banco.nome}</div>
-                      <div className="text-xs text-slate-400 md:hidden mt-1">ISPB: {banco.ispb}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
-                      <span className="text-sm text-slate-300">{banco.ispb}</span>
-                    </td>
-                    <td className="px-3 py-4 text-right">
-                      <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-blue-400 transition-colors ml-auto" />
-                    </td>
-                  </tr>
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                  </th>
                 ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+              </tr>
+            ))}
+          </thead>
+          <tbody className="divide-y divide-slate-200/50 dark:divide-zinc-800/30">
+            {table.getRowModel().rows.map(row => (
+              <tr 
+                key={row.id} 
+                className="group/row hover:bg-slate-100/50 dark:hover:bg-blue-500/[0.02] transition-all duration-300"
+              >
+                {row.getVisibleCells().map(cell => (
+                  <td 
+                    key={cell.id} 
+                    className={`py-5 px-6 ${cell.column.columnDef.meta?.hiddenOnMobile ? 'hidden md:table-cell' : ''}`}
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-        {/* Pagination */}
-        {!loading && bancos.length > 0 && (
-          <div className="bg-slate-800/40 px-6 py-4 border-t border-slate-700/50 flex items-center justify-between">
-            <div className="text-sm text-slate-400">
-              Mostrando página <span className="font-medium text-white">{currentPage}</span> de{' '}
-              <span className="font-medium text-white">{totalPaginas}</span>
-              <span className="ml-2">({totalRegistros} total)</span>
-            </div>
-            
-            <div className="flex gap-2">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="px-4 py-2 bg-slate-700/50 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-700 text-sm font-medium text-white rounded-lg transition-colors border border-slate-600/50"
-              >
-                Anterior
-              </button>
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage >= totalPaginas}
-                className="px-4 py-2 bg-slate-700/50 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-700 text-sm font-medium text-white rounded-lg transition-colors border border-slate-600/50"
-              >
-                Próxima
-              </button>
-            </div>
+        {/* Sync Status Overlay */}
+        {loading && bancos.length > 0 && (
+          <div className="absolute bottom-4 right-4 px-4 py-2 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md rounded-xl border border-blue-500/20 shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2">
+            <RefreshCw className="w-4 h-4 text-blue-500 animate-spin" />
+            <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">Sincronizando...</span>
           </div>
         )}
-      </div>
+      </TableContainer>
     </div>
   );
 }

@@ -54,8 +54,8 @@ export default function CondicaoDetails() {
         badges={
           <span className={`flex items-center gap-1.5 text-xs px-3 py-1 rounded-lg border font-semibold ${
             isAtivo
-              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-              : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+              : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
           }`}>
             {isAtivo ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
             {isAtivo ? 'Ativa' : 'Inativa'}
@@ -65,18 +65,18 @@ export default function CondicaoDetails() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <SectionCard icon={CreditCard} iconColor="text-emerald-400" title="Configuração">
+          <SectionCard icon={CreditCard} iconColor="text-emerald-600 dark:text-emerald-400" title="Configuração">
             <div className="space-y-0">
-              <InfoRow label="Código" value={<span className="font-mono text-emerald-400">{condicao.codigo}</span>} />
-              <InfoRow label="Descrição" value={condicao.descricao} className="text-white font-semibold" />
+              <InfoRow label="Código" value={<span className="font-mono text-emerald-600 dark:text-emerald-400">{condicao.codigo}</span>} />
+              <InfoRow label="Descrição" value={condicao.descricao} className="text-slate-900 dark:text-white font-semibold" />
               <InfoRow label="Nº de Parcelas" value={
-                <span className="text-lg font-bold text-white">{condicao.parcelas}x</span>
+                <span className="text-lg font-bold text-slate-900 dark:text-white">{condicao.parcelas}x</span>
               } />
               {omie?.dias_parcelas && (
                 <InfoRow label="Dias entre Parcelas" value={`${omie.dias_parcelas} dias`} />
               )}
               <InfoRow label="Status" value={
-                <span className={`font-semibold ${isAtivo ? 'text-emerald-400' : 'text-rose-400'}`}>
+                <span className={`font-semibold ${isAtivo ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                   {isAtivo ? 'Ativa' : 'Inativa'}
                 </span>
               } />
@@ -85,7 +85,7 @@ export default function CondicaoDetails() {
         </div>
 
         <div>
-          <SectionCard icon={Shield} iconColor="text-zinc-400" title="Auditoria ERP">
+          <SectionCard icon={Shield} iconColor="text-slate-500 dark:text-zinc-400" title="Auditoria ERP">
             <div className="space-y-0">
               {omie?.omie_id && <InfoRow label="Omie ID" value={<span className="font-mono text-xs">{omie.omie_id}</span>} />}
               {omie?.created_at && (

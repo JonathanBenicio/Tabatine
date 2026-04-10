@@ -56,7 +56,7 @@ export default function FormaDetails() {
         title={forma.descricao}
         subtitle={`Código ${forma.codigo} · ${forma.quantidadeParcelas}x de ${forma.diasParcelas} dias`}
         badges={
-          <span className="font-mono text-sm px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span className="font-mono text-sm px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
             #{forma.codigo}
           </span>
         }
@@ -64,32 +64,32 @@ export default function FormaDetails() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <SectionCard icon={Wallet} iconColor="text-emerald-400" title="Configuração">
+          <SectionCard icon={Wallet} iconColor="text-emerald-600 dark:text-emerald-400" title="Configuração">
             <div className="space-y-0">
-              <InfoRow label="Código" value={<span className="font-mono text-emerald-400">{forma.codigo}</span>} />
-              <InfoRow label="Descrição" value={forma.descricao} className="text-white font-semibold" />
+              <InfoRow label="Código" value={<span className="font-mono text-emerald-600 dark:text-emerald-400">{forma.codigo}</span>} />
+              <InfoRow label="Descrição" value={forma.descricao} className="text-slate-900 dark:text-white font-semibold" />
               <InfoRow label="Nº de Parcelas" value={
-                <span className="text-lg font-bold text-white">{forma.quantidadeParcelas}x</span>
+                <span className="text-lg font-bold text-slate-900 dark:text-white">{forma.quantidadeParcelas}x</span>
               } />
               <InfoRow label="Dias entre Parcelas" value={
-                <span className="font-semibold text-zinc-200">{forma.diasParcelas} dias</span>
+                <span className="font-semibold text-slate-700 dark:text-zinc-200">{forma.diasParcelas} dias</span>
               } />
             </div>
           </SectionCard>
 
           {/* Tabela de Parcelas */}
           {parcelasList.length > 0 && (
-            <SectionCard icon={Calendar} iconColor="text-amber-400" title="Detalhamento de Parcelas">
+            <SectionCard icon={Calendar} iconColor="text-amber-600 dark:text-amber-400" title="Detalhamento de Parcelas">
               <div className="space-y-2">
                 {parcelasList.map((parcela: string, idx: number) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between p-3 rounded-xl bg-amber-500/5 border border-amber-500/10"
+                    className="flex items-center justify-between p-3 rounded-xl bg-amber-500/10 dark:bg-amber-500/5 border border-amber-500/20 dark:border-amber-500/10"
                   >
-                    <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-bold flex items-center justify-center shrink-0">
+                    <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-400 text-[10px] font-bold flex items-center justify-center shrink-0">
                       {idx + 1}
                     </span>
-                    <span className="text-sm text-zinc-300 flex-1 ml-3 font-mono">{parcela}</span>
+                    <span className="text-sm text-slate-600 dark:text-zinc-300 flex-1 ml-3 font-mono">{parcela}</span>
                   </div>
                 ))}
               </div>
@@ -98,7 +98,7 @@ export default function FormaDetails() {
         </div>
 
         <div>
-          <SectionCard icon={Shield} iconColor="text-zinc-400" title="Auditoria ERP">
+          <SectionCard icon={Shield} iconColor="text-slate-500 dark:text-zinc-400" title="Auditoria ERP">
             <div className="space-y-0">
               {omie?.omie_id && <InfoRow label="Omie ID" value={<span className="font-mono text-xs">{omie.omie_id}</span>} />}
               {omie?.created_at && (

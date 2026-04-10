@@ -17,13 +17,13 @@ export function DetailNotFound({ backHref, backLabel, entityName }: DetailNotFou
   return (
     <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
       <AlertCircle className="w-16 h-16 text-rose-500 mb-6 opacity-80" />
-      <h2 className="text-2xl font-bold text-white mb-2">{entityName} não encontrado</h2>
-      <p className="text-zinc-400 max-w-md mb-8">
+      <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{entityName} não encontrado</h2>
+      <p className="text-slate-500 dark:text-zinc-400 max-w-md mb-8">
         Não foi possível localizar o registro solicitado. Ele pode ter sido removido ou o ID é inválido.
       </p>
       <button
         onClick={() => router.push(backHref)}
-        className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl transition-colors font-medium flex items-center gap-2"
+        className="px-6 py-3 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-900 dark:text-white rounded-xl transition-colors font-medium flex items-center gap-2"
       >
         <ArrowLeft size={18} />
         {backLabel}

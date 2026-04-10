@@ -9,6 +9,7 @@ import {
 import { parseISO, isValid, startOfWeek, endOfWeek, isWithinInterval, format, setWeek, setYear, getISOWeek, getYear } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { TrendingUp, DollarSign, ShoppingCart, Activity, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { TableSummaryCard } from '@/components/ui/TableSummaryCard';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 const STATUS_COLORS: Record<string, string> = {
@@ -198,10 +199,25 @@ export default function DashboardCharts() {
 
   if (loading && (!vendas || vendas.length === 0)) {
     return (
-      <div className="flex h-[400px] w-full items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-          <p className="text-zinc-400">Carregando dados do dashboard...</p>
+      <div className="space-y-6 animate-pulse">
+        {/* Skeleton Top Bar */}
+        <div className="h-16 w-full rounded-2xl bg-slate-200/50 dark:bg-zinc-800/50 backdrop-blur-xl"></div>
+        {/* Skeleton Insights Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-28 rounded-2xl bg-slate-200/50 dark:bg-zinc-800/50 backdrop-blur-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="h-4 w-1/2 bg-slate-300/50 dark:bg-zinc-700/50 rounded"></div>
+                <div className="h-8 w-8 rounded-lg bg-slate-300/50 dark:bg-zinc-700/50"></div>
+              </div>
+              <div className="h-6 w-3/4 bg-slate-300/50 dark:bg-zinc-700/50 rounded"></div>
+            </div>
+          ))}
+        </div>
+        {/* Skeleton Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 h-[400px] rounded-2xl bg-slate-200/50 dark:bg-zinc-800/50 backdrop-blur-xl"></div>
+          <div className="h-[400px] rounded-2xl bg-slate-200/50 dark:bg-zinc-800/50 backdrop-blur-xl"></div>
         </div>
       </div>
     );
@@ -229,137 +245,135 @@ export default function DashboardCharts() {
     <div className="space-y-6">
 
       {/* Week + Year Selector */}
-      <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-zinc-800/50 bg-zinc-900/50 p-4 backdrop-blur-xl">
-        <CalendarDays className="w-5 h-5 text-purple-400" />
+      <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-white/60 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-900/50 p-4 backdrop-blur-xl shadow-lg shadow-teal-900/5 dark:shadow-none">
+        <CalendarDays className="w-5 h-5 text-teal-600 dark:text-purple-400" />
 
         <div className="flex items-center gap-2">
-          <button onClick={prevWeek} className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors">
+          <button onClick={prevWeek} className="p-1.5 rounded-lg bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors border border-slate-200/50 dark:border-transparent">
             <ChevronLeft className="w-4 h-4" />
           </button>
 
           <div className="flex items-center gap-2">
-            <label className="text-xs text-zinc-500 uppercase tracking-wider">Semana</label>
+            <label className="text-xs text-slate-500 dark:text-zinc-500 uppercase tracking-wider">Semana</label>
             <select
               value={selectedWeek}
               onChange={(e) => setSelectedWeek(Number(e.target.value))}
-              className="bg-zinc-800 border border-zinc-700 text-white text-sm rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/50 outline-none"
+              className="bg-white/80 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white text-sm rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-teal-500/30 dark:focus:ring-purple-500/30 focus:border-teal-500/50 dark:focus:border-purple-500/50 outline-none backdrop-blur-md"
             >
               {weekOptions.map(w => (
-                <option key={w} value={w}>Semana {w}</option>
+                <option key={w} value={w} className="bg-white dark:bg-zinc-800 text-slate-900 dark:text-white">Semana {w}</option>
               ))}
             </select>
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="text-xs text-zinc-500 uppercase tracking-wider">Ano</label>
+            <label className="text-xs text-slate-500 dark:text-zinc-500 uppercase tracking-wider">Ano</label>
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="bg-zinc-800 border border-zinc-700 text-white text-sm rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/50 outline-none"
+              className="bg-white/80 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white text-sm rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-teal-500/30 dark:focus:ring-purple-500/30 focus:border-teal-500/50 dark:focus:border-purple-500/50 outline-none backdrop-blur-md"
             >
               {yearOptions.map(y => (
-                <option key={y} value={y}>{y}</option>
+                <option key={y} value={y} className="bg-white dark:bg-zinc-800 text-slate-900 dark:text-white">{y}</option>
               ))}
             </select>
           </div>
 
-          <button onClick={nextWeek} className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors">
+          <button onClick={nextWeek} className="p-1.5 rounded-lg bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors border border-slate-200/50 dark:border-transparent">
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
 
-        <span id="week-label" className="text-zinc-400 text-sm ml-auto">{weekLabel}</span>
+        <span id="week-label" className="text-slate-500 dark:text-zinc-400 text-sm ml-auto">{weekLabel}</span>
       </div>
       
       {/* Cards de Insights */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/50 p-6 backdrop-blur-xl transition-all hover:bg-zinc-800/50 group">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-zinc-400">Faturamento</h3>
-            <div className="p-2 bg-blue-500/10 rounded-lg group-hover:bg-blue-500/20 transition-colors">
-              <DollarSign className="w-5 h-5 text-blue-400" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-white">{formatCurrency(totalValorSemana)}</p>
-        </div>
-
-        <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/50 p-6 backdrop-blur-xl transition-all hover:bg-zinc-800/50 group">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-zinc-400">Pedidos</h3>
-            <div className="p-2 bg-emerald-500/10 rounded-lg group-hover:bg-emerald-500/20 transition-colors">
-              <ShoppingCart className="w-5 h-5 text-emerald-400" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-white">{totalVendasSemana}</p>
-        </div>
-
-        <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/50 p-6 backdrop-blur-xl transition-all hover:bg-zinc-800/50 group">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-zinc-400">Ticket Médio</h3>
-            <div className="p-2 bg-purple-500/10 rounded-lg group-hover:bg-purple-500/20 transition-colors">
-              <Activity className="w-5 h-5 text-purple-400" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-white">{formatCurrency(ticketMedio)}</p>
-        </div>
-
-        <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/50 p-6 backdrop-blur-xl transition-all hover:bg-zinc-800/50 group">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-zinc-400">Melhor Dia</h3>
-            <div className="p-2 bg-orange-500/10 rounded-lg group-hover:bg-orange-500/20 transition-colors">
-              <TrendingUp className="w-5 h-5 text-orange-400" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-white">{bestDay.valor > 0 ? bestDay.name : '--'}</p>
-          {bestDay.valor > 0 && <p className="text-xs text-zinc-500 mt-1">{formatCurrency(bestDay.valor)}</p>}
-        </div>
-
-        <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/50 p-6 backdrop-blur-xl transition-all hover:bg-zinc-800/50 group">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-zinc-400">Comissão</h3>
-            <div className="p-2 bg-pink-500/10 rounded-lg group-hover:bg-pink-500/20 transition-colors">
-              <TrendingUp className="w-5 h-5 text-pink-400" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-white">{formatCurrency(totalComissaoSemana)}</p>
-        </div>
+        <TableSummaryCard 
+          label="Faturamento"
+          value={totalValorSemana}
+          isCurrency
+          icon={DollarSign}
+          variant="blue"
+          isLoading={loading}
+        />
+        <TableSummaryCard 
+          label="Pedidos"
+          value={totalVendasSemana}
+          icon={ShoppingCart}
+          variant="emerald"
+          isLoading={loading}
+        />
+        <TableSummaryCard 
+          label="Ticket Médio"
+          value={ticketMedio}
+          isCurrency
+          icon={Activity}
+          variant="purple"
+          isLoading={loading}
+        />
+        <TableSummaryCard 
+          label="Melhor Dia"
+          value={bestDay.valor > 0 ? bestDay.name : '--'}
+          sublabel={bestDay.valor > 0 ? formatCurrency(bestDay.valor) : undefined}
+          icon={TrendingUp}
+          variant="orange"
+          isLoading={loading}
+        />
+        <TableSummaryCard 
+          label="Comissão"
+          value={totalComissaoSemana}
+          isCurrency
+          icon={TrendingUp}
+          variant="pink"
+          isLoading={loading}
+        />
       </div>
 
       {/* Gráficos Principais */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Faturamento por Dia (Segunda → Domingo) */}
-        <div className="lg:col-span-2 rounded-2xl border border-zinc-800/50 bg-zinc-900/50 p-6 backdrop-blur-xl">
-          <h3 className="text-lg font-semibold text-white mb-1">Faturamento por Dia</h3>
-          <p className="text-xs text-zinc-500 mb-6">Segunda a Domingo — {weekLabel}</p>
+        <div className="lg:col-span-2 rounded-2xl border border-white/60 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-900/50 p-6 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none">
+          <h3 className="text-lg font-black text-slate-900 dark:text-white mb-1 tracking-tight">Faturamento por Dia</h3>
+          <p className="text-[10px] font-bold text-slate-500 dark:text-zinc-500 mb-6 uppercase tracking-widest leading-none">Segunda a Domingo — {weekLabel}</p>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartFaturamentoDia} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#8b5cf6" stopOpacity={1}/>
-                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.5}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                <XAxis dataKey="name" stroke="#a1a1aa" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#a1a1aa" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `R$ ${(val/1000).toFixed(0)}k`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" strokeOpacity={0.2} vertical={false} />
+                <XAxis dataKey="name" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} tick={{ fontWeight: 600 }} />
+                <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `R$ ${(val/1000).toFixed(0)}k`} />
                 <Tooltip 
-                  cursor={{ fill: '#27272a', opacity: 0.4 }}
-                  contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '12px', color: '#fff' }}
-                  itemStyle={{ color: '#e4e4e7' }}
+                  cursor={{ fill: 'rgba(0,0,0,0.04)', radius: 8 }}
+                  contentStyle={{ 
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)', 
+                    borderColor: 'rgba(255, 255, 255, 0.5)', 
+                    borderRadius: '16px', 
+                    padding: '12px',
+                    boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                    borderWidth: '1px',
+                    backdropFilter: 'blur(10px)'
+                  }}
+                  itemStyle={{ color: '#0f172a', fontWeight: 700, fontSize: '12px' }}
+                  labelStyle={{ color: '#64748b', fontWeight: 800, fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '0.1em' }}
                   formatter={(value: any) => [formatCurrency(Number(value ?? 0)), 'Faturamento']}
                 />
-                <Bar dataKey="valor" fill="url(#barGradient)" radius={[6, 6, 0, 0]} maxBarSize={48} />
+                <Bar dataKey="valor" fill="url(#barGradient)" radius={[8, 8, 0, 0]} maxBarSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Gráfico de Pizza (Status) */}
-        <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/50 p-6 backdrop-blur-xl">
-          <h3 className="text-lg font-semibold text-white mb-1">Pedidos por Status</h3>
-          <p className="text-xs text-zinc-500 mb-6">Distribuição por quantidade — {weekLabel}</p>
+        <div className="rounded-2xl border border-white/60 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-900/50 p-6 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none">
+          <h3 className="text-lg font-black text-slate-900 dark:text-white mb-1 tracking-tight">Status</h3>
+          <p className="text-[10px] font-bold text-slate-500 dark:text-zinc-500 mb-6 uppercase tracking-widest leading-none">Distribuição de Pedidos</p>
           <div className="h-[300px] w-full flex flex-col items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -367,20 +381,28 @@ export default function DashboardCharts() {
                   data={chartStatus}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
+                  innerRadius={65}
+                  outerRadius={85}
+                  paddingAngle={8}
                   dataKey="value"
                   stroke="none"
-                  label={({ percent }) => percent ? `${(percent * 100).toFixed(0)}%` : ''}
+                  label={({ percent }) => (percent ?? 0) > 0.1 ? `${((percent ?? 0) * 100).toFixed(0)}%` : ''}
                 >
                   {chartStatus.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.name] || COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '12px' }}
-                  itemStyle={{ color: '#fff' }}
+                   contentStyle={{ 
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)', 
+                    borderColor: 'rgba(255, 255, 255, 0.5)', 
+                    borderRadius: '16px', 
+                    padding: '12px',
+                    boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                    borderWidth: '1px',
+                    backdropFilter: 'blur(10px)'
+                  }}
+                  itemStyle={{ color: '#0f172a', fontWeight: 700, fontSize: '12px' }}
                   formatter={(value: any, name: any) => {
                     const total = chartStatus.reduce((acc, curr) => acc + curr.value, 0);
                     const valNum = Number(value || 0);
@@ -396,9 +418,9 @@ export default function DashboardCharts() {
       </div>
 
       {/* Gráfico Secundário — Quantidade de Pedidos por Dia */}
-      <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/50 p-6 backdrop-blur-xl">
-        <h3 className="text-lg font-semibold text-white mb-1">Quantidade de Pedidos por Dia</h3>
-        <p className="text-xs text-zinc-500 mb-6">Volume diário — {weekLabel}</p>
+      <div className="rounded-2xl border border-white/60 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-900/50 p-6 backdrop-blur-xl shadow-lg shadow-teal-900/5 dark:shadow-none">
+        <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-1">Quantidade de Pedidos por Dia</h3>
+        <p className="text-xs text-slate-500 dark:text-zinc-500 mb-6">Volume diário — {weekLabel}</p>
         <div className="h-[250px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartQtdDia} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
@@ -408,12 +430,12 @@ export default function DashboardCharts() {
                   <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-              <XAxis dataKey="name" stroke="#a1a1aa" fontSize={12} tickLine={false} axisLine={false} />
-              <YAxis stroke="#a1a1aa" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" strokeOpacity={0.5} vertical={false} />
+              <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+              <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
               <Tooltip 
-                contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '12px', color: '#fff' }}
-                itemStyle={{ color: '#e4e4e7' }}
+                contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--card-border)', borderRadius: '12px', color: 'var(--foreground)', backdropFilter: 'blur(12px)' }}
+                itemStyle={{ color: 'var(--foreground)' }}
                 formatter={(value: any) => [value ?? 0, 'Pedidos']}
               />
               <Area type="monotone" dataKey="qtd" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorQtd)" />
@@ -425,56 +447,56 @@ export default function DashboardCharts() {
       {/* Rankings Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Vendedores */}
-        <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/50 p-6 backdrop-blur-xl transition-all hover:bg-zinc-800/20">
-          <h3 className="text-lg font-semibold text-white mb-1">Top Vendedores</h3>
-          <p className="text-xs text-zinc-500 mb-6">Maiores faturamentos — {weekLabel}</p>
+        <div className="rounded-2xl border border-white/60 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-900/50 p-6 backdrop-blur-xl shadow-lg shadow-teal-900/5 dark:shadow-none transition-all hover:bg-white/70 dark:hover:bg-zinc-800/20">
+          <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-1">Top Vendedores</h3>
+          <p className="text-xs text-slate-500 dark:text-zinc-500 mb-6">Maiores faturamentos — {weekLabel}</p>
           
           <div className="space-y-6">
             {topVendedores.map((vend, idx) => (
               <div key={vend.name} className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-zinc-300 font-medium flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center text-[10px] text-blue-400 border border-blue-500/20">
+                  <span className="text-slate-700 dark:text-zinc-300 font-medium flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center text-[10px] text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20">
                       {idx + 1}
                     </span>
                     {vend.name}
                   </span>
-                  <span className="text-white font-semibold">{formatCurrency(vend.total)}</span>
+                  <span className="text-slate-900 dark:text-white font-semibold">{formatCurrency(vend.total)}</span>
                 </div>
-                <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-1.5 w-full bg-slate-200 dark:bg-zinc-800 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full"
+                    className="h-full bg-gradient-to-r from-blue-500 to-teal-400 dark:from-blue-600 dark:to-blue-400 rounded-full"
                     style={{ width: `${(vend.total / (topVendedores[0]?.total || 1)) * 100}%` }}
                   />
                 </div>
               </div>
             ))}
             {topVendedores.length === 0 && (
-              <p className="text-center text-zinc-500 py-8 italic">Sem faturamentos nesta semana.</p>
+              <p className="text-center text-slate-500 dark:text-zinc-500 py-8 italic">Sem faturamentos nesta semana.</p>
             )}
           </div>
         </div>
 
         {/* Top Produtos */}
-        <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/50 p-6 backdrop-blur-xl transition-all hover:bg-zinc-800/20">
-          <h3 className="text-lg font-semibold text-white mb-1">Top Produtos</h3>
-          <p className="text-xs text-zinc-500 mb-6">Produtos mais rentáveis — {weekLabel}</p>
+        <div className="rounded-2xl border border-white/60 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-900/50 p-6 backdrop-blur-xl shadow-lg shadow-teal-900/5 dark:shadow-none transition-all hover:bg-white/70 dark:hover:bg-zinc-800/20">
+          <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-1">Top Produtos</h3>
+          <p className="text-xs text-slate-500 dark:text-zinc-500 mb-6">Produtos mais rentáveis — {weekLabel}</p>
           
           <div className="space-y-4">
             {topProdutos.map((prod, idx) => (
-              <div key={prod.name} className="flex items-center gap-4 p-3 rounded-xl bg-zinc-800/30 border border-zinc-700/30 hover:bg-zinc-800/50 transition-colors group">
-                 <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-bold border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-colors">
+              <div key={prod.name} className="flex items-center gap-4 p-3 rounded-xl bg-white/60 dark:bg-zinc-800/30 border border-white/80 dark:border-zinc-700/30 hover:bg-white dark:hover:bg-zinc-800/50 shadow-sm dark:shadow-none transition-colors group">
+                 <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-200 dark:border-emerald-500/20 group-hover:bg-emerald-200 dark:group-hover:bg-emerald-500/20 transition-colors">
                     {idx + 1}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{prod.name}</p>
-                    <p className="text-xs text-zinc-500">{formatCurrency(prod.total)}</p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{prod.name}</p>
+                    <p className="text-xs text-slate-500 dark:text-zinc-500">{formatCurrency(prod.total)}</p>
                   </div>
                   <TrendingUp className="w-4 h-4 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             ))}
             {topProdutos.length === 0 && (
-              <p className="text-center text-zinc-500 py-8 italic">Dados de produtos indisponíveis.</p>
+              <p className="text-center text-slate-500 dark:text-zinc-500 py-8 italic">Dados de produtos indisponíveis.</p>
             )}
           </div>
         </div>

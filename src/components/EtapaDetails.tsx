@@ -53,8 +53,8 @@ export default function EtapaDetails() {
         badges={
           <span className={`flex items-center gap-1.5 text-xs px-3 py-1 rounded-lg border font-semibold ${
             isAtivo
-              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-              : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+              : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
           }`}>
             {isAtivo ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
             {isAtivo ? 'Ativa' : 'Inativa'}
@@ -64,15 +64,15 @@ export default function EtapaDetails() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <SectionCard icon={Layers} iconColor="text-indigo-400" title="Identificação">
+          <SectionCard icon={Layers} iconColor="text-indigo-600 dark:text-indigo-400" title="Identificação">
             <div className="space-y-0">
-              <InfoRow label="Código" value={<span className="font-mono text-indigo-400">{etapa.codigo}</span>} />
-              <InfoRow label="Descrição" value={etapa.descricao} className="text-white font-semibold" />
+              <InfoRow label="Código" value={<span className="font-mono text-indigo-600 dark:text-indigo-400">{etapa.codigo}</span>} />
+              <InfoRow label="Descrição" value={etapa.descricao} className="text-slate-900 dark:text-white font-semibold" />
               {etapa.descricaoPadrao && etapa.descricaoPadrao !== etapa.descricao && (
                 <InfoRow label="Descrição Padrão" value={etapa.descricaoPadrao} />
               )}
               <InfoRow label="Status" value={
-                <span className={`font-semibold ${isAtivo ? 'text-emerald-400' : 'text-rose-400'}`}>
+                <span className={`font-semibold ${isAtivo ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                   {isAtivo ? 'Ativa' : 'Inativa'}
                 </span>
               } />
@@ -81,19 +81,19 @@ export default function EtapaDetails() {
 
           {/* Operação Vinculada */}
           {omie?.codigo_operacao && (
-            <SectionCard icon={GitBranch} iconColor="text-amber-400" title="Operação Vinculada">
-              <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/15">
+            <SectionCard icon={GitBranch} iconColor="text-amber-600 dark:text-amber-400" title="Operação Vinculada">
+              <div className="p-4 rounded-xl bg-amber-500/10 dark:bg-amber-500/5 border border-amber-500/20 dark:border-amber-500/15">
                 <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-lg bg-amber-500/10">
-                    <GitBranch className="text-amber-400" size={18} />
+                  <div className="p-2 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                    <GitBranch size={18} />
                   </div>
                   <div>
-                    <p className="text-xs text-amber-400/70 font-semibold uppercase tracking-wider mb-1">
+                    <p className="text-xs text-amber-700/70 dark:text-amber-400/70 font-semibold uppercase tracking-wider mb-1">
                       Código da Operação
                     </p>
-                    <p className="text-xl font-bold text-white font-mono">{omie.codigo_operacao}</p>
+                    <p className="text-xl font-bold text-slate-900 dark:text-white font-mono">{omie.codigo_operacao}</p>
                     {omie.descricao_operacao && (
-                      <p className="text-sm text-zinc-400 mt-1">{omie.descricao_operacao}</p>
+                      <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1">{omie.descricao_operacao}</p>
                     )}
                   </div>
                 </div>
@@ -103,7 +103,7 @@ export default function EtapaDetails() {
         </div>
 
         <div>
-          <SectionCard icon={Shield} iconColor="text-zinc-400" title="Auditoria ERP">
+          <SectionCard icon={Shield} iconColor="text-slate-500 dark:text-zinc-400" title="Auditoria ERP">
             <div className="space-y-0">
               {omie?.omie_id && <InfoRow label="Omie ID" value={<span className="font-mono text-xs">{omie.omie_id}</span>} />}
               {omie?.created_at && (
