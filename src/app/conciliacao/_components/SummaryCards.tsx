@@ -10,7 +10,7 @@ interface SummaryCardsProps {
 
 export function SummaryCards({ income, expenses, balance }: SummaryCardsProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div id="summary-cards" className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div className="p-6 rounded-3xl bg-zinc-900/40 border border-zinc-800/50 backdrop-blur-xl flex flex-col justify-between group hover:border-emerald-500/40 transition-all">
         <div className="flex justify-between items-start mb-6">
           <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Entradas</p>
