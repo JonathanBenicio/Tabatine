@@ -50,7 +50,7 @@ export default function MeioDetails() {
         title={meio.descricao}
         subtitle={`Código ${meio.codigo}`}
         badges={
-          <span className="font-mono text-sm px-3 py-1 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
+          <span className="font-mono text-sm px-3 py-1 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
             #{meio.codigo}
           </span>
         }
@@ -58,17 +58,17 @@ export default function MeioDetails() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <SectionCard icon={Coins} iconColor="text-amber-400" title="Identificação">
+          <SectionCard icon={Coins} iconColor="text-amber-600 dark:text-amber-400" title="Identificação">
             <div className="space-y-0">
-              <InfoRow label="Código ABNT/Omie" value={<span className="font-mono text-amber-400">{meio.codigo}</span>} />
-              <InfoRow label="Descrição" value={meio.descricao} className="text-white font-semibold" />
+              <InfoRow label="Código ABNT/Omie" value={<span className="font-mono text-amber-600 dark:text-amber-400">{meio.codigo}</span>} />
+              <InfoRow label="Descrição" value={meio.descricao} className="text-slate-900 dark:text-white font-semibold" />
               {omie?.tipo && <InfoRow label="Tipo" value={omie.tipo} />}
             </div>
           </SectionCard>
         </div>
 
         <div>
-          <SectionCard icon={Shield} iconColor="text-zinc-400" title="Auditoria ERP">
+          <SectionCard icon={Shield} iconColor="text-slate-500 dark:text-zinc-400" title="Auditoria ERP">
             <div className="space-y-0">
               {omie?.omie_id && <InfoRow label="Omie ID" value={<span className="font-mono text-xs">{omie.omie_id}</span>} />}
               {omie?.created_at && (
@@ -83,8 +83,8 @@ export default function MeioDetails() {
 
         {/* TODO: Cross-reference com pedidos que usam este meio */}
         <div className="lg:col-span-3">
-          <div className="p-4 rounded-xl border border-zinc-800/50 bg-zinc-900/20 flex items-center gap-3">
-            <span className="text-xs text-zinc-600">🔮 Futuro: exibir pedidos que utilizam este meio de pagamento</span>
+          <div className="p-4 rounded-xl border border-slate-200 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-900/20 backdrop-blur-md flex items-center gap-3">
+            <span className="text-xs text-slate-500 dark:text-zinc-600">🔮 Futuro: exibir pedidos que utilizam este meio de pagamento</span>
           </div>
         </div>
       </div>
