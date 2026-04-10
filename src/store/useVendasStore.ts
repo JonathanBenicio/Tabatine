@@ -45,7 +45,7 @@ export interface VendaPlana {
   parcela3?: { valor: number; vencimento: string };
   vencimentoStatus: string;
   statusComissao: string;
-  omieData: any;
+  omieData: Record<string, unknown>;
 
   dataPedido: string;
   dataPrevisao: string;
@@ -161,7 +161,7 @@ interface VendasStoreState {
   setShowColumnFilters: (show: boolean) => void;
   
   resetFilters: () => void;
-  fetchVendas: (page?: number, forceRefresh?: boolean) => Promise<void>;
+  fetchVendas: (page?: number, forceRefresh?: boolean, limit?: number) => Promise<void>;
   fetchVendaByLinhaId: (id_linha: string) => Promise<VendaPlana | null>;
 }
 
@@ -201,16 +201,21 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
     sorting: [{ id: 'data', desc: true }],
   }),
 
-  fetchVendas: async (page = 1, forceRefresh = false) => {
-    if (page === get().currentPage && get().hasFetchedInitial && !forceRefresh) return;
+  fetchVendas: async (page = 1, forceRefresh = false, limit?: number) => {
+    // Only skip if it's the same page, we've fetched before, no refresh is forced, AND no custom limit is requested
+    if (page === get().currentPage && get().hasFetchedInitial && !forceRefresh && !limit) return;
+    
     set({ loading: true, error: null, hasFetchedInitial: true });
     try {
-      const { searchTerm, sorting, filters } = get();
+      const { searchTerm, sorting, filters, pageSize } = get();
       const sortField = sorting[0]?.id || 'data';
       const sortOrder = sorting[0]?.desc ? 'desc' : 'asc';
+      
+      const effectiveLimit = (limit || pageSize || 10).toString();
+
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: '10',
+        limit: effectiveLimit,
         search: searchTerm,
         sortField,
         sortOrder,
@@ -231,7 +236,7 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
       const vendedoresMap: Record<number, string> = {};
       const contasMap: Record<number, string> = {};
 
-      rawPedidos.forEach((ped: any) => {
+      rawPedidos.forEach((ped: Record<string, unknown>) => {
         if (ped.cabecalho?.codigo_cliente && ped.infoCadastro?.cliente_nome) {
           clientesMap[ped.cabecalho.codigo_cliente] = ped.infoCadastro.cliente_nome;
         }
@@ -247,7 +252,7 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
       lookupStore.setContas(contasMap);
 
       const flatVendas: VendaPlana[] = [];
-      rawPedidos.forEach((ped: any) => flatVendas.push(...mapOrderToFlatVendas(ped)));
+      rawPedidos.forEach((ped: Record<string, unknown>) => flatVendas.push(...mapOrderToFlatVendas(ped)));
 
       set({
         vendas: flatVendas,
@@ -256,8 +261,8 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
         currentPage: data.pagina || page,
         loading: false,
       });
-    } catch (error: any) {
-      set({ error: error.message, loading: false });
+    } catch (error: unknown) {
+      set({ error: (error as Error).message, loading: false });
     }
   },
 
@@ -283,8 +288,8 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
           loading: false 
         }));
         return venda;
-      } catch (err: any) {
-        set({ error: err.message, loading: false });
+      } catch (err: unknown) {
+        set({ error: (err as Error).message, loading: false });
         return null;
       } finally {
         fetchingPromises.delete(id_linha);

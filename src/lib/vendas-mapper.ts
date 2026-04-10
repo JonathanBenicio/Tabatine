@@ -21,15 +21,15 @@ export const formatISOToBR = (iso: string) => {
  * Maps a raw Omie/Supabase order record to the VendaPlana interface.
  * This function centralizes the flattening logic used across the application.
  */
-export function mapOrderToFlatVendas(ped: any): VendaPlana[] {
-  const cabecalho = ped.cabecalho || {};
-  const det = ped.det || [];
-  const frete = ped.frete || {};
-  const info = ped.infoCadastro || {};
-  const parcelasInfo = ped.lista_parcelas?.parcela || [];
-  const infoAdicional = ped.informacoes_adicionais || {};
-  const totalPedido = ped.total_pedido || {};
-  const observacoes = ped.observacoes || {};
+export function mapOrderToFlatVendas(ped: Record<string, unknown>): VendaPlana[] {
+  const cabecalho = (ped.cabecalho || {}) as Record<string, any>;
+  const det = (ped.det || []) as any[];
+  const frete = (ped.frete || {}) as Record<string, any>;
+  const info = (ped.infoCadastro || {}) as Record<string, any>;
+  const parcelasInfo = (ped.lista_parcelas as any)?.parcela || [];
+  const infoAdicional = (ped.informacoes_adicionais || {}) as Record<string, any>;
+  const totalPedido = (ped.total_pedido || {}) as Record<string, any>;
+  const observacoes = (ped.observacoes || {}) as Record<string, any>;
 
   // Try getting up to 3 installments for the summary
   const p1 = parcelasInfo[0] ? { valor: parcelasInfo[0].valor || 0, vencimento: parcelasInfo[0].data_vencimento || '' } : undefined;
@@ -38,13 +38,13 @@ export function mapOrderToFlatVendas(ped: any): VendaPlana[] {
 
   // Map all installments
   const todasParcelas: ParcelaInfo[] = parcelasInfo.map((parc: any, pIdx: number) => ({
-    numero: parc.numero_parcela || pIdx + 1,
-    valor: parc.valor || 0,
-    vencimento: parc.data_vencimento || '',
-    percentual: parc.percentual || 0,
-    meioPagamento: parc.meio_pagamento || '',
-    categoria: parc.categoria || '',
-    nsu: parc.nsu || '',
+    numero: (parc.numero_parcela as number) || pIdx + 1,
+    valor: (parc.valor as number) || 0,
+    vencimento: (parc.data_vencimento as string) || '',
+    percentual: (parc.percentual as number) || 0,
+    meioPagamento: (parc.meio_pagamento as string) || '',
+    categoria: (parc.categoria as string) || '',
+    nsu: (parc.nsu as string) || '',
   }));
 
   const flatRows: VendaPlana[] = [];
@@ -63,7 +63,7 @@ export function mapOrderToFlatVendas(ped: any): VendaPlana[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  det.forEach((item: any, idx: number) => {
+  det.forEach((item: Record<string, any>, idx: number) => {
     const prod = item.produto || {};
     const itemIde = item.ide || {};
     const imp = item.imposto || {};
