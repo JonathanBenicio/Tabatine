@@ -101,8 +101,8 @@ export default function VendasTable() {
       id: 'cliente',
       cell: (info: any) => (
         <div className="flex items-center gap-2 group-hover/row:translate-x-1 transition-transform">
-          <User size={12} className="text-zinc-600" />
-          <span className="text-xs font-bold text-white group-hover/row:text-orange-400 transition-colors">
+          <User size={12} className="text-slate-400 dark:text-zinc-600" />
+          <span className="text-xs font-bold text-slate-900 dark:text-white group-hover/row:text-orange-500 dark:group-hover/row:text-orange-400 transition-colors">
             {getClienteNome(info.getValue())}
           </span>
         </div>
@@ -130,8 +130,8 @@ export default function VendasTable() {
       accessorKey: 'produto',
       cell: (info: any) => (
         <div className="flex items-center gap-2">
-          <Package size={12} className="text-zinc-600" />
-          <span className="text-xs font-medium text-zinc-300 truncate max-w-[180px]">{info.getValue()}</span>
+          <Package size={12} className="text-slate-400 dark:text-zinc-600" />
+          <span className="text-xs font-medium text-slate-700 dark:text-zinc-300 truncate max-w-[180px]">{info.getValue()}</span>
         </div>
       ),
       minSize: 200,
@@ -164,7 +164,7 @@ export default function VendasTable() {
     {
       header: '🎯 VALOR TOTAL',
       accessorKey: 'valorTotal',
-      cell: (info: any) => <span className="text-xs font-black text-white">{formatCurrency(info.getValue())}</span>,
+      cell: (info: any) => <span className="text-xs font-black text-slate-900 dark:text-white">{formatCurrency(info.getValue())}</span>,
     },
     {
       header: '🏦 FORMA PG',
@@ -233,7 +233,7 @@ export default function VendasTable() {
       cell: (info: any) => (
         <button 
           onClick={() => router.push(`/vendas/${info.row.original.id_linha}`)}
-          className="p-2 rounded-lg bg-zinc-800/50 hover:bg-orange-500/20 text-zinc-400 hover:text-orange-400 transition-colors border border-zinc-700/50 hover:border-orange-500/30 group"
+          className="p-2 rounded-lg bg-slate-100 dark:bg-zinc-800/50 hover:bg-orange-500/10 dark:hover:bg-orange-500/20 text-slate-500 dark:text-zinc-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors border border-slate-200 dark:border-zinc-700/50 hover:border-orange-500/30 group"
           title="Ver Detalhes"
         >
           <Eye size={16} className="group-hover:scale-110 transition-transform" />
@@ -327,25 +327,25 @@ export default function VendasTable() {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <div className="p-2 bg-orange-500/10 rounded-lg text-orange-400">
+            <div className="p-2 bg-orange-500/10 rounded-lg text-orange-500 dark:text-orange-400">
               <TrendingUp size={20} />
             </div>
-            <h2 className="text-2xl font-bold text-white tracking-tight">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
               Análise de Vendas
             </h2>
           </div>
-          <p className="text-zinc-500 text-sm max-w-md">Relatório detalhado de pedidos, produtos e parcelamentos.</p>
+          <p className="text-slate-500 dark:text-zinc-500 text-sm max-w-md">Relatório detalhado de pedidos, produtos e parcelamentos.</p>
         </div>
 
         <div className="flex items-center gap-3 w-full lg:w-auto">
           <div className="relative group flex-1 lg:flex-none">
-            <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:text-orange-400 transition-colors" />
+            <Search className="w-4 h-4 text-slate-400 dark:text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:text-orange-500 dark:group-focus-within:text-orange-400 transition-colors" />
             <input 
               type="text" 
               placeholder="Pesquisar pedido ou cliente..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2.5 bg-zinc-900/40 border border-zinc-800 focus:border-orange-500/40 rounded-xl text-sm placeholder:text-zinc-600 outline-none w-full lg:w-64 transition-all focus:ring-4 focus:ring-orange-500/5 backdrop-blur-sm"
+              className="pl-10 pr-4 py-2.5 bg-white/50 dark:bg-zinc-900/40 border border-white/60 dark:border-zinc-800 focus:border-orange-500/40 rounded-xl text-sm placeholder:text-slate-500 dark:placeholder:text-zinc-600 text-slate-900 dark:text-white outline-none w-full lg:w-64 transition-all focus:ring-4 focus:ring-orange-500/5 backdrop-blur-sm"
             />
           </div>
 
@@ -390,7 +390,7 @@ export default function VendasTable() {
                 setShowFilters(!showFilters);
                 setShowVisibility(false);
               }}
-              className={`flex items-center gap-2 px-4 py-2.5 border rounded-xl text-sm font-medium transition-all ${showFilters ? 'bg-orange-500/10 border-orange-500/50 text-orange-400' : 'bg-zinc-900/40 border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 backdrop-blur-sm'}`}
+              className={`flex items-center gap-2 px-4 py-2.5 border rounded-xl text-sm font-medium transition-all ${showFilters ? 'bg-orange-500/10 border-orange-500/50 text-orange-500 dark:text-orange-400' : 'bg-white/50 dark:bg-zinc-900/40 border-white/60 dark:border-zinc-800 text-slate-500 dark:text-zinc-400 hover:text-slate-900 hover:bg-slate-100 dark:hover:text-white dark:hover:bg-zinc-800 backdrop-blur-sm'}`}
             >
               <Filter className="w-4 h-4" />
               <span className="hidden sm:inline">Filtros</span>
@@ -498,7 +498,7 @@ export default function VendasTable() {
 
           <button 
             onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2.5 bg-zinc-900/40 border border-zinc-800 rounded-xl text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all backdrop-blur-sm"
+            className="flex items-center gap-2 px-4 py-2.5 bg-white/50 dark:bg-zinc-900/40 border border-white/60 dark:border-zinc-800 rounded-xl text-sm font-medium text-slate-500 dark:text-zinc-400 hover:text-slate-900 hover:bg-slate-100 dark:hover:text-white dark:hover:bg-zinc-800 transition-all backdrop-blur-sm"
           >
             <FileDown className="w-4 h-4" />
             <span className="hidden sm:inline">Exportar</span>
@@ -507,61 +507,61 @@ export default function VendasTable() {
           <button  
             onClick={() => refetch()} 
             disabled={isLoading}
-            className="p-2.5 bg-zinc-900/40 border border-zinc-800 hover:border-zinc-700 rounded-xl text-zinc-400 hover:text-white transition-all active:scale-95 disabled:opacity-50 group backdrop-blur-sm"
+            className="p-2.5 bg-white/50 dark:bg-zinc-900/40 border border-white/60 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 rounded-xl text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-all active:scale-95 disabled:opacity-50 group backdrop-blur-sm"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-orange-400' : 'group-hover:rotate-180 transition-transform duration-700'}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-orange-500 dark:text-orange-400' : 'group-hover:rotate-180 transition-transform duration-700'}`} />
           </button>
         </div>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-orange-500/30 transition-all">
+        <div className="p-5 rounded-2xl bg-white/50 dark:bg-zinc-900/30 border border-white/60 dark:border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-orange-500/30 transition-all">
           <div className="flex justify-between items-start mb-4">
-            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Pedidos Encontrados</span>
-            <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-400">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-500 uppercase tracking-widest">Pedidos Encontrados</span>
+            <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500 dark:text-orange-400">
               <Package size={16} />
             </div>
           </div>
           <div>
-            <p className="text-3xl font-bold text-white tracking-tighter">{data?.totalRegistros || 0}</p>
+            <p className="text-3xl font-bold text-slate-900 dark:text-white tracking-tighter">{data?.totalRegistros || 0}</p>
             <div className="flex items-center gap-1 mt-1">
-              <span className="text-[10px] text-zinc-500">Fluxo Analítico</span>
+              <span className="text-[10px] text-slate-500 dark:text-zinc-500">Fluxo Analítico</span>
             </div>
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-emerald-500/30 transition-all">
+        <div className="p-5 rounded-2xl bg-white/50 dark:bg-zinc-900/30 border border-white/60 dark:border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-emerald-500/30 transition-all">
           <div className="flex justify-between items-start mb-4">
-            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Volume (Pág. Atual)</span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-500 uppercase tracking-widest">Volume (Pág. Atual)</span>
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
               <TrendingUp size={16} />
             </div>
           </div>
           <div>
-            <p className="text-2xl font-bold text-emerald-400 tracking-tight">
+            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">
               {formatCurrency(data?.vendas?.reduce((sum, v) => sum + (v.valorTotal || 0), 0) || 0)}
             </p>
-            <p className="text-[10px] text-zinc-500 mt-1">Soma dos itens listados</p>
+            <p className="text-[10px] text-slate-500 dark:text-zinc-500 mt-1">Soma dos itens listados</p>
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-blue-500/30 transition-all">
+        <div className="p-5 rounded-2xl bg-white/50 dark:bg-zinc-900/30 border border-white/60 dark:border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group hover:border-blue-500/30 transition-all">
           <div className="flex justify-between items-start mb-4">
-            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Ticket Médio (Item)</span>
-            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-500 uppercase tracking-widest">Ticket Médio (Item)</span>
+            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400">
                <Package size={14} />
             </div>
           </div>
           <div>
-            <p className="text-2xl font-bold text-white tracking-tight">
+            <p className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
               {formatCurrency(
                 data?.vendas?.length 
                   ? (data.vendas.reduce((sum, v) => sum + (v.valorTotal || 0), 0) / data.vendas.length)
                   : 0
               )}
             </p>
-            <p className="text-[10px] text-zinc-500 mt-1">Média por linha</p>
+            <p className="text-[10px] text-slate-500 dark:text-zinc-500 mt-1">Média por linha</p>
           </div>
         </div>
       </div>
@@ -578,12 +578,12 @@ export default function VendasTable() {
       )}
 
       {/* Table Container */}
-      <div className="group relative rounded-3xl border border-zinc-800/50 bg-zinc-950/20 backdrop-blur-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+      <div className="group relative rounded-3xl border border-white/60 dark:border-zinc-800/50 bg-white/40 dark:bg-zinc-950/20 backdrop-blur-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
         <div className="overflow-x-auto">
           <table className="w-max min-w-full text-left border-collapse">
             <thead>
               {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id} className="border-b border-zinc-800/50 bg-zinc-900/20">
+                <tr key={headerGroup.id} className="border-b border-white/60 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-900/20">
                   {headerGroup.headers.map(header => {
                     const isPinned = header.column.getIsPinned();
                     
@@ -592,22 +592,22 @@ export default function VendasTable() {
                       left: isPinned === 'left' ? `${header.column.getStart('left')}px` : undefined,
                       right: isPinned === 'right' ? `${header.column.getAfter('right')}px` : undefined, 
                       zIndex: 30,
-                      backgroundColor: 'rgb(24, 24, 27)', // zinc-900
+                      backgroundColor: 'var(--card)', // usar cor transparente baseada no tema
                     } : {
                       // Se o cabeçalho não for fixo lateralmente, ele ainda deve ser fixo no topo
                       position: 'sticky',
                       top: 0,
                       zIndex: 10,
-                      backgroundColor: 'rgb(24, 24, 27)',
+                      backgroundColor: 'transparent',
                     };
 
                     return (
                       <th 
                         key={header.id} 
                         colSpan={header.colSpan}
-                        className={`py-4 px-5 text-[9px] font-black text-zinc-500 uppercase tracking-widest font-sans whitespace-nowrap select-none transition-colors 
-                          ${header.column.getCanSort() ? 'cursor-pointer hover:bg-orange-500/5 hover:text-orange-400' : ''} 
-                          ${isPinned ? 'shadow-[2px_0_10px_rgba(0,0,0,0.5)] z-40' : ''}`}
+                        className={`py-4 px-5 text-[9px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-widest font-sans whitespace-nowrap select-none transition-colors 
+                          ${header.column.getCanSort() ? 'cursor-pointer hover:bg-orange-500/5 hover:text-orange-500 dark:hover:text-orange-400' : ''} 
+                          ${isPinned ? 'shadow-[2px_0_10px_rgba(0,0,0,0.1)] dark:shadow-[2px_0_10px_rgba(0,0,0,0.5)] z-40' : ''}`}
                         style={{ 
                           width: header.getSize() !== 150 ? header.getSize() : undefined,
                           ...pinningStyles
@@ -650,14 +650,14 @@ export default function VendasTable() {
                 </tr>
               ))}
             </thead>
-            <tbody className="divide-y divide-zinc-800/30">
+            <tbody className="divide-y divide-slate-200 dark:divide-zinc-800/30">
               {isLoading && !data ? (
                 /* Skeleton rows */
                 [...Array(6)].map((_, i) => (
                   <tr key={i} className="animate-pulse">
                      {columns.map((_, col) => (
                         <td key={col} className="py-5 px-5">
-                          <div className="h-4 bg-zinc-800/50 rounded-md w-full min-w-[70px]"></div>
+                          <div className="h-4 bg-slate-200 dark:bg-zinc-800/50 rounded-md w-full min-w-[70px]"></div>
                         </td>
                      ))}
                   </tr>
@@ -666,11 +666,11 @@ export default function VendasTable() {
                 <tr>
                   <td colSpan={columns.length} className="py-24 px-6 text-center">
                     <div className="flex flex-col items-center justify-center gap-4 group/icon">
-                      <div className="w-16 h-16 rounded-full bg-zinc-900/50 border border-zinc-800 flex items-center justify-center text-zinc-700 group-hover/icon:text-zinc-500 transition-colors">
+                      <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 flex items-center justify-center text-slate-500 dark:text-zinc-700 group-hover/icon:text-slate-600 dark:group-hover/icon:text-zinc-500 transition-colors">
                         <Package size={32} />
                       </div>
-                      <p className="text-zinc-400 font-medium">Nenhuma venda localizada</p>
-                      <button onClick={() => {setSearchTerm(''); setFilters({});}} className="text-xs text-orange-400 font-bold hover:underline">Limpar filtros e pesquisa</button>
+                      <p className="text-slate-500 dark:text-zinc-400 font-medium">Nenhuma venda localizada</p>
+                      <button onClick={() => {setSearchTerm(''); setFilters({});}} className="text-xs text-orange-500 dark:text-orange-400 font-bold hover:underline">Limpar filtros e pesquisa</button>
                     </div>
                   </td>
                 </tr>
@@ -687,14 +687,14 @@ export default function VendasTable() {
                         left: isPinned === 'left' ? `${cell.column.getStart('left')}px` : undefined,
                         right: isPinned === 'right' ? `${cell.column.getAfter('right')}px` : undefined,
                         zIndex: 10,
-                        backgroundColor: 'rgba(9, 9, 11, 0.95)', // bg-zinc-950 com opacidade
+                        backgroundColor: 'var(--card)', 
                         backdropFilter: 'blur(8px)',
                       } : {};
 
                       return (
                         <td 
                           key={cell.id} 
-                          className={`py-4 px-5 whitespace-nowrap border-b border-zinc-800/10 ${isPinned ? 'shadow-[2px_0_5px_rgba(0,0,0,0.3)]' : ''}`}
+                          className={`py-4 px-5 whitespace-nowrap border-b border-slate-200 dark:border-zinc-800/10 ${isPinned ? 'shadow-[2px_0_5px_rgba(0,0,0,0.05)] dark:shadow-[2px_0_5px_rgba(0,0,0,0.3)]' : ''}`}
                           style={pinningStyles}
                         >
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -708,18 +708,18 @@ export default function VendasTable() {
           </table>
         </div>
 
-        <div className="px-6 py-4 border-t border-zinc-800/50 bg-zinc-900/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="px-6 py-4 border-t border-white/60 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-900/30 flex flex-col sm:flex-row items-center justify-between gap-4">
            <div className="flex items-center gap-6">
-              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
-                Mostrando <span className="text-white">{table.getRowModel().rows.length}</span> de <span className="text-white">{data?.totalRegistros || 0}</span> pedidos
+              <p className="text-[10px] text-slate-500 dark:text-zinc-500 font-bold uppercase tracking-widest">
+                Mostrando <span className="text-slate-900 dark:text-white">{table.getRowModel().rows.length}</span> de <span className="text-slate-900 dark:text-white">{data?.totalRegistros || 0}</span> pedidos
               </p>
               
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Linhas:</span>
+                <span className="text-[10px] text-slate-500 dark:text-zinc-600 font-bold uppercase tracking-widest">Linhas:</span>
                 <select 
                   value={pageSize}
                   onChange={e => setPageSize(Number(e.target.value))}
-                  className="bg-zinc-950 border border-zinc-800 rounded-lg px-2 py-1 text-[10px] font-bold text-zinc-400 outline-none focus:border-orange-500/50 transition-colors"
+                  className="bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg px-2 py-1 text-[10px] font-bold text-slate-500 dark:text-zinc-400 outline-none focus:border-orange-500/50 transition-colors"
                 >
                   {[10, 20, 50, 100].map(size => (
                     <option key={size} value={size}>{size}</option>
@@ -737,9 +737,9 @@ export default function VendasTable() {
 
         {/* Loading Overlay */}
         {isLoading && data && (
-          <div className="absolute inset-0 bg-zinc-950/40 backdrop-blur-[2px] flex flex-col justify-center items-center z-20">
-            <RefreshCw className="w-10 h-10 text-orange-500 animate-spin" />
-            <p className="text-[10px] font-bold text-orange-400 uppercase tracking-[0.2em] mt-4">Calculando Matriz...</p>
+          <div className="absolute inset-0 bg-white/40 dark:bg-zinc-950/40 backdrop-blur-[2px] flex flex-col justify-center items-center z-20 transition-all duration-300">
+            <RefreshCw className="w-10 h-10 text-orange-500 dark:text-orange-500 animate-spin" />
+            <p className="text-[10px] font-bold text-orange-500 dark:text-orange-400 uppercase tracking-[0.2em] mt-4">Carregando...</p>
           </div>
         )}
       </div>
