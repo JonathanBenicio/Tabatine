@@ -12,7 +12,7 @@ export async function GET() {
     }
 
     const { data, error } = await supabase
-      .from('Notifications')
+      .from('notifications')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(50);
@@ -41,7 +41,7 @@ export async function PATCH(req: Request) {
 
     const { id, all } = await req.json();
 
-    let query = supabase.from('Notifications').update({ is_read: true });
+    let query = supabase.from('notifications').update({ is_read: true });
 
     if (all) {
       query = query.eq('is_read', false);
@@ -81,8 +81,8 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: 'Notification ID required' }, { status: 400 });
     }
 
-    const { error } = await supabase
-      .from('Notifications')
+    const { data, error } = await supabase
+      .from('notifications')
       .delete()
       .eq('id', id);
 

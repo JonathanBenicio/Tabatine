@@ -26,7 +26,6 @@ export async function GET(req: Request) {
     const sortOrder = searchParams.get('sortOrder') || 'desc';
     const omieId = searchParams.get('omieId');
 
-    // Map frontend field name to DB column name
     // Map frontend field name to DB column name for filtering/sorting
     const VENDA_COLUMN_MAP: Record<string, string> = {
       data: 'data_inclusao',
@@ -120,7 +119,6 @@ export async function GET(req: Request) {
       if (search) {
         const escapedSearch = escapeFilterValue(`%${search}%`);
         const orConditions = [`numero_pedido.ilike.${escapedSearch}`];
-        // Use root column ClienteId and VendedorId with the IDs we found
         if (searchFilterIds.cliente?.length) orConditions.push(`cliente_id.in.(${searchFilterIds.cliente.join(',')})`);
         if (searchFilterIds.vendedor?.length) orConditions.push(`vendedor_id.in.(${searchFilterIds.vendedor.join(',')})`);
         query = query.or(orConditions.join(','));
@@ -131,7 +129,7 @@ export async function GET(req: Request) {
       activeFilters.forEach(({ field, value }) => {
         if (field === 'cliente') {
            if (searchFilterIds.cliente?.length) query = query.in('cliente_id', searchFilterIds.cliente);
-           else if (value) query = query.eq('cliente_id', EMPTY_UUID); // Force empty result if filter typed but no match found
+           else if (value) query = query.eq('cliente_id', EMPTY_UUID);
         } else if (field === 'vendedor') {
            if (searchFilterIds.vendedor?.length) query = query.in('vendedor_id', searchFilterIds.vendedor);
            else if (value) query = query.eq('vendedor_id', EMPTY_UUID);
@@ -151,10 +149,21 @@ export async function GET(req: Request) {
       });
     }
 
-    const { data, error, count } = await (omieId 
-      ? query 
-      : query.order(sortField, { ascending: sortOrder === 'asc' }).range(from, to)
-    );
+    // Fixed Sorting Logic for Relationships
+    let finalQuery = query;
+    if (!omieId) {
+      if (sortField.includes('.')) {
+        const parts = sortField.split('.');
+        const column = parts.pop()!;
+        const table = parts.join('.');
+        finalQuery = query.order(column, { referencedTable: table, ascending: sortOrder === 'asc' });
+      } else {
+        finalQuery = query.order(sortField, { ascending: sortOrder === 'asc' });
+      }
+      finalQuery = finalQuery.range(from, to);
+    }
+
+    const { data, error, count } = await finalQuery;
 
     if (error) {
       throw error;
@@ -175,7 +184,6 @@ export async function GET(req: Request) {
           data_previsao: order.data_previsao,
           codigo_cliente: order.clientes?.omie_id,
           codigo_parcela: order.codigo_parcela,
-          // RECUPERANDO A DESCRIÇÃO DA FORMA DE PAGAMENTO
           meio_pagamento: order.formas_pagamento?.descricao || order.meio_pagamento || '',
           quantidade_itens: itens.length,
           qtde_parcelas: order.quantidade_parcelas || 0,
@@ -250,7 +258,6 @@ export async function GET(req: Request) {
           codVend: order.vendedores?.omie_id,
           vendedor_nome: order.vendedores?.nome,
           codigo_conta_corrente: order.contas_corrente?.omie_id,
-          // RECUPERANDO A DESCRIÇÃO DO BANCO/CONTA CORRENTE
           conta_corrente_nome: order.contas_corrente?.descricao || '',
           perc_comissao: num(order.comissao_vendedor),
           contato: order.contato,
@@ -264,7 +271,6 @@ export async function GET(req: Request) {
           uInc: order.usuario_inclusao,
           dAlt: order.updated_at,
           uAlt: order.usuario_alteracao,
-          // RECUPERANDO O NÚMERO DA NOTA FISCAL
           numero_nfe: nf?.numero_nf || '',
           serie_nfe: nf?.serie || '',
           valor_total_nfe: num(nf?.valor_total),
