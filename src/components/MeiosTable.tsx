@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useMeiosStore } from '@/store/useMeiosStore';
-import { Coins, Search } from 'lucide-react';
+import { Coins, Search, ChevronRight } from 'lucide-react';
 import { useDebounce } from 'use-debounce';
+import { useRouter } from 'next/navigation';
 
 export default function MeiosTable() {
   const {
@@ -21,6 +22,7 @@ export default function MeiosTable() {
 
   const [localSearch, setLocalSearch] = useState(searchTerm);
   const [debouncedSearch] = useDebounce(localSearch, 500);
+  const router = useRouter();
 
   useEffect(() => {
     if (debouncedSearch !== searchTerm) {
@@ -99,7 +101,8 @@ export default function MeiosTable() {
                 {meios.map((meio) => (
                   <tr
                     key={meio.id}
-                    className="hover:bg-slate-700/30 transition-colors cursor-default"
+                    onClick={() => router.push(`/meios-pagamento/${meio.id}`)}
+                    className="hover:bg-slate-700/30 transition-colors cursor-pointer group"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="font-mono text-sm font-medium text-blue-400 bg-blue-400/10 px-2 py-1 rounded">
@@ -108,6 +111,9 @@ export default function MeiosTable() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm font-medium text-white">{meio.descricao}</span>
+                    </td>
+                    <td className="px-3 py-4 text-right">
+                      <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-amber-400 transition-colors ml-auto" />
                     </td>
                   </tr>
                 ))}
