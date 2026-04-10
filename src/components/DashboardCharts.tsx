@@ -10,6 +10,7 @@ import { parseISO, isValid, startOfWeek, endOfWeek, isWithinInterval, format, se
 import { ptBR } from 'date-fns/locale';
 import { TrendingUp, DollarSign, ShoppingCart, Activity, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { TableSummaryCard } from '@/components/ui/TableSummaryCard';
+import { useVendasQuery } from '@/hooks/useVendasQuery';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 const STATUS_COLORS: Record<string, string> = {
@@ -41,31 +42,57 @@ function getWeekRange(week: number, year: number) {
 }
 
 export default function DashboardCharts() {
-  const { vendas, fetchVendas, loading, setFilters } = useVendasStore();
   const [isMounted, setIsMounted] = useState(false);
-
   const now = new Date();
   const [selectedWeek, setSelectedWeek] = useState(getISOWeek(now));
   const [selectedYear, setSelectedYear] = useState(getYear(now));
-
-  const [initialDataSet, setInitialDataSet] = useState(false);
+  const [activeWeeks, setActiveWeeks] = useState<number[]>([]);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Fetch data when week or year changes
+  // Fetch active weeks for the selected year
   useEffect(() => {
     if (!isMounted) return;
+    
+    const fetchActiveWeeks = async () => {
+      try {
+        const res = await fetch(`/api/supabase/vendas/resumo?year=${selectedYear}`);
+        const data = await res.json();
+        if (data.activeWeeks) {
+          setActiveWeeks(data.activeWeeks);
+        }
+      } catch (err) {
+        console.error('Erro ao buscar semanas ativas:', err);
+      }
+    };
+    
+    fetchActiveWeeks();
+  }, [selectedYear, isMounted]);
 
+  // Derived date range for the query
+  const dateRange = useMemo(() => {
     const { start, end } = getWeekRange(selectedWeek, selectedYear);
-    const startDate = format(start, 'yyyy-MM-dd');
-    const endDate = format(end, 'yyyy-MM-dd');
+    return {
+      startDate: format(start, 'yyyy-MM-dd'),
+      endDate: format(end, 'yyyy-MM-dd')
+    };
+  }, [selectedWeek, selectedYear]);
 
-    // Update store filters and fetch
-    setFilters({ startDate, endDate });
-    fetchVendas(1, true, 1000); // Higher limit for dashboard
-  }, [selectedWeek, selectedYear, isMounted, setFilters, fetchVendas]);
+  // Local query that doesn't affect global state filters
+  const { data: queryData, isLoading: queryLoading } = useVendasQuery(
+    1, 
+    1000, 
+    '', 
+    [], 
+    [], 
+    dateRange, 
+    isMounted
+  );
+
+  const vendas = queryData?.vendas || [];
+  const loading = queryLoading;
 
   // REMOVED: No longer setting week/year based on most recent sale automatically,
   // as we now prefer the current week + API fetching for that week.
@@ -260,9 +287,14 @@ export default function DashboardCharts() {
               onChange={(e) => setSelectedWeek(Number(e.target.value))}
               className="bg-white/80 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white text-sm rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-teal-500/30 dark:focus:ring-purple-500/30 focus:border-teal-500/50 dark:focus:border-purple-500/50 outline-none backdrop-blur-md"
             >
-              {weekOptions.map(w => (
-                <option key={w} value={w} className="bg-white dark:bg-zinc-800 text-slate-900 dark:text-white">Semana {w}</option>
-              ))}
+              {weekOptions.map(w => {
+                const hasData = activeWeeks.includes(w);
+                return (
+                  <option key={w} value={w} className="bg-white dark:bg-zinc-800 text-slate-900 dark:text-white">
+                    Semana {w} {hasData ? ' •' : ''}
+                  </option>
+                );
+              })}
             </select>
           </div>
 
