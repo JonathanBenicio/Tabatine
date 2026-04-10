@@ -1,3 +1,4 @@
+'use client';
 import React, { useEffect, useState } from 'react';
 import { useClienteStore, ClienteCadastro } from '@/store/useClienteStore';
 import { useVendasQuery } from '@/hooks/useVendasQuery';
@@ -157,14 +158,14 @@ export default function ClienteDetailsPage() {
   }, [codigo_cliente_omie, fetchClienteByOmieId]);
 
   if (loading && !cliente) {
-    return <DetailLoading message="Buscando detalhes do cliente..." iconColor="text-indigo-500" />;
+    return <DetailLoading message="Buscando detalhes do cliente..." />;
   }
 
   if (notFound || (!loading && !cliente)) {
     return (
       <DetailNotFound 
-        title="Cliente não encontrado" 
-        message="Não foi possível localizar os detalhes do cliente solicitado. Verifique se o código está correto ou se o registro foi removido." 
+        entityName="Cliente"
+        backLabel="Voltar para Clientes"
         backHref="/clientes" 
       />
     );
@@ -286,6 +287,4 @@ export default function ClienteDetailsPage() {
     </div>
   );
 }
-    </div>
-  );
-}
+

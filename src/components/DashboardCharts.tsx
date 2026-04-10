@@ -9,6 +9,7 @@ import {
 import { parseISO, isValid, startOfWeek, endOfWeek, isWithinInterval, format, setWeek, setYear, getISOWeek, getYear } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { TrendingUp, DollarSign, ShoppingCart, Activity, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { TableSummaryCard } from '@/components/ui/TableSummaryCard';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 const STATUS_COLORS: Record<string, string> = {
@@ -385,7 +386,7 @@ export default function DashboardCharts() {
                   paddingAngle={8}
                   dataKey="value"
                   stroke="none"
-                  label={({ percent }) => percent > 0.1 ? `${(percent * 100).toFixed(0)}%` : ''}
+                  label={({ percent }) => (percent ?? 0) > 0.1 ? `${((percent ?? 0) * 100).toFixed(0)}%` : ''}
                 >
                   {chartStatus.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.name] || COLORS[index % COLORS.length]} />

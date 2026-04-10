@@ -203,22 +203,21 @@ export default function ProdutosTable() {
 
   return (
     <div className="space-y-6">
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <TableSummaryCard
-          title="Total Produtos"
+          label="Total Produtos"
           value={data?.totalRegistros || 0}
-          subtitle="Base Sincronizada"
+          sublabel="Base Sincronizada"
           icon={Package}
-          iconColor="blue"
+          variant="blue"
         />
 
         <TableSummaryCard
-          title="Ativos"
+          label="Ativos"
           value={data?.produtos?.filter(p => p.excluido === 'N').length || 0}
-          subtitle="Na página atual"
+          sublabel="Na página atual"
           icon={CheckCircle2}
-          iconColor="emerald"
+          variant="emerald"
         />
       </div>
 
@@ -351,7 +350,21 @@ export default function ProdutosTable() {
 
       {/* Table Container */}
       <TableContainer
-        header={
+        pagination={
+          <div className="px-6 py-4 border-t border-slate-200/60 dark:border-zinc-800/50 bg-slate-50/20 dark:bg-zinc-900/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-xs text-slate-500 dark:text-zinc-500 font-medium tracking-wide">
+              Mostrando <span className="text-slate-900 dark:text-white font-bold">{table.getRowModel().rows.length}</span> de <span className="text-slate-600 dark:text-zinc-400">{data?.totalRegistros || 0}</span> produtos
+            </p>
+            <Pagination
+              currentPage={currentPage}
+              totalPaginas={data?.totalPaginas || 1}
+              onPageChange={setCurrentPage}
+              loading={isLoading}
+            />
+          </div>
+        }
+      >
+        <table className="w-full text-left border-collapse">
           <thead>
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id} className="border-b border-slate-200/60 dark:border-zinc-800/50 bg-slate-50/50 dark:bg-zinc-900/50">
@@ -377,54 +390,40 @@ export default function ProdutosTable() {
               </tr>
             ))}
           </thead>
-        }
-        footer={
-          <div className="px-6 py-4 border-t border-slate-200/60 dark:border-zinc-800/50 bg-slate-50/20 dark:bg-zinc-900/30 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-slate-500 dark:text-zinc-500 font-medium tracking-wide">
-              Mostrando <span className="text-slate-900 dark:text-white font-bold">{table.getRowModel().rows.length}</span> de <span className="text-slate-600 dark:text-zinc-400">{data?.totalRegistros || 0}</span> produtos
-            </p>
-            <Pagination
-              currentPage={currentPage}
-              totalPaginas={data?.totalPaginas || 1}
-              onPageChange={setCurrentPage}
-              loading={isLoading}
-            />
-          </div>
-        }
-      >
-        <tbody className="divide-y divide-slate-200/60 dark:divide-zinc-800/50">
-          {isLoading && !data ? (
-            Array.from({ length: 10 }).map((_, i) => (
-              <tr key={i} className="animate-pulse">
-                {columns.map((_, colIdx) => (
-                  <td key={colIdx} className="px-6 py-5">
-                    <div className="h-4 bg-slate-100 dark:bg-zinc-800/50 rounded-md w-full"></div>
-                  </td>
-                ))}
+          <tbody className="divide-y divide-slate-200/60 dark:divide-zinc-800/50">
+            {isLoading && !data ? (
+              Array.from({ length: 10 }).map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                  {columns.map((_, colIdx) => (
+                    <td key={colIdx} className="px-6 py-5">
+                      <div className="h-4 bg-slate-100 dark:bg-zinc-800/50 rounded-md w-full"></div>
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : table.getRowModel().rows.length > 0 ? (
+              table.getRowModel().rows.map(row => (
+                <tr key={row.id} className="group hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
+                  {row.getVisibleCells().map(cell => (
+                    <td key={cell.id} className="px-6 py-5">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={columns.length} className="px-6 py-24 text-center">
+                  <div className="flex flex-col items-center justify-center gap-3">
+                     <Package size={40} className="text-slate-200 dark:text-zinc-700" />
+                     <p className="text-sm font-medium text-slate-500 dark:text-zinc-500">Nenhum produto encontrado na base.</p>
+                     <button onClick={() => {setSearchTerm(''); setFilters({});}} className="text-xs text-blue-500 font-bold hover:underline">Limpar filtros e pesquisa</button>
+                  </div>
+                </td>
               </tr>
-            ))
-          ) : table.getRowModel().rows.length > 0 ? (
-            table.getRowModel().rows.map(row => (
-              <tr key={row.id} className="group hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
-                {row.getVisibleCells().map(cell => (
-                  <td key={cell.id} className="px-6 py-5">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={columns.length} className="px-6 py-24 text-center">
-                <div className="flex flex-col items-center justify-center gap-3">
-                   <Package size={40} className="text-slate-200 dark:text-zinc-700" />
-                   <p className="text-sm font-medium text-slate-500 dark:text-zinc-500">Nenhum produto encontrado na base.</p>
-                   <button onClick={() => {setSearchTerm(''); setFilters({});}} className="text-xs text-blue-500 font-bold hover:underline">Limpar filtros e pesquisa</button>
-                </div>
-              </td>
-            </tr>
-          )}
-        </tbody>
+            )}
+          </tbody>
+        </table>
       </TableContainer>
 
       {error && (

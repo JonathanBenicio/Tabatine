@@ -132,6 +132,7 @@ export default function CondicoesTable() {
             value={searchTerm}
             onChange={setSearchTerm}
             placeholder="Pesquisar condições..."
+            isLoading={loading}
           />
           <button 
             onClick={() => fetchCondicoes(currentPage)} 

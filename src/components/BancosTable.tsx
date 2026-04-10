@@ -117,6 +117,7 @@ export default function BancosTable() {
             value={searchTerm}
             onChange={setSearchTerm}
             placeholder="Pesquisar bancos..."
+            isLoading={loading}
           />
           <button 
             onClick={() => fetchBancos(currentPage)} 

@@ -132,6 +132,7 @@ export default function ContasCorrentesTable() {
               value={searchTerm}
               onChange={setSearchTerm}
               placeholder="Pesquisar contas..."
+              isLoading={isLoading}
             />
           </div>
           <button 
@@ -147,21 +148,23 @@ export default function ContasCorrentesTable() {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <TableSummaryCard
-          title="Total de Contas"
+          label="Total de Contas"
           value={data?.totalRegistros || 0}
-          subtitle="Registradas"
+          sublabel="Registradas"
           icon={Banknote}
-          iconColor="emerald"
+          variant="emerald"
+          isLoading={isLoading && !data}
         />
 
         <TableSummaryCard
-          title="Saldo Inicial (Total)"
+          label="Saldo Inicial (Total)"
           value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
             data?.contas?.reduce((sum, c) => sum + (c.saldo_inicial || 0), 0) || 0
           )}
-          subtitle="Soma base formativa"
+          sublabel="Soma base formativa"
           icon={Building2}
-          iconColor="blue"
+          variant="blue"
+          isLoading={isLoading && !data}
         />
       </div>
 
@@ -174,9 +177,24 @@ export default function ContasCorrentesTable() {
             <p className="opacity-70 mt-0.5">{(error as Error).message}</p>
           </div>
         </div>
-           {/* Table Container */}
+      )}
+
+      {/* Table Container */}
       <TableContainer
-        header={
+        isLoading={isLoading && !data}
+        isEmpty={!isLoading && table.getRowModel().rows.length === 0}
+        emptyMessage="Nenhuma conta encontrada"
+        emptyIcon={Banknote}
+        pagination={
+          <Pagination 
+            currentPage={currentPage}
+            totalPaginas={data?.totalPaginas || 1}
+            onPageChange={setCurrentPage}
+            loading={isLoading}
+          />
+        }
+      >
+        <table className="w-full text-left border-collapse">
           <thead>
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id} className="border-b border-slate-200/60 dark:border-zinc-800/50 bg-slate-50/50 dark:bg-zinc-900/20">
@@ -191,41 +209,8 @@ export default function ContasCorrentesTable() {
               </tr>
             ))}
           </thead>
-        }
-        footer={
-          <Pagination 
-            currentPage={currentPage}
-            totalPaginas={data?.totalPaginas || 1}
-            onPageChange={setCurrentPage}
-            loading={isLoading}
-          />
-        }
-      >
-        <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/30">
-          {isLoading && !data ? (
-            [...Array(6)].map((_, i) => (
-              <tr key={i} className="animate-pulse">
-                <td className="py-5 px-6"><div className="h-4 bg-slate-100 dark:bg-zinc-800/50 rounded-md w-48"></div></td>
-                <td className="py-5 px-6"><div className="h-4 bg-slate-100 dark:bg-zinc-800/50 rounded-md w-32"></div></td>
-                <td className="py-5 px-6"><div className="h-4 bg-slate-100 dark:bg-zinc-800/50 rounded-md w-32"></div></td>
-                <td className="py-5 px-6"><div className="h-4 bg-slate-100 dark:bg-zinc-800/50 rounded-md w-16"></div></td>
-                <td className="py-5 px-6"><div className="h-6 bg-slate-100 dark:bg-zinc-800/50 rounded-full w-20 mx-auto"></div></td>
-                <td className="py-5 px-6"><div className="h-4 bg-slate-100 dark:bg-zinc-800/50 rounded-md w-10 mx-auto"></div></td>
-              </tr>
-            ))
-          ) : table.getRowModel().rows.length === 0 ? (
-            <tr>
-              <td colSpan={columns.length} className="py-24 px-6 text-center">
-                <div className="flex flex-col items-center justify-center gap-4 group/icon">
-                  <div className="w-16 h-16 rounded-full bg-slate-50 dark:bg-zinc-900/50 border border-slate-100 dark:border-zinc-800 flex items-center justify-center text-slate-300 dark:text-zinc-700 group-hover/icon:text-slate-400 dark:group-hover/icon:text-zinc-500 transition-colors">
-                    <Banknote size={32} />
-                  </div>
-                  <p className="text-slate-500 dark:text-zinc-400 font-medium">Nenhuma conta encontrada</p>
-                </div>
-              </td>
-            </tr>
-          ) : (
-            table.getRowModel().rows.map(row => (
+          <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/30">
+            {table.getRowModel().rows.map(row => (
               <tr 
                 key={row.id} 
                 className="group/row hover:bg-slate-50/50 dark:hover:bg-zinc-800/30 transition-all duration-300"
@@ -236,20 +221,12 @@ export default function ContasCorrentesTable() {
                   </td>
                 ))}
               </tr>
-            ))
-          )}
-        </tbody>
+            ))}
+          </tbody>
+        </table>
       </TableContainer>
 
-      {/* Loading Overlay */}
-      {isLoading && data && (
-        <div className="fixed inset-0 bg-slate-900/10 dark:bg-zinc-950/40 backdrop-blur-[2px] flex flex-col justify-center items-center z-[100]">
-          <RefreshCw className="w-10 h-10 text-emerald-600 dark:text-emerald-500 animate-spin" />
-          <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em] mt-4">Sincronizando...</p>
-        </div>
-      )}
-   )}
-      </div>
+
     </div>
   );
 }

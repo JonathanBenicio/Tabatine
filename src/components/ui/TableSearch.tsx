@@ -1,22 +1,28 @@
 import React from 'react';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 
-interface TableSearchProps {
+export interface TableSearchProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  isLoading?: boolean;
 }
 
 export function TableSearch({ 
   value, 
   onChange, 
   placeholder = "Pesquisar...", 
-  className = "" 
+  className = "",
+  isLoading = false,
 }: TableSearchProps) {
   return (
     <div className={`relative group ${className}`}>
-      <Search className="w-4 h-4 text-slate-400 dark:text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:text-orange-500 dark:group-focus-within:text-orange-400 transition-colors" />
+      {isLoading ? (
+        <Loader2 className="w-4 h-4 text-orange-500 dark:text-orange-400 absolute left-3 top-1/2 -translate-y-1/2 animate-spin" />
+      ) : (
+        <Search className="w-4 h-4 text-slate-400 dark:text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:text-orange-500 dark:group-focus-within:text-orange-400 transition-colors" />
+      )}
       <input 
         type="text" 
         placeholder={placeholder}

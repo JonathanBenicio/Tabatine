@@ -9,6 +9,7 @@ import {
   X,
   RefreshCw,
   Filter,
+  Activity,
 } from 'lucide-react';
 import {
   useReactTable,
@@ -30,7 +31,7 @@ import {
 import type { WebhookEventDto, WebhookFilters, WebhookStatus } from '@/types/webhook';
 import { TableContainer } from '@/components/ui/TableContainer';
 import { TableSearch } from '@/components/ui/TableSearch';
-import { Pagination } from '@/components/Pagination';
+import Pagination from '../Pagination';
 
 const ALL_STATUSES: WebhookStatus[] = ['Pending', 'Processing', 'Completed', 'Failed', 'DeadLetter'];
 const STATUS_LABELS: Record<WebhookStatus, string> = {
@@ -361,58 +362,97 @@ export function WebhooksTable() {
       )}
 
       {/* Tabela */}
-      <TableContainer
-        isLoading={isLoading}
-        isEmpty={!data || data.items.length === 0}
-        error={error}
-        onRetry={refetch}
-        emptyMessage={(filters.status ?? []).length > 0 ? 'Nenhum evento corresponde aos filtros.' : 'A fila está limpa!'}
-      >
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id} className="border-b border-slate-200/60 dark:border-zinc-800/50">
-                  {headerGroup.headers.map((header) => (
-                    <th
-                      key={header.id}
-                      className="px-4 py-4 text-left text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 tracking-wider"
-                    >
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/30">
-              {table.getRowModel().rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className={`group transition-colors hover:bg-white/40 dark:hover:bg-zinc-800/20 ${
-                    selectedIds.has(row.original.id) ? 'bg-orange-500/5 dark:bg-orange-500/10' : ''
-                  }`}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-4 py-3.5">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+      <div className="relative">
+        <TableContainer
+          pagination={
+            data && data.totalPages > 1 ? (
+              <div className="px-6 py-4 border-t border-slate-200/60 dark:border-zinc-800/50 bg-slate-50/20 dark:bg-zinc-900/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p className="text-xs text-slate-500 dark:text-zinc-500 font-medium tracking-wide">
+                  Mostrando <span className="text-slate-900 dark:text-white font-bold">{table.getRowModel().rows.length}</span> eventos
+                </p>
+                <Pagination
+                  currentPage={data.page}
+                  totalPaginas={data.totalPages}
+                  onPageChange={(page) => setFilters((p) => ({ ...p, page }))}
+                  loading={isLoading}
+                />
+              </div>
+            ) : undefined
+          }
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id} className="border-b border-slate-200/60 dark:border-zinc-800/50 bg-slate-50/50 dark:bg-zinc-900/50">
+                    {headerGroup.headers.map((header) => (
+                      <th
+                        key={header.id}
+                        className="px-4 py-4 text-left text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 tracking-wider"
+                      >
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/30 text-sm">
+                {isLoading && !data ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      {table.getAllLeafColumns().map((_, colIdx) => (
+                        <td key={colIdx} className="px-4 py-4">
+                          <div className="h-4 bg-slate-100 dark:bg-zinc-800/50 rounded-md w-full"></div>
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : error ? (
+                   <tr>
+                     <td colSpan={table.getAllLeafColumns().length} className="px-6 py-12 text-center">
+                       <div className="p-4 bg-rose-500/5 border border-rose-500/20 rounded-2xl flex flex-col items-center justify-center gap-3 text-rose-400 max-w-sm mx-auto">
+                         <X className="w-8 h-8 opacity-50" />
+                         <p className="font-medium text-sm text-rose-600 dark:text-rose-400">{(error as Error).message}</p>
+                         <button onClick={() => refetch()} className="mt-2 text-xs font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors">
+                           Tentar novamente
+                         </button>
+                       </div>
+                     </td>
+                   </tr>
+                ) : !data || data.items.length === 0 ? (
+                  <tr>
+                    <td colSpan={table.getAllLeafColumns().length} className="px-6 py-24 text-center">
+                      <div className="flex flex-col items-center justify-center gap-3">
+                         <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-300 dark:text-zinc-600">
+                           <Activity size={24} />
+                         </div>
+                         <p className="text-sm font-medium text-slate-500 dark:text-zinc-500">
+                           {(filters.status ?? []).length > 0 ? 'Nenhum evento corresponde aos filtros.' : 'A fila está limpa!'}
+                         </p>
+                      </div>
                     </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </TableContainer>
-
-      {/* Paginação */}
-      {data && data.totalPages > 1 && (
-        <Pagination
-          currentPage={data.page}
-          totalPaginas={data.totalPages}
-          onPageChange={(page) => setFilters((p) => ({ ...p, page }))}
-          loading={isLoading}
-        />
-      )}
+                  </tr>
+                ) : (
+                  table.getRowModel().rows.map((row) => (
+                    <tr
+                      key={row.id}
+                      className={`group transition-colors hover:bg-slate-50/50 dark:hover:bg-white/[0.02] ${
+                        selectedIds.has(row.original.id) ? 'bg-orange-500/5 hover:bg-orange-500/10 dark:bg-orange-500/10 dark:hover:bg-orange-500/20' : ''
+                      }`}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id} className="px-4 py-3.5">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </TableContainer>
+      </div>
 
       {/* Modal de detalhe */}
       {selectedWebhookId && (

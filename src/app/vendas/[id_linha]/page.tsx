@@ -6,7 +6,7 @@ import { useLookupStore } from '@/store/useLookupStore';
 import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft, Package, DollarSign, Percent, Truck, Receipt,
-  RefreshCw, AlertCircle
+  RefreshCw, AlertCircle, ClipboardList, User, CreditCard, Calendar, FileText, Check, Copy, ShieldCheck
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { SectionCard } from '@/components/ui/SectionCard';
@@ -201,14 +201,14 @@ export default function VendaDetailsPage() {
   // ── Loading / Not Found ──
 
   if (loading && !venda) {
-    return <DetailLoading message="Buscando detalhes do pedido..." iconColor="text-orange-500" />;
+    return <DetailLoading message="Buscando detalhes do pedido..." />;
   }
 
   if (notFound || (!loading && !venda)) {
     return (
       <DetailNotFound 
-        title="Venda não encontrada" 
-        message="Não foi possível localizar os detalhes da venda solicitada. Ela pode ter sido removida ou o ID é inválido." 
+        entityName="Venda"
+        backLabel="Voltar para Vendas"
         backHref="/vendas" 
       />
     );
@@ -519,8 +519,3 @@ export default function VendaDetailsPage() {
   );
 }
 
-
-
-    </div>
-  );
-}

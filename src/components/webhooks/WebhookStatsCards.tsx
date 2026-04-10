@@ -19,42 +19,42 @@ export function WebhookStatsCards({ stats }: WebhookStatsCardsProps) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
       <TableSummaryCard
-        title="Pendentes"
+        label="Pendentes"
         value={stats.pending}
         icon={Clock}
-        variant="indigo"
+        variant="purple"
       />
       <TableSummaryCard
-        title="Processando"
+        label="Processando"
         value={stats.processing}
         icon={Zap}
         variant="blue"
       />
       <TableSummaryCard
-        title="Com Falha"
+        label="Com Falha"
         value={stats.failed}
         icon={AlertTriangle}
         variant="orange"
       />
       <TableSummaryCard
-        title="Dead Letter"
+        label="Dead Letter"
         value={stats.deadLetter}
         icon={XCircle}
         variant="rose"
-        description={stats.deadLetter > 0 ? "Ação necessária" : undefined}
+        sublabel={stats.deadLetter > 0 ? "Ação necessária" : undefined}
       />
       <TableSummaryCard
-        title="Concluídos Hoje"
+        label="Concluídos Hoje"
         value={stats.completedToday}
         icon={CheckCircle2}
         variant="emerald"
       />
       <TableSummaryCard
-        title="Último Evento"
+        label="Último Evento"
         value={lastEventLabel ?? '—'}
         icon={RotateCcw}
-        variant="slate"
-        description={stats.lastEventAt ? format(new Date(stats.lastEventAt), 'dd/MM/yyyy HH:mm') : undefined}
+        variant="blue"
+        sublabel={stats.lastEventAt ? format(new Date(stats.lastEventAt), 'dd/MM/yyyy HH:mm') : undefined}
       />
     </div>
   );

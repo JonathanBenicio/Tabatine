@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo } from 'react';
 import { useFormasStore, FormaPlana } from '@/store/useFormasStore';
-import { Wallet, Eye, RefreshCw, AlertCircle, CalendarClock, Hash, ListNumbers } from 'lucide-react';
+import { Wallet, Eye, RefreshCw, AlertCircle, CalendarClock, Hash, ListOrdered } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
   useReactTable,
@@ -81,11 +81,11 @@ export default function FormasTable() {
       header: 'Regra de Parcelas',
       cell: info => (
         <div className="flex items-center gap-2 text-slate-400 dark:text-zinc-500 max-w-[200px]">
-          <ListNumbers size={12} className="shrink-0" />
+          <ListOrdered size={12} className="shrink-0" />
           <span className="text-[10px] font-mono truncate">{info.getValue() || '—'}</span>
         </div>
       ),
-      meta: { hidden: 'sm' }
+      meta: { hiddenOnMobile: true }
     }),
     columnHelper.display({
       id: 'actions',
@@ -132,9 +132,10 @@ export default function FormasTable() {
             value={searchTerm}
             onChange={setSearchTerm}
             placeholder="Pesquisar formas..."
+            isLoading={loading}
           />
           <button 
-            onClick={() => fetchFormas(currentPage)} 
+            onClick={() => fetchFormas(currentPage, searchTerm)} 
             disabled={loading}
             className="p-3 bg-white/50 dark:bg-zinc-900/40 border border-slate-200 dark:border-zinc-800 hover:border-blue-500/50 rounded-2xl text-slate-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all active:scale-95 disabled:opacity-50 group backdrop-blur-sm shadow-sm"
             title="Atualizar dados"
@@ -158,7 +159,7 @@ export default function FormasTable() {
           label="Parceladas"
           value={formas.filter(f => f.quantidadeParcelas > 1).length}
           sublabel="Métodos com parcelamento"
-          icon={ListNumbers}
+          icon={ListOrdered}
           variant="emerald"
           isLoading={loading && formas.length === 0}
         />

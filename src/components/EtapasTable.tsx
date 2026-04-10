@@ -134,6 +134,7 @@ export default function EtapasTable() {
             value={searchTerm}
             onChange={setSearchTerm}
             placeholder="Pesquisar etapas..."
+            isLoading={loading}
           />
           <button 
             onClick={() => fetchEtapas(currentPage)} 

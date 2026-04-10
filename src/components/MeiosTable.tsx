@@ -112,6 +112,7 @@ export default function MeiosTable() {
             value={searchTerm}
             onChange={setSearchTerm}
             placeholder="Pesquisar meios..."
+            isLoading={loading}
           />
           <button 
             onClick={() => fetchMeios(currentPage)} 
