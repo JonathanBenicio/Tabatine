@@ -8,7 +8,7 @@ const APP_SECRET = process.env.APP_SECRET;
 
 interface CacheEntry {
   timestamp: number;
-  data: any;
+  data: unknown;
 }
 
 const cache = new Map<string, CacheEntry>();
@@ -49,11 +49,12 @@ export async function POST(req: Request) {
     cache.set(cacheKey, { timestamp: Date.now(), data: response.data });
 
     return NextResponse.json(response.data);
-  } catch (error: any) {
-    console.error('Error proxying Omie request (Pedidos):', error.response?.data || error.message);
+  } catch (error: unknown) {
+    const axiosError = error as any;
+    console.error('Error proxying Omie request (Pedidos):', axiosError.response?.data || axiosError.message);
     return NextResponse.json(
-      { error: error.response?.data?.faultstring || 'Internal Server Error', details: error.message },
-      { status: error.response?.status || 500 }
+      { error: axiosError.response?.data?.faultstring || 'Internal Server Error', details: axiosError.message },
+      { status: axiosError.response?.status || 500 }
     );
   }
 }

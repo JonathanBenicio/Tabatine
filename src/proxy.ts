@@ -38,13 +38,21 @@ export async function proxy(request: NextRequest) {
       }
     )
 
-    const {
+    let {
       data: { user },
       error
     } = await supabase.auth.getUser()
 
-    if (error) {
-      console.error('Error fetching user in proxy:', error.message)
+    // Retry once if there's a session error - helps with flakiness in local dev/E2E
+    if (error && error.message === 'Auth session missing!') {
+       if (process.env.DEBUG === 'true') console.log('[Proxy Debug] Retrying getUser due to session missing error...')
+       const retryResult = await supabase.auth.getUser()
+       user = retryResult.data.user
+       error = retryResult.error
+    }
+
+    if (error && process.env.DEBUG === 'true') {
+      // console.error('Error fetching user in proxy:', error.message)
     }
 
     const isAuthRoute = request.nextUrl.pathname.startsWith('/auth')

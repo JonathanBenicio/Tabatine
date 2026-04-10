@@ -13,8 +13,16 @@ Usage:
 import os
 import json
 import argparse
+import sys
+import io
 from pathlib import Path
 from typing import Dict, Any, List
+
+# Ensure UTF-8 output for Windows
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
 def get_project_root(path: str) -> Path:
     return Path(path).resolve()
