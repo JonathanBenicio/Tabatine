@@ -40,7 +40,7 @@ function getWeekRange(week: number, year: number) {
 }
 
 export default function DashboardCharts() {
-  const { vendas, fetchVendas, loading } = useVendasStore();
+  const { vendas, fetchVendas, loading, setFilters } = useVendasStore();
   const [isMounted, setIsMounted] = useState(false);
 
   const now = new Date();
@@ -51,30 +51,23 @@ export default function DashboardCharts() {
 
   useEffect(() => {
     setIsMounted(true);
-    // Dispara apenas quando montar (o `hasFetchedInitial` lá no zustand vai bloquear dupes)
-    if (vendas.length === 0) {
-      fetchVendas(1);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Once data arrives, set the default week/year to the most recent sale
+  // Fetch data when week or year changes
   useEffect(() => {
-    if (vendas.length > 0 && !initialDataSet) {
-      let latestDate: Date | null = null;
-      vendas.forEach(v => {
-        const d = parseDateString(v.data);
-        if (d && (!latestDate || d > latestDate)) {
-          latestDate = d;
-        }
-      });
-      if (latestDate) {
-        setSelectedYear(getYear(latestDate));
-        setSelectedWeek(getISOWeek(latestDate));
-      }
-      setInitialDataSet(true);
-    }
-  }, [vendas, initialDataSet]);
+    if (!isMounted) return;
+
+    const { start, end } = getWeekRange(selectedWeek, selectedYear);
+    const startDate = format(start, 'yyyy-MM-dd');
+    const endDate = format(end, 'yyyy-MM-dd');
+
+    // Update store filters and fetch
+    setFilters({ startDate, endDate });
+    fetchVendas(1, true, 1000); // Higher limit for dashboard
+  }, [selectedWeek, selectedYear, isMounted, setFilters, fetchVendas]);
+
+  // REMOVED: No longer setting week/year based on most recent sale automatically,
+  // as we now prefer the current week + API fetching for that week.
 
   // Generate year options combining current year and any years from data
   const yearOptions = useMemo(() => {
@@ -109,7 +102,7 @@ export default function DashboardCharts() {
   };
 
   const aggregatedData = useMemo(() => {
-    if (!vendas || vendas.length === 0) return null;
+    const validVendas = vendas || [];
 
     const { start: weekStart, end: weekEnd } = getWeekRange(selectedWeek, selectedYear);
 
@@ -125,7 +118,7 @@ export default function DashboardCharts() {
     const vendedoresAgg: Record<string, number> = {};
     const produtosAgg: Record<string, number> = {};
 
-    vendas.forEach(venda => {
+    validVendas.forEach(venda => {
       const dateObj = parseDateString(venda.data);
       if (!dateObj) return;
 
@@ -154,7 +147,7 @@ export default function DashboardCharts() {
     const ticketMedio = totalVendasSemana > 0 ? totalValorSemana / totalVendasSemana : 0;
     
     // Total Commissions projection (heuristic)
-    const totalComissaoSemana = vendas.reduce((acc, v) => {
+    const totalComissaoSemana = validVendas.reduce((acc, v) => {
       const d = parseDateString(v.data);
       if (d && isWithinInterval(d, { start: weekStart, end: weekEnd })) {
         return acc + (v.valorTotal * (v.percComissao / 100));
@@ -210,14 +203,6 @@ export default function DashboardCharts() {
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
           <p className="text-zinc-400">Carregando dados do dashboard...</p>
         </div>
-      </div>
-    );
-  }
-
-  if (!aggregatedData) {
-    return (
-      <div className="flex h-[400px] w-full items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-900/50">
-        <p className="text-zinc-500">Nenhum dado de venda encontrado para a semana selecionada.</p>
       </div>
     );
   }
@@ -283,7 +268,7 @@ export default function DashboardCharts() {
           </button>
         </div>
 
-        <span className="text-zinc-400 text-sm ml-auto">{weekLabel}</span>
+        <span id="week-label" className="text-zinc-400 text-sm ml-auto">{weekLabel}</span>
       </div>
       
       {/* Cards de Insights */}
