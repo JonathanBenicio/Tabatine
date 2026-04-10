@@ -276,6 +276,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
 
         {/* Bottom Actions */}
         <div className="p-4 border-t border-zinc-800/50 space-y-2">
+          <ThemeToggle isSidebarCollapsed={isSidebarCollapsed} />
           <Link href="/perfil" title={isSidebarCollapsed ? "Meu Perfil" : undefined} className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 rounded-xl ${pathname === '/perfil' ? 'bg-blue-500/10 text-blue-400' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'} transition-all group`}>
             <UserCircle className={`w-5 h-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />
             {!isSidebarCollapsed && <span className="text-sm font-medium">Meu Perfil</span>}

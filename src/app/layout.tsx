@@ -20,21 +20,7 @@ export const metadata: Metadata = {
   description: 'Integração de Notas Fiscais e Clientes com Omie ERP',
 };
 
-// Script otimizado para evitar FOUC (Flash of Unstyled Content)
-// Precisa ser uma IIFE em string pura pois roda antes do React hidratar
-const ThemeScript = () => {
-  const scriptContent = `
-    (function() {
-      try {
-        const storage = JSON.parse(localStorage.getItem('theme-storage') || '{}');
-        const theme = storage?.state?.theme || 'system';
-        const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        document.documentElement.classList.toggle('dark', isDark);
-      } catch (e) {}
-    })();
-  `;
-  return <script dangerouslySetInnerHTML={{ __html: scriptContent }} />;
-};
+// next-themes handles the hydration matching automatically.
 
 export default function RootLayout({
   children,
@@ -44,10 +30,9 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <head>
-        <ThemeScript />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
-        <ThemeProvider>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`} suppressHydrationWarning>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <Providers>
             <LayoutWrapper>{children}</LayoutWrapper>
           </Providers>
