@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useFormasStore } from '@/store/useFormasStore';
-import { Wallet, Search, CalendarCheck } from 'lucide-react';
+import { Wallet, Search, CalendarCheck, ChevronRight } from 'lucide-react';
 import { useDebounce } from 'use-debounce';
+import { useRouter } from 'next/navigation';
 
 export default function FormasTable() {
   const {
@@ -21,6 +22,7 @@ export default function FormasTable() {
 
   const [localSearch, setLocalSearch] = useState(searchTerm);
   const [debouncedSearch] = useDebounce(localSearch, 500);
+  const router = useRouter();
 
   useEffect(() => {
     if (debouncedSearch !== searchTerm) {
@@ -105,7 +107,8 @@ export default function FormasTable() {
                 {formas.map((forma) => (
                   <tr
                     key={forma.id}
-                    className="hover:bg-slate-700/30 transition-colors cursor-default"
+                    onClick={() => router.push(`/formas-pagamento/${forma.id}`)}
+                    className="hover:bg-slate-700/30 transition-colors cursor-pointer group"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col gap-0.5">
@@ -130,6 +133,9 @@ export default function FormasTable() {
                       <span className="text-xs font-mono text-slate-400 max-w-xs truncate block">
                         {forma.listaParcelas || '—'}
                       </span>
+                    </td>
+                    <td className="px-3 py-4 text-right">
+                      <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-emerald-400 transition-colors ml-auto" />
                     </td>
                   </tr>
                 ))}
