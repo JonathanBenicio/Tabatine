@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useEtapasStore } from '@/store/useEtapasStore';
-import { Layers, Search, Workflow } from 'lucide-react';
+import { Layers, Search, Workflow, ChevronRight } from 'lucide-react';
 import { useDebounce } from 'use-debounce';
+import { useRouter } from 'next/navigation';
 
 export default function EtapasTable() {
   const { 
@@ -21,6 +22,7 @@ export default function EtapasTable() {
 
   const [localSearch, setLocalSearch] = useState(searchTerm);
   const [debouncedSearch] = useDebounce(localSearch, 500);
+  const router = useRouter();
 
   useEffect(() => {
     if (debouncedSearch !== searchTerm) {
@@ -103,8 +105,9 @@ export default function EtapasTable() {
               <tbody className="divide-y divide-slate-700/50 bg-slate-800/10">
                 {etapas.map((etapa) => (
                   <tr 
-                    key={etapa.id} 
-                    className={`hover:bg-slate-700/30 transition-colors cursor-default ${!etapa.ativos ? 'opacity-50' : ''}`}
+                    key={etapa.id}
+                    onClick={() => router.push(`/etapas-faturamento/${etapa.id}`)}
+                    className={`hover:bg-slate-700/30 transition-colors cursor-pointer group ${!etapa.ativos ? 'opacity-60' : ''}`}
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
@@ -127,6 +130,9 @@ export default function EtapasTable() {
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${etapa.ativos ? 'bg-emerald-400/10 text-emerald-400' : 'bg-rose-400/10 text-rose-400'}`}>
                         {etapa.ativos ? 'Ativo' : 'Inativa'}
                       </span>
+                    </td>
+                    <td className="px-3 py-4 text-right">
+                      <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-indigo-400 transition-colors ml-auto" />
                     </td>
                   </tr>
                 ))}
