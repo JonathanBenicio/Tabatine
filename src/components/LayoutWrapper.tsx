@@ -22,7 +22,12 @@ import {
   ChevronRight,
   UserCircle,
   Webhook,
-  Home
+  Home,
+  Landmark,
+  CreditCard,
+  Layers,
+  Wallet,
+  Coins
 } from 'lucide-react';
 import { NotificationCenter } from './NotificationCenter';
 import { ThemeToggle } from './ThemeToggle';
@@ -199,6 +204,50 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
               isCollapsed={isSidebarCollapsed}
               isActive={pathname === '/vendedores'}
               activeColor="blue"
+            />
+          </NavGroup>
+
+          {/* Support Tables Group */}
+          <NavGroup title="Tabelas de Apoio" isCollapsed={isSidebarCollapsed}>
+            <NavItem
+              href="/bancos"
+              icon={Landmark}
+              label="Bancos"
+              isCollapsed={isSidebarCollapsed}
+              isActive={pathname === '/bancos'}
+              activeColor="emerald"
+            />
+            <NavItem
+              href="/condicoes-pagamento"
+              icon={CreditCard}
+              label="Cond. Pagamento"
+              isCollapsed={isSidebarCollapsed}
+              isActive={pathname === '/condicoes-pagamento'}
+              activeColor="emerald"
+            />
+            <NavItem
+              href="/etapas-faturamento"
+              icon={Layers}
+              label="Etapas Faturamento"
+              isCollapsed={isSidebarCollapsed}
+              isActive={pathname === '/etapas-faturamento'}
+              activeColor="emerald"
+            />
+            <NavItem
+              href="/formas-pagamento"
+              icon={Wallet}
+              label="Formas Pagamento"
+              isCollapsed={isSidebarCollapsed}
+              isActive={pathname === '/formas-pagamento'}
+              activeColor="emerald"
+            />
+            <NavItem
+              href="/meios-pagamento"
+              icon={Coins}
+              label="Meios Pagamento"
+              isCollapsed={isSidebarCollapsed}
+              isActive={pathname === '/meios-pagamento'}
+              activeColor="emerald"
             />
           </NavGroup>
 
