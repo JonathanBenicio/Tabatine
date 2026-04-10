@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useCondicoesStore } from '@/store/useCondicoesStore';
-import { CreditCard, Search, CalendarDays } from 'lucide-react';
+import { CreditCard, Search, CalendarDays, ChevronRight } from 'lucide-react';
 import { useDebounce } from 'use-debounce';
+import { useRouter } from 'next/navigation';
 
 export default function CondicoesTable() {
   const { 
@@ -21,6 +22,7 @@ export default function CondicoesTable() {
 
   const [localSearch, setLocalSearch] = useState(searchTerm);
   const [debouncedSearch] = useDebounce(localSearch, 500);
+  const router = useRouter();
 
   useEffect(() => {
     if (debouncedSearch !== searchTerm) {
@@ -103,8 +105,9 @@ export default function CondicoesTable() {
               <tbody className="divide-y divide-slate-700/50 bg-slate-800/10">
                 {condicoes.map((condicao) => (
                   <tr 
-                    key={condicao.id} 
-                    className={`hover:bg-slate-700/30 transition-colors cursor-default ${!condicao.ativos ? 'opacity-50' : ''}`}
+                    key={condicao.id}
+                    onClick={() => router.push(`/condicoes-pagamento/${condicao.id}`)}
+                    className={`hover:bg-slate-700/30 transition-colors cursor-pointer group ${!condicao.ativos ? 'opacity-60' : ''}`}
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="font-mono text-sm font-medium text-blue-400 bg-blue-400/10 px-2 py-1 rounded">
@@ -124,6 +127,9 @@ export default function CondicoesTable() {
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${condicao.ativos ? 'bg-emerald-400/10 text-emerald-400' : 'bg-rose-400/10 text-rose-400'}`}>
                         {condicao.ativos ? 'Ativo' : 'Inativo'}
                       </span>
+                    </td>
+                    <td className="px-3 py-4 text-right">
+                      <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-emerald-400 transition-colors ml-auto" />
                     </td>
                   </tr>
                 ))}
