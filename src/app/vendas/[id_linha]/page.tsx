@@ -191,7 +191,7 @@ export default function VendaDetailsPage() {
       return;
     }
     
-    if (!venda?.omieData?.cabecalho?.codigo_pedido) return;
+    if (!venda?.codigo_pedido) return;
 
     setLoadingDanfe(true);
     try {
@@ -200,7 +200,7 @@ export default function VendaDetailsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           call: 'StatusPedido',
-          param: [{ codigo_pedido: venda.omieData.cabecalho.codigo_pedido }]
+          param: [{ codigo_pedido: venda.codigo_pedido }]
         })
       });
       const data = await res.json();

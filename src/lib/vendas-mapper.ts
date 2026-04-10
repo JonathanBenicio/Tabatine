@@ -112,6 +112,7 @@ export function mapOrderToFlatVendas(ped: Record<string, unknown>): VendaPlana[]
       parcela3: p3,
       vencimentoStatus,
       statusComissao,
+      codigo_pedido: cabecalho.codigo_pedido || 0,
       omieData: ped,
 
       // Cabecalho extra

@@ -45,7 +45,8 @@ export interface VendaPlana {
   parcela3?: { valor: number; vencimento: string };
   vencimentoStatus: string;
   statusComissao: string;
-  omieData: Record<string, unknown>;
+  codigo_pedido: number;
+  omieData: any;
 
   dataPedido: string;
   dataPrevisao: string;
@@ -236,7 +237,7 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
       const vendedoresMap: Record<number, string> = {};
       const contasMap: Record<number, string> = {};
 
-      rawPedidos.forEach((ped: Record<string, unknown>) => {
+      rawPedidos.forEach((ped: any) => {
         if (ped.cabecalho?.codigo_cliente && ped.infoCadastro?.cliente_nome) {
           clientesMap[ped.cabecalho.codigo_cliente] = ped.infoCadastro.cliente_nome;
         }
@@ -252,7 +253,7 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
       lookupStore.setContas(contasMap);
 
       const flatVendas: VendaPlana[] = [];
-      rawPedidos.forEach((ped: Record<string, unknown>) => flatVendas.push(...mapOrderToFlatVendas(ped)));
+      rawPedidos.forEach((ped: any) => flatVendas.push(...mapOrderToFlatVendas(ped)));
 
       set({
         vendas: flatVendas,
