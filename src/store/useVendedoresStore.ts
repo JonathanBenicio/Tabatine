@@ -65,8 +65,8 @@ export const useVendedoresStore = create<VendedoresStoreState>((set, get) => ({
         currentPage: data.pagina || page,
         loading: false,
       })
-    } catch (error: any) {
-      set({ error: error.message, loading: false })
+    } catch (error: unknown) {
+      set({ error: (error as Error).message, loading: false })
     }
   },
 
@@ -102,8 +102,8 @@ export const useVendedoresStore = create<VendedoresStoreState>((set, get) => ({
         }
         set({ loading: false })
         return null
-      } catch (error: any) {
-        set({ error: error.message, loading: false })
+      } catch (error: unknown) {
+        set({ error: (error as Error).message, loading: false })
         return null
       } finally {
         fetchingPromises.delete(codigo);
