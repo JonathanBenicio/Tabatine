@@ -1,6 +1,5 @@
-// src/store/useBancosStore.ts
 import { create } from 'zustand';
-import { mapSupabaseToBancos } from '@/lib/bancos-mapper';
+import { mapSupabaseToBancos, mapSupabaseToBanco } from '@/lib/bancos-mapper';
 
 export interface BancoPlano {
   id: string;
@@ -22,6 +21,7 @@ interface BancosStoreState {
   setSearchTerm: (term: string) => void;
   setCurrentPage: (page: number) => void;
   fetchBancos: (page?: number, search?: string) => Promise<void>;
+  fetchBancoById: (id: string) => Promise<BancoPlano | null>;
 }
 
 export const useBancosStore = create<BancosStoreState>((set, get) => ({
@@ -62,6 +62,29 @@ export const useBancosStore = create<BancosStoreState>((set, get) => ({
       });
     } catch (error: any) {
       set({ error: error.message, loading: false });
+    }
+  },
+
+  fetchBancoById: async (id: string) => {
+    // Check cache first
+    const cached = get().bancos.find(b => b.id === id);
+    if (cached) return cached;
+
+    set({ loading: true, error: null });
+    try {
+      const response = await fetch(`/api/supabase/bancos/${id}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Banco não encontrado');
+      }
+
+      const mapped = mapSupabaseToBanco(data.banco);
+      set({ loading: false });
+      return mapped;
+    } catch (error: any) {
+      set({ error: error.message, loading: false });
+      return null;
     }
   },
 }));

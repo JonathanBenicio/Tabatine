@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useBancosStore } from '@/store/useBancosStore';
-import { Landmark, Search, PlusCircle, CheckCircle2, ChevronRight, XCircle } from 'lucide-react';
+import { Landmark, Search, ChevronRight } from 'lucide-react';
 import { useDebounce } from 'use-debounce';
+import { useRouter } from 'next/navigation';
 
 export default function BancosTable() {
   const { 
@@ -21,6 +22,7 @@ export default function BancosTable() {
 
   const [localSearch, setLocalSearch] = useState(searchTerm);
   const [debouncedSearch] = useDebounce(localSearch, 500);
+  const router = useRouter();
 
   useEffect(() => {
     if (debouncedSearch !== searchTerm) {
@@ -107,8 +109,9 @@ export default function BancosTable() {
               <tbody className="divide-y divide-slate-700/50 bg-slate-800/10">
                 {bancos.map((banco) => (
                   <tr 
-                    key={banco.id} 
-                    className="hover:bg-slate-700/30 transition-colors cursor-default"
+                    key={banco.id}
+                    onClick={() => router.push(`/bancos/${banco.id}`)}
+                    className="hover:bg-slate-700/30 transition-colors cursor-pointer group"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -123,6 +126,9 @@ export default function BancosTable() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
                       <span className="text-sm text-slate-300">{banco.ispb}</span>
+                    </td>
+                    <td className="px-3 py-4 text-right">
+                      <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-blue-400 transition-colors ml-auto" />
                     </td>
                   </tr>
                 ))}
