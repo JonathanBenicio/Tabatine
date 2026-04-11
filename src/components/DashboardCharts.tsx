@@ -404,7 +404,7 @@ export default function DashboardCharts() {
 
         {/* Gráfico de Pizza (Status) */}
         <div className="rounded-2xl border border-white/60 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-900/50 p-6 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none">
-          <h3 className="text-lg font-black text-slate-900 dark:text-white mb-1 tracking-tight">Status</h3>
+          <h3 className="text-lg font-black text-slate-900 dark:text-white mb-1 tracking-tight">Pedidos por Status</h3>
           <p className="text-[10px] font-bold text-slate-500 dark:text-zinc-500 mb-6 uppercase tracking-widest leading-none">Distribuição de Pedidos</p>
           <div className="h-[300px] w-full flex flex-col items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
