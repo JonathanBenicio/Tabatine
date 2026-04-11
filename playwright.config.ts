@@ -23,7 +23,28 @@ export default defineConfig({
   /* Opt out of parallel tests on local for better session reliability. */
   workers: 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
+  reporter: [
+    ['html'],
+    ['monocart-reporter', {  
+        name: "Tabatine E2E Coverage Report",
+        outputFile: './playwright-report/index.html',
+        coverage: {
+            // Coletar cobertura de arquivos JS/TS no navegador
+            entryFilter: (entry: any) => entry.url.includes('next/static') || entry.url.includes('src/'),
+            // Filtrar apenas o código fonte do projeto para o relatório
+            sourceFilter: (sourcePath: string) => sourcePath.includes('src/') && !sourcePath.includes('node_modules'),
+            outputDir: './coverage',
+            reports: [
+                ['cobertura'],
+                ['lcovonly'],
+                ['text-summary'],
+                ['html', {
+                    subdir: 'html'
+                }]
+            ]
+        }
+    }]
+  ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   expect: {
     timeout: 10000,
