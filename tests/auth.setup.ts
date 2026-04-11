@@ -7,7 +7,16 @@ setup('authenticate', async ({ page }) => {
   const TEST_PASSWORD = process.env.PLAYWRIGHT_TEST_PASSWORD;
 
   if (!TEST_EMAIL || !TEST_PASSWORD) {
-    console.warn('PLAYWRIGHT_TEST_EMAIL ou PLAYWRIGHT_TEST_PASSWORD não definidos. Pulando autenticação real.');
+    if (process.env.CI) {
+      throw new Error(
+        '\n❌ ERRO DE CONFIGURAÇÃO: As variáveis PLAYWRIGHT_TEST_EMAIL ou PLAYWRIGHT_TEST_PASSWORD não foram encontradas no ambiente de CI.\n' +
+        'Configure os GitHub Secrets para que os testes E2E possam realizar a autenticação.\n'
+      );
+    }
+    
+    console.warn('PLAYWRIGHT_TEST_EMAIL ou PLAYWRIGHT_TEST_PASSWORD não definidos. Criando estado de autenticação vazio para evitar erro ENOENT.');
+    // Salva um estado vazio para evitar que o Playwright quebre ao tentar ler o arquivo no boot de outros projetos
+    await page.context().storageState({ path: authFile });
     return;
   }
 
