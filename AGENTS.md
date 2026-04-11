@@ -17,17 +17,21 @@ npm run start        # Start production server
 npm run lint         # Run ESLint (eslint-config-next with TypeScript rules)
 
 # Testing (Node.js built-in test runner)
-npm test                              # Run all tests
+npm test                              # Run all unit tests
 node --experimental-strip-types --test src/lib/ofxParser.test.ts  # Single test file
-node --experimental-strip-types --test src/utils/supabase/filter-utils.test.ts
+
+# Testing (Playwright E2E)
+npm run test:e2e                      # Run E2E tests in headless mode
+npm run test:e2e:ui                   # Run E2E tests with UI runner
 ```
 
 ### Testing Conventions
-- Test files: `*.test.ts` suffix in same directory as source
-- Imports: `import { test, describe } from 'node:test'` and `import assert from 'node:assert'`
-- Structure: `describe()` blocks with `test()` cases inside
-- Async tests: Use `async (t) => { await t.test(...) }` pattern
-- Assertions: Use `assert.strictEqual()` for type-safe equality checks
+- **Unit Tests**: `*.test.ts` suffix in same directory as source. Use `node:test`.
+- **E2E Tests**: Found in `/tests` directory. Suffix `*.spec.ts`.
+- **E2E Auth**: Tests requiring login should depend on the `setup` project.
+- **Coverage**: E2E tests track V8 coverage via `monocart-reporter`.
+- Structure: `describe()` blocks with `test()` cases inside.
+- Assertions: Use `assert.strictEqual()` for unit, `expect()` for Playwright.
 
 ## Code Style Guidelines
 
@@ -145,6 +149,13 @@ src/
 - Tailwind arbitrary values allowed for fine-tuning
 - Use `backdrop-blur-xl` for glassmorphism effects
 
+### Reusable UI Components
+Always prioritize using standardized components from `src/components/ui/` or the following base components:
+- **TableContainer**: Main wrapper for data tables with consistent padding and theme.
+- **TableSearch**: Standardized search input with debouncing and icons.
+- **TableSummaryCard**: Stat cards for data overview (e.g., Total Count, Sum).
+- **PageHeader**: Standardized header with breadcrumbs and actions.
+
 ### Lucide React Icons
 - Import from `lucide-react`
 - Standard size: `w-5 h-5` or `w-6 h-6`
@@ -153,7 +164,7 @@ src/
 ### Tables (TanStack Table)
 - Column definitions in same file or separate `columns.tsx`
 - Server-side pagination/sorting preferred
-- Use `keepPreviousData` from TanStack Query
+- Use `placeholderData: (previousData) => previousData` from TanStack Query for smooth transitions.
 
 ## Environment Variables
 ```
