@@ -102,6 +102,7 @@ const MySchema = z.object({ field: z.string() });
 ### Database & Supabase Usage
 - **SERVER-SIDE ONLY**: As chamadas ao banco de dados e ao Supabase DEVEM ocorrer exclusivamente no Backend (Server Components, API Routes ou Server Actions).
 - **Proibido no Client**: NUNCA utilize o `@/utils/supabase/client` ou faça queries de banco (como `.select()`, `.update()`) dentro de Client Components (`'use client'`).
+- **RLS**: O acesso via `PUBLISHABLE_KEY` respeita o RLS. Para operações administrativas ou sincronização, use o `createAdminClient` que utiliza a `SERVICE_ROLE_KEY` (apenas em contextos server-side seguros).
 
 ### Directory Structure
 ```
@@ -156,11 +157,17 @@ src/
 
 ## Environment Variables
 ```
+# Omie API
 APP_KEY=          # Omie API key
 APP_SECRET=       # Omie API secret
 OMIE_API_URL=    # Omie API endpoint (default: https://app.omie.com.br/api/v1/)
+
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=             # Supabase Project URL
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY= # Supabase Anon/Publishable Key
+SUPABASE_SERVICE_ROLE_KEY=            # Supabase Service Role (Server-side ONLY)
 ```
-Required for: `/api/omie/*` routes to work
+Required for: `/api/omie/*` and `/api/supabase/*` routes to work.
 
 ## Working with the Codebase
 

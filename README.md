@@ -30,6 +30,11 @@ A navegação está organizada de forma intuitiva no `LayoutWrapper`:
 - **Bancos** (`/contas-correntes`): Controle de contas correntes e movimentações bancárias.
 - **Conciliação** (`/conciliacao`): Ferramentas para conciliação bancária e financeira.
 - **Notificações** (`/notificacoes`): Central de alertas e webhooks recebidos em tempo real.
+- **Módulos de Apoio**:
+  - **Etapas** (`/etapas`): Gestão de etapas de pedidos.
+  - **Formas de Pagamento** (`/formas-pagamento`): Lista de formas configuradas.
+  - **Meios de Pagamento** (`/meios-pagamento`): Lista de meios de pagamento (cartões, etc).
+  - **Condições de Pagamento** (`/condicoes-pagamento`): Prazos e parcelamentos.
 
 ## 🏗️ Padrões de Arquitetura
 
@@ -59,14 +64,38 @@ A navegação está organizada de forma intuitiva no `LayoutWrapper`:
    npm install
    ```
 
-2. Configure seu arquivo `.env.local` com as chaves do Omie:
+2. Configure seu arquivo `.env.local` com as chaves do Omie e Supabase:
    ```env
+   # Omie
    APP_KEY=seu_app_key
    APP_SECRET=seu_app_secret
    OMIE_API_URL=https://app.omie.com.br/api/v1/
+
+   # Supabase
+   NEXT_PUBLIC_SUPABASE_URL=sua_url_supabase
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sua_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=sua_service_role_key
    ```
 
 3. Inicie o servidor de desenvolvimento:
    ```bash
    npm run dev
    ```
+
+## 🧪 Testes
+
+A aplicação utiliza o test runner nativo do Node.js para testes unitários e Playwright para E2E.
+
+```bash
+# Testes Unitários
+npm test
+
+# Testes E2E (Playwright)
+npm run test:e2e
+npm run test:e2e:ui # Com interface visual
+```
+
+## 📮 Postman
+
+Uma coleção do Postman para testar os endpoints da API Omie diretamente está disponível na raiz do projeto:
+`Tabatine_Omie_API.postman_collection.json`

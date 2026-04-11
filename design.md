@@ -64,6 +64,27 @@ Pares chave-valor limpos.
 
 ---
 
+## 📊 Componentes de Tabela (Padrão)
+
+Para novas telas de listagem, utilize obrigatoriamente os componentes em `src/components/ui`:
+
+### TableContainer
+O wrapper principal para tabelas que gerencia estados de carregamento e vazio.
+- **Props**: `isLoading`, `isEmpty`, `emptyMessage`, `emptyIcon`, `pagination`.
+- **Estilo**: Glassmorphism avançado com bordas arredondadas `rounded-3xl`.
+
+### TableSearch
+Componente de busca padronizado com feedback de carregamento.
+- **Props**: `value`, `onChange`, `isLoading`.
+- **Estilo**: Foco em `orange-500` para manter consistência visual.
+
+### TableSummaryCard
+Cards de resumo localizados acima das tabelas para métricas rápidas.
+- **Props**: `label`, `value`, `sublabel`, `variant`, `isCurrency`, `isLoading`.
+- **Variantes**: `blue`, `emerald`, `orange`, `purple`, `rose`, `amber`, `pink`.
+
+---
+
 ## 📐 Tipografia e Espaçamento
 
 - **Fonte**: **Inter** (via Google Fonts).
