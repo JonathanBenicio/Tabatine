@@ -37,7 +37,9 @@ export default defineConfig({
             reports: [
                 ['cobertura'],
                 ['lcovonly'],
-                ['text-summary'],
+                ['text-summary', {
+                    outputFile: 'text-summary.txt'
+                }],
                 ['html', {
                     subdir: 'html'
                 }]

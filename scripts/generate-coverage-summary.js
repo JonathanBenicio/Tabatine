@@ -13,6 +13,15 @@ function parseTextSummary() {
     const summaryPath = path.join(COVERAGE_DIR, 'text-summary.txt');
     if (!fs.existsSync(summaryPath)) {
         console.error('Arquivo text-summary.txt não encontrado em:', summaryPath);
+        
+        // Log para ajudar no debug no CI
+        if (fs.existsSync(COVERAGE_DIR)) {
+            const files = fs.readdirSync(COVERAGE_DIR);
+            console.log('Arquivos encontrados no diretório de cobertura:', files);
+        } else {
+            console.error('Diretório de cobertura não encontrado:', COVERAGE_DIR);
+        }
+        
         return null;
     }
 
@@ -38,7 +47,9 @@ function parseTextSummary() {
 }
 
 function generateMarkdown(data) {
-    if (!data) return '### ⚠️ Erro ao carregar dados de cobertura de código.';
+    if (!data) {
+        return '### ⚠️ Erro ao carregar dados de cobertura de código.\n\n> O arquivo `text-summary.txt` não foi encontrado ou não pôde ser processado. Verifique os logs da execução dos testes.';
+    }
 
     const getStatusEmoji = (pct) => {
         const val = parseFloat(pct);
