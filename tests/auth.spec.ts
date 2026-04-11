@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures/test';
 
 // Utilizando variáveis de ambiente para o login, configuráveis no GitHub Secrets ou no .env.local local
 const TEST_EMAIL = process.env.PLAYWRIGHT_TEST_EMAIL || 'seu-email-teste@tabatine.com';

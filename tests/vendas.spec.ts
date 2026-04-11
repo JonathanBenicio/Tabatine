@@ -3,7 +3,7 @@
  * @description E2E Tests for the Vendas module (Issue #59)
  * Covers: Tab switching, Rendering, Search/Filter, Sorting, Pagination, Export, Navigation to Details
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures/test';
 
 test.describe('Módulo: Vendas', () => {
   test.beforeEach(async ({ page }) => {

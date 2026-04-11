@@ -3,7 +3,7 @@
  * @description E2E Tests for the Clientes module (Issue #59)
  * Covers: Rendering, Search/Filter, Pagination, Navigation to Details
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures/test';
 
 test.describe('Módulo: Clientes', () => {
   test.beforeEach(async ({ page }) => {
