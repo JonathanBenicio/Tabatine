@@ -9,22 +9,69 @@ import path from 'path';
 const COVERAGE_DIR = './coverage';
 const OUTPUT_FILE = process.env.GITHUB_STEP_SUMMARY || './coverage-summary.md';
 
-function parseTextSummary() {
-    const summaryPath = path.join(COVERAGE_DIR, 'text-summary.txt');
-    if (!fs.existsSync(summaryPath)) {
-        console.error('Arquivo text-summary.txt não encontrado em:', summaryPath);
+/**
+ * Busca um arquivo de forma recursiva
+ */
+function findFile(dir, fileName) {
+    if (!fs.existsSync(dir)) return null;
+    try {
+        const files = fs.readdirSync(dir);
+        for (const file of files) {
+            const fullPath = path.join(dir, file);
+            if (fs.statSync(fullPath).isDirectory()) {
+                if (file === 'node_modules' || file === '.next' || file === '.git') continue;
+                const found = findFile(fullPath, fileName);
+                if (found) return found;
+            } else if (file === fileName) {
+                return fullPath;
+            }
+        }
+    } catch (e) {
+        // Silently ignore permission errors
+    }
+    return null;
+}
+
+/**
+ * Aguarda a existência de um arquivo com retries
+ */
+async function waitForFile(filePath, fileName, retries = 5, delay = 2000) {
+    for (let i = 0; i < retries; i++) {
+        const foundPath = findFile(filePath, fileName);
+        if (foundPath) return foundPath;
+        
+        console.log(`Aguardando arquivo ${fileName} em ${filePath}... Tentativa ${i + 1}/${retries}`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    return null;
+}
+
+async function parseTextSummary() {
+    // Primeiro tenta o caminho padrão, depois busca no root e subpastas
+    let summaryPath = await waitForFile(COVERAGE_DIR, 'text-summary.txt');
+    
+    if (!summaryPath) {
+        console.log('Buscando text-summary.txt no diretório raiz (ignorando node_modules etc)...');
+        summaryPath = findFile('./', 'text-summary.txt');
+    }
+
+    if (!summaryPath) {
+        console.error('Arquivo text-summary.txt não encontrado após buscas e retries.');
         
         // Log para ajudar no debug no CI
-        if (fs.existsSync(COVERAGE_DIR)) {
-            const files = fs.readdirSync(COVERAGE_DIR);
-            console.log('Arquivos encontrados no diretório de cobertura:', files);
-        } else {
-            console.error('Diretório de cobertura não encontrado:', COVERAGE_DIR);
-        }
+        const searchDirs = [COVERAGE_DIR, './playwright-report', './test-results'];
+        searchDirs.forEach(dir => {
+            if (fs.existsSync(dir)) {
+                try {
+                    console.log(`Arquivos em ${dir}:`, fs.readdirSync(dir, { recursive: true }));
+                } catch (e) {}
+            }
+        });
         
         return null;
     }
 
+    console.log('Usando arquivo de sumário encontrado em:', summaryPath);
     const content = fs.readFileSync(summaryPath, 'utf8');
     
     // O text-summary do istanbul/monocart segue este padrão:
@@ -72,8 +119,15 @@ function generateMarkdown(data) {
     return md;
 }
 
-const summaryData = parseTextSummary();
-const markdown = generateMarkdown(summaryData);
+async function main() {
+    const summaryData = await parseTextSummary();
+    const markdown = generateMarkdown(summaryData);
 
-fs.writeFileSync(OUTPUT_FILE, markdown);
-console.log('Sumário de cobertura gerado com sucesso em:', OUTPUT_FILE);
+    fs.writeFileSync(OUTPUT_FILE, markdown);
+    console.log('Sumário de cobertura gerado com sucesso em:', OUTPUT_FILE);
+}
+
+main().catch(err => {
+    console.error('Erro ao gerar sumário de cobertura:', err);
+    process.exit(1);
+});

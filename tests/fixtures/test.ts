@@ -10,6 +10,7 @@ export const test = testBase.extend<{
         const isChromium = testInfo.project.name === 'chromium' || testInfo.project.name === 'Desktop Chromium' || testInfo.project.name === 'setup';
 
         if (isChromium) {
+            console.log(`[Coverage] Iniciando coleta V8 para: ${testInfo.title}`);
             await Promise.all([
                 page.coverage.startJSCoverage({ resetOnNavigation: false }),
                 page.coverage.startCSSCoverage({ resetOnNavigation: false })
@@ -25,6 +26,7 @@ export const test = testBase.extend<{
             ]);
             
             const coverageData = [...jsCoverage, ...cssCoverage];
+            console.log(`[Coverage] Coleta finalizada: ${testInfo.title}. Registros: ${coverageData.length}`);
             
             // Adiciona dados ao relatório global do monocart
             await addCoverageReport(coverageData, testInfo);
