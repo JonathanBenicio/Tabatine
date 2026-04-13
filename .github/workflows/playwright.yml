@@ -46,6 +46,14 @@ jobs:
         path: playwright-report/
         retention-days: 30
 
+    - name: 🔍 Debug File Structure (CI Only)
+      if: always()
+      run: |
+        echo "Root directory:"
+        ls -F
+        echo "Listing all files (recursive):"
+        ls -R | grep -v node_modules | grep -v .next || true
+
     - name: 📊 Generate Code Coverage Summary
       if: always()
       run: node scripts/generate-coverage-summary.js

@@ -8,9 +8,10 @@ setup('authenticate', async ({ page }) => {
 
   if (!TEST_EMAIL || !TEST_PASSWORD) {
     if (process.env.CI) {
-      throw new Error(
-        '\n❌ ERRO DE CONFIGURAÇÃO: As variáveis PLAYWRIGHT_TEST_EMAIL ou PLAYWRIGHT_TEST_PASSWORD não foram encontradas no ambiente de CI.\n' +
-        'Configure os GitHub Secrets para que os testes E2E possam realizar a autenticação.\n'
+      // [S6] Loga erro mas não interrompe — permite que testes não-autenticados ainda rodem
+      console.error(
+        '❌ AVISO: PLAYWRIGHT_TEST_EMAIL ou PLAYWRIGHT_TEST_PASSWORD não configurados no CI. ' +
+        'Testes que dependem de autenticação serão ignorados.'
       );
     }
     

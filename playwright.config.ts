@@ -33,7 +33,7 @@ export default defineConfig({
             entryFilter: (entry: any) => entry.url.includes('next/static') || entry.url.includes('src/'),
             // Filtrar apenas o código fonte do projeto para o relatório
             sourceFilter: (sourcePath: string) => sourcePath.includes('src/') && !sourcePath.includes('node_modules'),
-            outputDir: './coverage',
+            outputDir: path.resolve(__dirname, 'coverage'),
             reports: [
                 ['cobertura'],
                 ['lcovonly'],
