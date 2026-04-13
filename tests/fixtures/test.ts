@@ -6,8 +6,11 @@ export const test = testBase.extend<{
 }>({
     // Fixture automática para gerenciar a cobertura de todos os testes
     autoTestFixture: [async ({ page }, use, testInfo) => {
-        // Cobertura V8 é exclusiva do Chromium
-        const isChromium = testInfo.project.name === 'chromium' || testInfo.project.name === 'Desktop Chromium' || testInfo.project.name === 'setup';
+        // [S4] Cobertura V8 é exclusiva do Chromium — checa pelo browserType ao invés do project.name
+        // Isso é mais robusto: funciona mesmo se o nome do projeto for renomeado no config
+        const browserName = testInfo.project.use?.defaultBrowserType 
+            || testInfo.project.name;
+        const isChromium = browserName === 'chromium' || testInfo.project.name === 'setup';
 
         if (isChromium) {
             console.log(`[Coverage] Iniciando coleta V8 para: ${testInfo.title}`);

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { useVendasStore } from '@/store/useVendasStore';
+import { useQuery } from '@tanstack/react-query';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   AreaChart, Area, PieChart, Pie, Cell, Legend
@@ -11,6 +11,9 @@ import { ptBR } from 'date-fns/locale';
 import { TrendingUp, DollarSign, ShoppingCart, Activity, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { TableSummaryCard } from '@/components/ui/TableSummaryCard';
 import { useVendasQuery } from '@/hooks/useVendasQuery';
+
+// [S2] Constante para o limite máximo de pedidos por query do dashboard
+const DASHBOARD_MAX_PEDIDOS = 1000;
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 const STATUS_COLORS: Record<string, string> = {
@@ -46,30 +49,23 @@ export default function DashboardCharts() {
   const now = new Date();
   const [selectedWeek, setSelectedWeek] = useState(getISOWeek(now));
   const [selectedYear, setSelectedYear] = useState(getYear(now));
-  const [activeWeeks, setActiveWeeks] = useState<number[]>([]);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Fetch active weeks for the selected year
-  useEffect(() => {
-    if (!isMounted) return;
-    
-    const fetchActiveWeeks = async () => {
-      try {
-        const res = await fetch(`/api/supabase/vendas/resumo?year=${selectedYear}`);
-        const data = await res.json();
-        if (data.activeWeeks) {
-          setActiveWeeks(data.activeWeeks);
-        }
-      } catch (err) {
-        console.error('Erro ao buscar semanas ativas:', err);
-      }
-    };
-    
-    fetchActiveWeeks();
-  }, [selectedYear, isMounted]);
+  // [S3] Fetch active weeks via useQuery — evita race condition e é consistente com o padrão do projeto
+  const { data: activeWeeksData } = useQuery<{ year: number; activeWeeks: number[] }>({
+    queryKey: ['vendas-active-weeks', selectedYear],
+    queryFn: async () => {
+      const res = await fetch(`/api/supabase/vendas/resumo?year=${selectedYear}`);
+      if (!res.ok) throw new Error('Erro ao buscar semanas ativas');
+      return res.json();
+    },
+    enabled: isMounted,
+    staleTime: 5 * 60 * 1000, // 5 minutos — semanas ativas mudam raramente
+  });
+  const activeWeeks = activeWeeksData?.activeWeeks || [];
 
   // Derived date range for the query
   const dateRange = useMemo(() => {
@@ -83,7 +79,7 @@ export default function DashboardCharts() {
   // Local query that doesn't affect global state filters
   const { data: queryData, isLoading: queryLoading } = useVendasQuery(
     1, 
-    1000, 
+    DASHBOARD_MAX_PEDIDOS, 
     '', 
     [], 
     [], 
@@ -91,7 +87,7 @@ export default function DashboardCharts() {
     isMounted
   );
 
-  const vendas = queryData?.vendas || [];
+  const vendas = useMemo(() => queryData?.vendas || [], [queryData]);
   const loading = queryLoading;
 
   // REMOVED: No longer setting week/year based on most recent sale automatically,
@@ -394,7 +390,7 @@ export default function DashboardCharts() {
                   }}
                   itemStyle={{ color: '#0f172a', fontWeight: 700, fontSize: '12px' }}
                   labelStyle={{ color: '#64748b', fontWeight: 800, fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '0.1em' }}
-                  formatter={(value: any) => [formatCurrency(Number(value ?? 0)), 'Faturamento']}
+                  formatter={(value: number | string) => [formatCurrency(Number(value ?? 0)), 'Faturamento']}
                 />
                 <Bar dataKey="valor" fill="url(#barGradient)" radius={[8, 8, 0, 0]} maxBarSize={40} />
               </BarChart>
@@ -435,7 +431,7 @@ export default function DashboardCharts() {
                     backdropFilter: 'blur(10px)'
                   }}
                   itemStyle={{ color: '#0f172a', fontWeight: 700, fontSize: '12px' }}
-                  formatter={(value: any, name: any) => {
+                  formatter={(value: number | string, name: string) => {
                     const total = chartStatus.reduce((acc, curr) => acc + curr.value, 0);
                     const valNum = Number(value || 0);
                     const percent = total > 0 ? ((valNum / total) * 100).toFixed(1) : '0';
@@ -468,7 +464,7 @@ export default function DashboardCharts() {
               <Tooltip 
                 contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--card-border)', borderRadius: '12px', color: 'var(--foreground)', backdropFilter: 'blur(12px)' }}
                 itemStyle={{ color: 'var(--foreground)' }}
-                formatter={(value: any) => [value ?? 0, 'Pedidos']}
+                formatter={(value: number | string) => [value ?? 0, 'Pedidos']}
               />
               <Area type="monotone" dataKey="qtd" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorQtd)" />
             </AreaChart>

@@ -60,9 +60,6 @@ test.describe('Módulo: Clientes', () => {
     await expect(searchInput).toBeVisible();
     await searchInput.click({ force: true });
 
-    // Captura o texto do primeiro row antes da busca
-    const firstRowBefore = await page.locator('tbody tr:not(.animate-pulse)').first().locator('td').first().textContent();
-
     await searchInput.fill('a'); // 'a' garante algum resultado na maioria dos casos
     await page.waitForTimeout(600); // Aguarda debounce
 
@@ -70,9 +67,6 @@ test.describe('Módulo: Clientes', () => {
     const tableOrEmpty = page.locator('tbody tr:not(.animate-pulse)').first()
       .or(page.getByText(/nenhum cliente encontrado/i));
     await expect(tableOrEmpty).toBeVisible({ timeout: 10000 });
-
-    // Verifica a contagem nos summary cards diminuiu se houver filtro ativo
-    const _ = firstRowBefore; // evitar lint de unused var
   });
 
   test('2.2 deve exibir empty state quando busca não retornar resultados', async ({ page }) => {

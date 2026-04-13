@@ -74,16 +74,25 @@ async function parseTextSummary() {
     console.log('Usando arquivo de sumário encontrado em:', summaryPath);
     const content = fs.readFileSync(summaryPath, 'utf8');
     
-    // O text-summary do istanbul/monocart segue este padrão:
+    // [S5] O text-summary do istanbul/monocart segue este padrão:
     // Lines        : 85.5% ( 123/144 )
     // Functions    : 75% ( 15/20 )
     // Statements   : 84% ( 130/155 )
     // Branches     : 60% ( 12/20 )
+    //
+    // Regex: captura (1) percentual e (2) ratio (ex: "123/144")
+    // \s+ = whitespace flexível entre label e valores
 
     const lines = content.match(/Lines\s+:\s+([\d.]+)%\s+\(\s+(\d+\/\d+)\s+\)/);
     const functions = content.match(/Functions\s+:\s+([\d.]+)%\s+\(\s+(\d+\/\d+)\s+\)/);
     const statements = content.match(/Statements\s+:\s+([\d.]+)%\s+\(\s+(\d+\/\d+)\s+\)/);
     const branches = content.match(/Branches\s+:\s+([\d.]+)%\s+\(\s+(\d+\/\d+)\s+\)/);
+
+    // Safety: loga conteúdo bruto se nenhuma métrica for detectada (debug CI)
+    if (!lines && !functions && !statements && !branches) {
+        console.warn('⚠️ Nenhuma métrica de cobertura encontrada no text-summary. Conteúdo bruto:');
+        console.warn(content.substring(0, 500));
+    }
 
     return {
         lines: lines ? { pct: lines[1], ratio: lines[2] } : null,
