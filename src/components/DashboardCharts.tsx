@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { useVendasStore } from '@/store/useVendasStore';
+import { useQuery } from '@tanstack/react-query';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   AreaChart, Area, PieChart, Pie, Cell, Legend
@@ -10,6 +10,10 @@ import { parseISO, isValid, startOfWeek, endOfWeek, isWithinInterval, format, se
 import { ptBR } from 'date-fns/locale';
 import { TrendingUp, DollarSign, ShoppingCart, Activity, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { TableSummaryCard } from '@/components/ui/TableSummaryCard';
+import { useVendasQuery } from '@/hooks/useVendasQuery';
+
+// [S2] Constante para o limite máximo de pedidos por query do dashboard
+const DASHBOARD_MAX_PEDIDOS = 1000;
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 const STATUS_COLORS: Record<string, string> = {
@@ -41,31 +45,50 @@ function getWeekRange(week: number, year: number) {
 }
 
 export default function DashboardCharts() {
-  const { vendas, fetchVendas, loading, setFilters } = useVendasStore();
   const [isMounted, setIsMounted] = useState(false);
-
   const now = new Date();
   const [selectedWeek, setSelectedWeek] = useState(getISOWeek(now));
   const [selectedYear, setSelectedYear] = useState(getYear(now));
-
-  const [initialDataSet, setInitialDataSet] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Fetch data when week or year changes
-  useEffect(() => {
-    if (!isMounted) return;
+  // [S3] Fetch active weeks via useQuery — evita race condition e é consistente com o padrão do projeto
+  const { data: activeWeeksData } = useQuery<{ year: number; activeWeeks: number[] }>({
+    queryKey: ['vendas-active-weeks', selectedYear],
+    queryFn: async () => {
+      const res = await fetch(`/api/supabase/vendas/resumo?year=${selectedYear}`);
+      if (!res.ok) throw new Error('Erro ao buscar semanas ativas');
+      return res.json();
+    },
+    enabled: isMounted,
+    staleTime: 5 * 60 * 1000, // 5 minutos — semanas ativas mudam raramente
+  });
+  const activeWeeks = activeWeeksData?.activeWeeks || [];
 
+  // Derived date range for the query
+  const dateRange = useMemo(() => {
     const { start, end } = getWeekRange(selectedWeek, selectedYear);
-    const startDate = format(start, 'yyyy-MM-dd');
-    const endDate = format(end, 'yyyy-MM-dd');
+    return {
+      startDate: format(start, 'yyyy-MM-dd'),
+      endDate: format(end, 'yyyy-MM-dd')
+    };
+  }, [selectedWeek, selectedYear]);
 
-    // Update store filters and fetch
-    setFilters({ startDate, endDate });
-    fetchVendas(1, true, 1000); // Higher limit for dashboard
-  }, [selectedWeek, selectedYear, isMounted, setFilters, fetchVendas]);
+  // Local query that doesn't affect global state filters
+  const { data: queryData, isLoading: queryLoading } = useVendasQuery(
+    1, 
+    DASHBOARD_MAX_PEDIDOS, 
+    '', 
+    [], 
+    [], 
+    dateRange, 
+    isMounted
+  );
+
+  const vendas = useMemo(() => queryData?.vendas || [], [queryData]);
+  const loading = queryLoading;
 
   // REMOVED: No longer setting week/year based on most recent sale automatically,
   // as we now prefer the current week + API fetching for that week.
@@ -260,9 +283,14 @@ export default function DashboardCharts() {
               onChange={(e) => setSelectedWeek(Number(e.target.value))}
               className="bg-white/80 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white text-sm rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-teal-500/30 dark:focus:ring-purple-500/30 focus:border-teal-500/50 dark:focus:border-purple-500/50 outline-none backdrop-blur-md"
             >
-              {weekOptions.map(w => (
-                <option key={w} value={w} className="bg-white dark:bg-zinc-800 text-slate-900 dark:text-white">Semana {w}</option>
-              ))}
+              {weekOptions.map(w => {
+                const hasData = activeWeeks.includes(w);
+                return (
+                  <option key={w} value={w} className="bg-white dark:bg-zinc-800 text-slate-900 dark:text-white">
+                    Semana {w} {hasData ? ' •' : ''}
+                  </option>
+                );
+              })}
             </select>
           </div>
 
@@ -362,7 +390,7 @@ export default function DashboardCharts() {
                   }}
                   itemStyle={{ color: '#0f172a', fontWeight: 700, fontSize: '12px' }}
                   labelStyle={{ color: '#64748b', fontWeight: 800, fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '0.1em' }}
-                  formatter={(value: any) => [formatCurrency(Number(value ?? 0)), 'Faturamento']}
+                  formatter={(value: number | string | undefined | readonly (string | number)[]) => [formatCurrency(Number(Array.isArray(value) ? value[0] : (value ?? 0))), 'Faturamento']}
                 />
                 <Bar dataKey="valor" fill="url(#barGradient)" radius={[8, 8, 0, 0]} maxBarSize={40} />
               </BarChart>
@@ -372,7 +400,7 @@ export default function DashboardCharts() {
 
         {/* Gráfico de Pizza (Status) */}
         <div className="rounded-2xl border border-white/60 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-900/50 p-6 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none">
-          <h3 className="text-lg font-black text-slate-900 dark:text-white mb-1 tracking-tight">Status</h3>
+          <h3 className="text-lg font-black text-slate-900 dark:text-white mb-1 tracking-tight">Pedidos por Status</h3>
           <p className="text-[10px] font-bold text-slate-500 dark:text-zinc-500 mb-6 uppercase tracking-widest leading-none">Distribuição de Pedidos</p>
           <div className="h-[300px] w-full flex flex-col items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
@@ -403,7 +431,7 @@ export default function DashboardCharts() {
                     backdropFilter: 'blur(10px)'
                   }}
                   itemStyle={{ color: '#0f172a', fontWeight: 700, fontSize: '12px' }}
-                  formatter={(value: any, name: any) => {
+                  formatter={(value: number | string | undefined | readonly (string | number)[], name: string | number | undefined) => {
                     const total = chartStatus.reduce((acc, curr) => acc + curr.value, 0);
                     const valNum = Number(value || 0);
                     const percent = total > 0 ? ((valNum / total) * 100).toFixed(1) : '0';
@@ -436,7 +464,7 @@ export default function DashboardCharts() {
               <Tooltip 
                 contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--card-border)', borderRadius: '12px', color: 'var(--foreground)', backdropFilter: 'blur(12px)' }}
                 itemStyle={{ color: 'var(--foreground)' }}
-                formatter={(value: any) => [value ?? 0, 'Pedidos']}
+                formatter={(value: number | string | undefined | readonly (string | number)[]) => [Array.isArray(value) ? value[0] : (value ?? 0), 'Pedidos']}
               />
               <Area type="monotone" dataKey="qtd" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorQtd)" />
             </AreaChart>

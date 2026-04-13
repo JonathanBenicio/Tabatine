@@ -55,9 +55,10 @@ export function TableSummaryCard({
   return (
     <div className={`p-5 rounded-2xl bg-white/50 dark:bg-zinc-900/30 border border-white/60 dark:border-zinc-800/40 backdrop-blur-xl flex flex-col justify-between group ${variants[variant]} transition-all shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.05)]`}>
       <div className="flex justify-between items-start mb-4">
-        <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-500 uppercase tracking-widest">{label}</span>
-        <div className={`w-8 h-8 rounded-lg bg-current opacity-10 flex items-center justify-center`}>
-          <Icon size={16} />
+        <h3 className="text-[10px] font-bold text-slate-500 dark:text-zinc-500 uppercase tracking-widest">{label}</h3>
+        <div className="relative w-8 h-8 flex items-center justify-center">
+          <div className="absolute inset-0 rounded-lg bg-current opacity-10"></div>
+          <Icon size={16} className="relative z-10" />
         </div>
       </div>
       <div>

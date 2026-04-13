@@ -1,4 +1,4 @@
-import { test as setup, expect } from '@playwright/test';
+import { test as setup, expect } from './fixtures/test';
 
 const authFile = 'playwright/.auth/user.json';
 
@@ -7,7 +7,17 @@ setup('authenticate', async ({ page }) => {
   const TEST_PASSWORD = process.env.PLAYWRIGHT_TEST_PASSWORD;
 
   if (!TEST_EMAIL || !TEST_PASSWORD) {
-    console.warn('PLAYWRIGHT_TEST_EMAIL ou PLAYWRIGHT_TEST_PASSWORD não definidos. Pulando autenticação real.');
+    if (process.env.CI) {
+      // [S6] Loga erro mas não interrompe — permite que testes não-autenticados ainda rodem
+      console.error(
+        '❌ AVISO: PLAYWRIGHT_TEST_EMAIL ou PLAYWRIGHT_TEST_PASSWORD não configurados no CI. ' +
+        'Testes que dependem de autenticação serão ignorados.'
+      );
+    }
+    
+    console.warn('PLAYWRIGHT_TEST_EMAIL ou PLAYWRIGHT_TEST_PASSWORD não definidos. Criando estado de autenticação vazio para evitar erro ENOENT.');
+    // Salva um estado vazio para evitar que o Playwright quebre ao tentar ler o arquivo no boot de outros projetos
+    await page.context().storageState({ path: authFile });
     return;
   }
 

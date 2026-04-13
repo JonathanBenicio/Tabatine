@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures/test';
 
 test.describe('Navegação Principal', () => {
   // O Playwright usará automaticamente o storageState configurado no projeto chromium/firefox/webkit

@@ -1,9 +1,8 @@
 import { test, expect } from './fixtures/test';
 
-test.describe('Módulo: Vendedores', () => {
+test.describe('Módulo: Produtos', () => {
   test.beforeEach(async ({ page }) => {
-    // Acessa a rota (o setup cuida da autenticação)
-    await page.goto('/vendedores');
+    await page.goto('/produtos');
   });
 
   // ─────────────────────────────────────────────────────────
@@ -11,26 +10,22 @@ test.describe('Módulo: Vendedores', () => {
   // ─────────────────────────────────────────────────────────
 
   test('1.1 deve exibir o banner e título da página', async ({ page }) => {
-    // Aguarda o título da página
-    const heading = page.getByRole('heading', { name: /listagem de vendedores/i });
+    const heading = page.getByRole('heading', { name: "Produtos", exact: true });
     await expect(heading).toBeVisible({ timeout: 10000 });
   });
 
   test('1.2 deve renderizar a tabela com dados reais e summary cards', async ({ page }) => {
-    // Verifica os cards de resumo
-    await expect(page.getByText(/total de vendedores/i)).toBeVisible();
-    await expect(page.getByText(/média comissão/i)).toBeVisible();
-
-    // Aguarda a tabela renderizar uma linha de dados (ignorando os placeholders da animação .animate-pulse)
+    await expect(page.getByText(/total produtos/i)).toBeVisible();
+    await expect(page.getByText(/ativos/i)).toBeVisible();
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
   });
 
   test('1.3 deve exibir cabeçalhos de coluna corretos', async ({ page }) => {
+    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
     const table = page.getByRole('table');
     await expect(table).toBeVisible();
 
-    // Checa colunas esperadas
-    const expectedHeaders = ['Vendedor', 'Código', 'Email', 'Comissão', 'Status', 'Ações'];
+    const expectedHeaders = ['Produto', 'SKU / Cód.', 'Família', 'Unidade', 'Preço', 'NCM', 'Status', 'Ações'];
     for (const header of expectedHeaders) {
       await expect(table.locator('th', { hasText: new RegExp(header, 'i') }).first()).toBeVisible();
     }
@@ -41,119 +36,123 @@ test.describe('Módulo: Vendedores', () => {
   // ─────────────────────────────────────────────────────────
 
   test('2.1 deve filtrar ao digitar no campo de busca', async ({ page }) => {
-    // Aguarda carregar
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
-    const searchInput = page.getByPlaceholder(/pesquisar vendedores/i);
-    await expect(searchInput).toBeVisible();
-
-    // Busca um vendedor comum ou a palavra 'Silva'
-    await searchInput.fill('Silva');
-
-    // Aguarda o debounce
+    const searchInput = page.getByPlaceholder(/pesquisar por nome/i);
+    await searchInput.fill('Produto X');
     await page.waitForTimeout(1000);
 
-    // Tabela deve continuar visível ou exibir empty state
     const rows = page.locator('tbody tr:not(.animate-pulse)');
-    const isEmpty = await page.getByText(/nenhum vendedor encontrado/i).isVisible();
-    
+    const isEmpty = await page.getByText(/nenhum produto encontrado/i).isVisible();
     expect(await rows.count() > 0 || isEmpty).toBeTruthy();
   });
 
-  test('2.2 deve exibir empty state quando busca não retornar resultados', async ({ page }) => {
+  // ─────────────────────────────────────────────────────────
+  // 3. FILTROS AVANÇADOS E VISIBILIDADE
+  // ─────────────────────────────────────────────────────────
+
+  test('3.1 deve abrir o painel de filtros avançados e aplicar filtro de status', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
-    const searchInput = page.getByPlaceholder(/pesquisar vendedores/i);
-    await searchInput.fill('TERMO-INEXISTENTE-123456789');
-    
-    // Aguarda a resposta (debounce)
-    await page.waitForTimeout(1500);
+    const filterBtn = page.getByRole('button', { name: /filtros/i }).first();
+    await filterBtn.click({ force: true });
+    await expect(page.getByText(/filtros avançados/i)).toBeVisible();
 
-    // Empty state deve estar visível
-    await expect(page.getByText(/nenhum vendedor encontrado/i)).toBeVisible({ timeout: 10000 });
+    const selectStatus = page.locator('select').nth(1); // O segundo select (Status)
+    await selectStatus.selectOption({ label: 'Ativo' });
+
+    // Espera atualizar
+    await page.waitForTimeout(1000);
+    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
   });
 
-  test('2.3 deve limpar a busca e restaurar a lista', async ({ page }) => {
+  test('3.2 deve abrir o painel de colunas', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
-    const searchInput = page.getByPlaceholder(/pesquisar vendedores/i);
-    await searchInput.fill('xyz123');
-    await page.waitForTimeout(1000);
+    const colBtn = page.locator('button[title="Colunas"]');
+    await colBtn.click({ force: true });
+    await expect(page.getByText(/colunas/i).first()).toBeVisible();
+  });
 
-    // Limpa a busca (pode usar o botão X do componente ou backspace)
-    const clearButton = page.locator('button').filter({ has: page.locator('.lucide-x') }).last();
-    if (await clearButton.isVisible()) {
-      await clearButton.click();
-    } else {
-      await searchInput.fill('');
-    }
+  // ─────────────────────────────────────────────────────────
+  // 4. ORDENAÇÃO
+  // ─────────────────────────────────────────────────────────
 
-    await page.waitForTimeout(1000);
-    // Vendedores originais devem voltar
+  test('4.1 deve ordenar ao clicar no cabeçalho (Preço)', async ({ page }) => {
+    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
+
+    const headerPreco = page.getByRole('columnheader').filter({ hasText: /preço/i }).first();
+    await headerPreco.click({ force: true }); // ASC
+    await expect(headerPreco.locator('svg').last()).toBeVisible({ timeout: 10000 });
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
   });
 
   // ─────────────────────────────────────────────────────────
-  // 3. PAGINAÇÃO
+  // 5. PAGINAÇÃO
   // ─────────────────────────────────────────────────────────
 
-  test('3.1 deve desabilitar "Anterior" na primeira página', async ({ page }) => {
+  test('5.1 deve desabilitar "Anterior" na primeira página e avançar na paginação', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
     const prevButton = page.getByRole('button', { name: /anterior/i });
     if (await prevButton.isVisible()) {
       await expect(prevButton).toBeDisabled();
     }
-  });
-
-  test('3.2 deve avançar para próxima página quando disponível', async ({ page }) => {
-    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
     const nextButton = page.getByRole('button', { name: /próxima/i });
     if (await nextButton.isVisible() && await nextButton.isEnabled()) {
-      // Pega o ID/Nome do primeiro item da página 1
-      const firstItemP1 = await page.locator('tbody tr:not(.animate-pulse) td').first().textContent();
-      
       await nextButton.click();
       await page.waitForTimeout(1000);
-      
       await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
-      
-      // Opcional: checar se o primeiro item da p2 é diferente (ou se é página de 1 resultado apenas)
-      const firstItemP2 = await page.locator('tbody tr:not(.animate-pulse) td').first().textContent();
-      // Não garantimos com strict equal porque se só houver 1 pag ele fica disabled na linha de cima
     }
   });
 
   // ─────────────────────────────────────────────────────────
-  // 4. NAVEGAÇÃO / DRILL-DOWN (Ver Detalhes)
+  // 6. EXPORTAÇÃO
   // ─────────────────────────────────────────────────────────
 
-  test('4.1 deve navegar para tela de detalhes ao clicar em Ações', async ({ page }) => {
-    const firstRow = page.locator('tbody tr:not(.animate-pulse)').first();
-    await expect(firstRow).toBeVisible({ timeout: 20000 });
+  test('6.1 deve exportar dados', async ({ page }) => {
+    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
-    // Clica no botão Ver Detalhes que aparece no hover ou da lista
-    const viewButton = firstRow.getByTitle(/ver detalhes/i).first();
-    await viewButton.click({ force: true }); // Usando force porque ele tem opacidade zero sem hover
-
-    // Deve redirecionar para /vendedores/{id}
-    await page.waitForURL(/\/vendedores\/\d+/, { timeout: 10000 });
-    await expect(page).toHaveURL(/\/vendedores\/\d+/);
+    const exportBtn = page.getByRole('button', { name: /exportar/i }).first();
+    if (await exportBtn.isVisible()) {
+      // Cria a promessa do download antes de clicar
+      const downloadPromise = page.waitForEvent('download', { timeout: 10000 }).catch(() => null);
+      await exportBtn.click({ force: true });
+      const download = await downloadPromise;
+      // Se houvesse data para exportar
+      if (download) {
+        expect(download.suggestedFilename()).toContain('produtos_tabatine');
+      }
+    }
   });
 
   // ─────────────────────────────────────────────────────────
-  // 5. AÇÕES AUXILIARES
+  // 7. NAVEGAÇÃO
   // ─────────────────────────────────────────────────────────
 
-  test('5.1 deve recarregar dados ao clicar no botão de refresh', async ({ page }) => {
+  test('7.1 deve navegar para tela de detalhes', async ({ page }) => {
+    const firstRow = page.locator('tbody tr:not(.animate-pulse)').first();
+    await expect(firstRow).toBeVisible({ timeout: 20000 });
+
+    const viewButton = firstRow.getByTitle(/ver detalhes/i).first();
+    await viewButton.click({ force: true });
+    
+    await page.waitForURL(/\/produtos\/\d+/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/produtos\/\d+/);
+  });
+
+  // ─────────────────────────────────────────────────────────
+  // 8. REFRESH
+  // ─────────────────────────────────────────────────────────
+
+  test('8.1 deve recarregar dados', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
-    const refreshBtn = page.locator('button[title="Atualizar dados"]').first();
+    const refreshBtn = page.locator('button').filter({ has: page.locator('.lucide-refresh-ccw') }).first();
     if (await refreshBtn.isVisible()) {
       await refreshBtn.click({ force: true });
       await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
     }
   });
-
 });

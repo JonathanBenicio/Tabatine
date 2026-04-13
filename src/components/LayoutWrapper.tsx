@@ -104,7 +104,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-6 custom-scrollbar">
           {/* Dashboard Group */}
-          <NavGroup title="Principal" isCollapsed={isSidebarCollapsed}>
+          <NavGroup title="Dashboard" isCollapsed={isSidebarCollapsed}>
             <NavItem
               href="/"
               icon={Home}
@@ -151,7 +151,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
               label="Contas a Pagar"
               isCollapsed={isSidebarCollapsed}
               isActive={pathname === '/financeiro/pagar'}
-              activeColor="emerald"
+              activeColor="rose"
             />
             <NavItem
               href="/financeiro/receber"
@@ -167,11 +167,11 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
               label="Bancos"
               isCollapsed={isSidebarCollapsed}
               isActive={pathname === '/contas-correntes'}
-              activeColor="emerald"
+              activeColor="blue"
             />
             <NavItem
               href="/conciliacao"
-              icon={TrendingUp}
+              icon={Wallet}
               label="Conciliação"
               isCollapsed={isSidebarCollapsed}
               isActive={pathname === '/conciliacao'}
@@ -208,11 +208,11 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
           </NavGroup>
 
           {/* Support Tables Group */}
-          <NavGroup title="Tabelas de Apoio" isCollapsed={isSidebarCollapsed}>
+          <NavGroup title="Configurações de Apoio" isCollapsed={isSidebarCollapsed}>
             <NavItem
               href="/bancos"
               icon={Landmark}
-              label="Bancos"
+              label="Bancos (Lista)"
               isCollapsed={isSidebarCollapsed}
               isActive={pathname === '/bancos'}
               activeColor="emerald"

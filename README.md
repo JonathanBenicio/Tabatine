@@ -19,38 +19,37 @@ A aplicação utiliza as tecnologias mais modernas do ecossistema React/Next.js:
 
 ## 📂 Estrutura de Páginas
 
-A navegação está organizada de forma intuitiva no `LayoutWrapper`:
+A navegação está organizada por categorias lógicas no `LayoutWrapper`:
 
-- **Dashboard** (`/dashboard`): Visão geral com métricas e gráficos de desempenho.
-- **Relatório Vendas** (`/vendas`): Listagem detalhada de pedidos de venda sincronizados.
-- **Notas Fiscais** (`/`): Gestão de NFs emitidas e recebidas (página inicial).
-- **Clientes** (`/clientes`): Base de clientes cadastrados no Omie.
-- **Vendedores** (`/vendedores`): Gestão da equipe de vendas e comissões.
-- **Produtos** (`/produtos`): Catálogo de produtos, SKUs e preços.
-- **Bancos** (`/contas-correntes`): Controle de contas correntes e movimentações bancárias.
-- **Conciliação** (`/conciliacao`): Ferramentas para conciliação bancária e financeira.
-- **Notificações** (`/notificacoes`): Central de alertas e webhooks recebidos em tempo real.
+### 📊 Dashboard
+- **Home** (`/`): Visão geral rápida e acesso às Notas Fiscais.
+- **Dashboard** (`/dashboard`): Métricas detalhadas, gráficos de desempenho e análise de vendas.
+
+### 💰 Vendas
+- **Pedidos** (`/vendas`): Listagem e gestão de pedidos de venda sincronizados do Omie.
+- **Notas Fiscais** (`/nf`): Acompanhamento e detalhes de NF-es emitidas.
+
+### 🏦 Financeiro
+- **Contas a Pagar/Receber**: Gestão de fluxo de caixa sincronizado.
+- **Bancos** (`/contas-correntes`): Saldos e extratos das contas cadastradas.
+- **Conciliação** (`/conciliacao`): Ferramenta para bater extratos bancários com o ERP.
+
+### 📋 Cadastros
+- **Clientes**, **Produtos** e **Vendedores**: Consulta e detalhes das entidades base do Omie.
+
+### ⚙️ Configurações de Apoio
+- Módulos auxiliares: **Bancos**, **Condições**, **Etapas**, **Formas** e **Meios de Pagamento**. Agora com páginas de detalhes completas para cada registro.
+
+### 🔐 Administração
+- **Webhooks DLQ** (`/admin/webhooks`): Monitoramento de falhas em webhooks com sistema de retry.
+- **Notificações** (`/notificacoes`): Central de alertas do sistema.
 
 ## 🏗️ Padrões de Arquitetura
 
-1. **Proxy API**: As chamadas para a API do Omie são feitas através de rotas internas do Next.js (`src/app/api/omie`), protegendo as credenciais (`APP_KEY`, `APP_SECRET`) no servidor.
-2. **State Management**: Utiliza **Zustand** para persistência e compartilhamento de estado global entre componentes, evitando *prop drilling* e facilitando a sincronização com o backend.
-3. **Data Fetching & Table Strategy**: Utiliza **TanStack Query** para sincronização de dados e **TanStack Table** para renderização de tabelas complexas com suporte a paginação, ordenação e filtros avançados.
-4. **Hooks Customizados**: Lógica de busca, paginação e mutações separada da interface para reaproveitamento nos componentes e stores.
-5. **Real-time Notifications**: Integração com Webhooks da Omie via backend para notificações instantâneas no dashboard.
-
-## 📦 Dependências Principais
-
-```json
-"dependencies": {
-  "axios": "^1.13.6",
-  "lucide-react": "^0.577.0",
-  "next": "16.1.6",
-  "react": "19.2.3",
-  "recharts": "^3.8.0",
-  "zustand": "^5.0.11"
-}
-```
+1. **Proxy API**: As chamadas para a API do Omie são feitas através de rotas internas do Next.js (`src/app/api/omie`), protegendo as credenciais no servidor.
+2. **State Management**: Utiliza **Zustand** para persistência e compartilhamento de estado global.
+3. **Mappers Centralizados**: Transformação de dados brutos da API para interfaces limpas via `src/lib/*-mapper.ts`.
+4. **Resiliency**: Sistema de monitoramento de Webhooks com fila de erro (DLQ) para garantir que nenhuma notificação do ERP seja perdida.
 
 ## 🛠️ Como Iniciar
 
@@ -59,14 +58,32 @@ A navegação está organizada de forma intuitiva no `LayoutWrapper`:
    npm install
    ```
 
-2. Configure seu arquivo `.env.local` com as chaves do Omie:
-   ```env
-   APP_KEY=seu_app_key
-   APP_SECRET=seu_app_secret
-   OMIE_API_URL=https://app.omie.com.br/api/v1/
-   ```
+2. Configure seu arquivo `.env.local` (solicite as chaves ao administrador).
 
 3. Inicie o servidor de desenvolvimento:
    ```bash
    npm run dev
    ```
+
+## 🧪 Testes e Qualidade
+
+A aplicação possui uma suíte robusta de testes unitários e de ponta a ponta (E2E).
+
+```bash
+# Testes Unitários (Node.js Test Runner)
+npm test
+
+# Testes E2E (Playwright)
+npm run test:e2e        # Execução em modo headless
+npm run test:e2e:ui     # Interface visual do Playwright
+```
+
+### 📊 Cobertura e Relatórios
+Os testes E2E geram relatórios automáticos de cobertura de código (V8 Coverage) utilizando o `monocart-reporter`.
+- **Relatório HTML**: Disponível em `playwright-report/index.html` após a execução.
+- **Cobertura**: Detalhes em `coverage/html/index.html`.
+
+## 📮 Postman
+
+Uma coleção do Postman para testar os endpoints da API Omie diretamente está disponível na raiz:
+`Tabatine_Omie_API.postman_collection.json`
