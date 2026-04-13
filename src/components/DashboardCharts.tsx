@@ -390,7 +390,7 @@ export default function DashboardCharts() {
                   }}
                   itemStyle={{ color: '#0f172a', fontWeight: 700, fontSize: '12px' }}
                   labelStyle={{ color: '#64748b', fontWeight: 800, fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '0.1em' }}
-                  formatter={(value: number | string) => [formatCurrency(Number(value ?? 0)), 'Faturamento']}
+                  formatter={(value: number | string | undefined | readonly (string | number)[]) => [formatCurrency(Number(Array.isArray(value) ? value[0] : (value ?? 0))), 'Faturamento']}
                 />
                 <Bar dataKey="valor" fill="url(#barGradient)" radius={[8, 8, 0, 0]} maxBarSize={40} />
               </BarChart>
@@ -431,7 +431,7 @@ export default function DashboardCharts() {
                     backdropFilter: 'blur(10px)'
                   }}
                   itemStyle={{ color: '#0f172a', fontWeight: 700, fontSize: '12px' }}
-                  formatter={(value: number | string, name: string) => {
+                  formatter={(value: number | string | undefined | readonly (string | number)[], name: string | number | undefined) => {
                     const total = chartStatus.reduce((acc, curr) => acc + curr.value, 0);
                     const valNum = Number(value || 0);
                     const percent = total > 0 ? ((valNum / total) * 100).toFixed(1) : '0';
@@ -464,7 +464,7 @@ export default function DashboardCharts() {
               <Tooltip 
                 contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--card-border)', borderRadius: '12px', color: 'var(--foreground)', backdropFilter: 'blur(12px)' }}
                 itemStyle={{ color: 'var(--foreground)' }}
-                formatter={(value: number | string) => [value ?? 0, 'Pedidos']}
+                formatter={(value: number | string | undefined | readonly (string | number)[]) => [Array.isArray(value) ? value[0] : (value ?? 0), 'Pedidos']}
               />
               <Area type="monotone" dataKey="qtd" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorQtd)" />
             </AreaChart>
