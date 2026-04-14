@@ -38,3 +38,21 @@ Este documento define os 5 pilares de testes que devem ser implementados para qu
     - [x] **Clique em Linha/Ação**: Deve navegar para a rota de detalhes (ex: `/clientes/[id]`).
     - [x] **Integridade do Detalhe**: A página de destino deve exibir informações coerentes com o item clicado.
     - [x] **Botão Voltar**: Deve retornar o usuário exatamente para a listagem original.
+
+---
+
+## Status de Conformidade por Módulo
+
+Abaixo, a lista de módulos que já seguem integralmente o **Roteiro Universal (5 Pilares)**:
+
+| Módulo | Renderização | Busca/Filtros | Paginação | Ordenação | Drill-down | Status Final |
+| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **Vendedores** | ✅ | ✅ | ✅ | ✅ | ✅ | **Completo** |
+| **Produtos** | ✅ | ✅ | ✅ | ✅ | ✅ | **Completo** |
+| **Vendas** | ✅ | ✅ | ✅ | ✅ | ✅ | **Completo** |
+| **Clientes** | ✅ | ✅ | ✅ | ✅ | ✅ | **Completo** |
+| **Notas Fiscais** | ✅ | ✅ | ✅ | ✅ | ✅ | **Completo** |
+| **Contas Correntes** | ✅ | ✅ | ✅ | ✅ | ✅ | **Completo** |
+| **Conciliação** | ✅ | ✅ | ✅ | ✅ | ✅ | **Completo** |
+
+**Última verificação completa**: 13/04/2026.
