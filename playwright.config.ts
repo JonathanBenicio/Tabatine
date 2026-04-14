@@ -27,7 +27,7 @@ export default defineConfig({
     ['html'],
     ['monocart-reporter', {  
         name: "Tabatine E2E Coverage Report",
-        outputFile: './playwright-report/index.html',
+        outputFile: './coverage/index.html',
         coverage: {
             // Coletar cobertura de arquivos JS/TS no navegador
             entryFilter: (entry: any) => entry.url.includes('next/static') || entry.url.includes('src/'),

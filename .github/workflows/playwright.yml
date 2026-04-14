@@ -13,6 +13,8 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      pages: write
+      id-token: write
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
@@ -92,3 +94,31 @@ jobs:
               });
             }
           }
+
+    - name: 🏗️ Prepare GitHub Pages site
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+      run: |
+        mkdir -p public-report/coverage
+        cp -r playwright-report/* public-report/
+        cp -r coverage/html/* public-report/coverage/
+        echo "Reports ready in public-report/"
+
+    - name: 🚀 Upload artifact for GitHub Pages
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: public-report/
+
+  deploy:
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: 🚀 Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

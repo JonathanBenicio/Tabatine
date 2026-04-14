@@ -78,11 +78,11 @@ npm run test:e2e        # Execução em modo headless
 npm run test:e2e:ui     # Interface visual do Playwright
 ```
 
-### 📊 Cobertura e Relatórios
-Os testes E2E geram relatórios automáticos de cobertura de código (V8 Coverage) utilizando o `monocart-reporter`.
-- **Relatório HTML**: Disponível em `playwright-report/index.html` após a execução.
-- **Cobertura**: Detalhes em `coverage/html/index.html`.
-- **E2E Roadmap**: Documentado em [docs/test-roadmap.md](file:///c:/Users/Jonathan/Documents/Developer/GitHub/Tabatine/docs/test-roadmap.md).
+### 📊 Cobertura e Relatórios (GitHub Pages)
+A suíte de testes E2E gera relatórios automáticos de cobertura de código (V8 Coverage) utilizando o `monocart-reporter`. Os resultados da branch `main` e `develop` são publicados automaticamente:
+- **Relatório de Testes (Playwright)**: [https://jonathanbenicio.github.io/Tabatine/](https://jonathanbenicio.github.io/Tabatine/)
+- **Relatório de Cobertura (Monocart)**: [https://jonathanbenicio.github.io/Tabatine/coverage/](https://jonathanbenicio.github.io/Tabatine/coverage/)
+- **E2E Roadmap**: Documentado em [docs/test-roadmap.md](docs/test-roadmap.md).
 
 ## 📮 Postman
 
