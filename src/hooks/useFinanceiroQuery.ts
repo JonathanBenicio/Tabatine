@@ -12,16 +12,22 @@ export const useFinanceiroQuery = (
   type: 'pagar' | 'receber',
   page: number,
   search: string,
+  sorting: any[] = [],
   enabled: boolean = true
 ) => {
   return useQuery<FetchFinanceiroResponse>({
-    queryKey: ['financeiro', type, page, search],
+    queryKey: ['financeiro', type, page, search, sorting],
     enabled: enabled,
     queryFn: async () => {
+      const sortField = sorting.length > 0 ? sorting[0].id : 'data_vencimento';
+      const sortOrder = sorting.length > 0 ? (sorting[0].desc ? 'desc' : 'asc') : 'asc';
+      
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '10',
         search: search,
+        sortField,
+        sortOrder,
       });
 
       const response = await fetch(`/api/supabase/financeiro/${type}?${params}`);

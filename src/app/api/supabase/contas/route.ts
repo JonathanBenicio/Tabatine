@@ -19,6 +19,8 @@ export async function GET(req: Request) {
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
+    const sortField = searchParams.get('sortField') || 'descricao';
+    const sortOrder = searchParams.get('sortOrder') || 'asc';
     
     let query = supabase
       .from('contas_corrente')
@@ -42,7 +44,7 @@ export async function GET(req: Request) {
     }
 
     const { data, error, count } = await query
-      .order('descricao', { ascending: true })
+      .order(sortField, { ascending: sortOrder === 'asc' })
       .range(from, to);
 
     if (error) throw error;

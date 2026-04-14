@@ -19,6 +19,9 @@ export async function GET(request: NextRequest) {
 
     const offset = (page - 1) * limit;
 
+    const sortField = searchParams.get('sortField') || 'codigo_banco';
+    const sortOrder = searchParams.get('sortOrder') || 'asc';
+
     let query = supabase.from('bancos').select('*', { count: 'exact' });
 
     if (omieId) {
@@ -28,7 +31,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { data, count, error } = await query
-      .order('codigo_banco', { ascending: true })
+      .order(sortField, { ascending: sortOrder === 'asc' })
       .range(offset, offset + limit - 1);
 
     if (error) throw error;

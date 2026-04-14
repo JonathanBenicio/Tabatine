@@ -9,14 +9,19 @@ interface FetchContasResponse {
   currentPage: number
 }
 
-export const useContasCorrentesQuery = (page: number, search: string) => {
+export const useContasCorrentesQuery = (page: number, search: string, sorting: any[] = []) => {
   return useQuery<FetchContasResponse>({
-    queryKey: ['contas-correntes', page, search],
+    queryKey: ['contas-correntes', page, search, sorting],
     queryFn: async () => {
+      const sortField = sorting.length > 0 ? sorting[0].id : 'descricao';
+      const sortOrder = sorting.length > 0 ? (sorting[0].desc ? 'desc' : 'asc') : 'asc';
+      
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '10',
-        search: search
+        search: search,
+        sortField,
+        sortOrder
       })
       const response = await fetch(`/api/supabase/contas?${params}`)
       const data = await response.json()
