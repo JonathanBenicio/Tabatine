@@ -45,18 +45,8 @@ test.describe('Módulo: Configurações de Apoio', () => {
         // Deve restaurar algum dado (se existir)
       });
 
-      // 3. ORDENAÇÃO (Mapeia a 2ª coluna geralmente descritiva)
-      test(`3.1 deve permitir ordenação (Sorting Pillar)`, async ({ page }) => {
-        const firstHeader = page.locator('th').filter({ has: page.locator('button') }).first();
-        if (await firstHeader.isVisible()) {
-          await firstHeader.click({ force: true });
-          await page.waitForTimeout(800);
-          await expect(firstHeader.locator('svg')).toBeVisible({ timeout: 10000 });
-        }
-      });
-
-      // 4. PAGINAÇÃO
-      test(`4.1 deve permitir paginação se disponível (Pagination Pillar)`, async ({ page }) => {
+      // 3. PAGINAÇÃO E NAVEGAÇÃO
+      test(`3.1 deve permitir paginação se disponível (Pagination Pillar)`, async ({ page }) => {
         const nextButton = page.getByRole('button', { name: /próxima/i });
         if (await nextButton.isVisible() && await nextButton.isEnabled()) {
           await nextButton.click();
@@ -65,13 +55,23 @@ test.describe('Módulo: Configurações de Apoio', () => {
         }
       });
 
-      // 5. DRILL-DOWN
+      // 4. ORDENAÇÃO
+      test(`4.1 deve permitir ordenação (Sorting Pillar)`, async ({ page }) => {
+        const firstHeader = page.locator('th').filter({ has: page.locator('button') }).first();
+        if (await firstHeader.isVisible()) {
+          await firstHeader.click({ force: true });
+          await page.waitForTimeout(800);
+          await expect(firstHeader.locator('svg')).toBeVisible({ timeout: 10000 });
+        }
+      });
+
+      // 5. DRILL-DOWN E DETALHES
       test(`5.1 deve navegar para detalhes e permitir voltar (Drill-down Pillar)`, async ({ page }) => {
         const rows = page.locator('tbody tr:not(.animate-pulse)');
         if (await rows.count() === 0) return;
 
         const firstRow = rows.first();
-        const viewLink = firstRow.locator('a[title*="Detalhes"], button[title*="Detalhes"]').first();
+        const viewLink = firstRow.locator('[title="Abrir Detalhes"]').first();
         
         if (await viewLink.isVisible()) {
           await viewLink.click({ force: true });

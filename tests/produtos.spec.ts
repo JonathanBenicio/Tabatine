@@ -68,25 +68,10 @@ test.describe('Módulo: Produtos', () => {
   });
 
   // ─────────────────────────────────────────────────────────
-  // 3. ORDENAÇÃO (SORTING)
+  // 3. PAGINAÇÃO E NAVEGAÇÃO
   // ─────────────────────────────────────────────────────────
 
-  test('3.1 deve ordenar por Nome do Produto ao clicar no cabeçalho', async ({ page }) => {
-    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
-
-    const headerNome = page.getByRole('columnheader', { name: /nome do produto/i }).first();
-    await headerNome.click({ force: true });
-    await page.waitForTimeout(800);
-
-    await expect(headerNome.locator('svg')).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
-  });
-
-  // ─────────────────────────────────────────────────────────
-  // 4. PAGINAÇÃO
-  // ─────────────────────────────────────────────────────────
-
-  test('4.1 deve desabilitar "Anterior" na pág 1 e avançar paginação', async ({ page }) => {
+  test('3.1 deve desabilitar "Anterior" na pág 1 e avançar paginação', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
     const prevButton = page.getByRole('button', { name: /anterior/i });
@@ -101,6 +86,21 @@ test.describe('Módulo: Produtos', () => {
       await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
       await expect(page.getByRole('button', { name: /anterior/i })).toBeEnabled();
     }
+  });
+
+  // ─────────────────────────────────────────────────────────
+  // 4. ORDENAÇÃO (SORTING)
+  // ─────────────────────────────────────────────────────────
+
+  test('4.1 deve ordenar por Nome do Produto ao clicar no cabeçalho', async ({ page }) => {
+    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
+
+    const headerNome = page.getByRole('columnheader', { name: /nome do produto/i }).first();
+    await headerNome.click({ force: true });
+    await page.waitForTimeout(800);
+
+    await expect(headerNome.locator('svg')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
   });
 
   // ─────────────────────────────────────────────────────────
@@ -137,7 +137,7 @@ test.describe('Módulo: Produtos', () => {
   });
 
   // ─────────────────────────────────────────────────────────
-  // 6. REFRESH
+  // 6. AÇÕES AUXILIARES
   // ─────────────────────────────────────────────────────────
 
   test('6.1 deve recarregar dados via botão de refresh', async ({ page }) => {

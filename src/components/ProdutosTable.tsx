@@ -17,6 +17,8 @@ import {
   CheckCircle2,
   Settings2,
   ChevronDown,
+  ChevronUp,
+  ChevronsUpDown,
   X
 } from 'lucide-react';
 import Pagination from './Pagination';
@@ -376,14 +378,13 @@ export default function ProdutosTable() {
                   >
                     <div className={`flex items-center gap-2 ${header.column.columnDef.meta?.align === 'right' ? 'justify-end' : header.column.columnDef.meta?.align === 'center' ? 'justify-center' : ''}`}>
                       {flexRender(header.column.columnDef.header, header.getContext())}
-                      {header.column.getCanSort() && (
-                        <div className="text-blue-500 font-bold transition-colors">
-                          {{
-                            asc: <span>↑</span>,
-                            desc: <span>↓</span>,
-                          }[header.column.getIsSorted() as string] ?? null}
-                        </div>
-                      )}
+                      {header.column.getIsSorted() === 'asc' ? (
+                        <ChevronUp className="w-3 h-3 text-blue-500" />
+                      ) : header.column.getIsSorted() === 'desc' ? (
+                        <ChevronDown className="w-3 h-3 text-blue-500" />
+                      ) : header.column.getCanSort() ? (
+                        <ChevronsUpDown className="w-3 h-3 text-slate-300 dark:text-zinc-700 opacity-20 group-hover:opacity-100 transition-opacity" />
+                      ) : null}
                     </div>
                   </th>
                 ))}

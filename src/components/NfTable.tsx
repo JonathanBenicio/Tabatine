@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { useNfStore, NfCadastroFlat } from '@/store/useNfStore';
-import { Search, FileText, AlertCircle, RefreshCw, Eye, CheckCircle2, XCircle, Clock, Hash, User, ShieldCheck, DollarSign, Ban } from 'lucide-react';
+import { Search, FileText, AlertCircle, RefreshCw, Eye, CheckCircle2, XCircle, Clock, Hash, User, ShieldCheck, DollarSign, Ban, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import Pagination from './Pagination';
 import Link from 'next/link';
@@ -259,10 +259,14 @@ export default function NfTable() {
                   >
                     <div className={`flex items-center gap-2 ${header.column.columnDef.meta?.align === 'right' ? 'justify-end' : header.column.columnDef.meta?.align === 'center' ? 'justify-center' : ''}`}>
                       {flexRender(header.column.columnDef.header, header.getContext())}
-                      {{
-                        asc: <span className="text-blue-500">↑</span>,
-                        desc: <span className="text-blue-500">↓</span>,
-                      }[header.column.getIsSorted() as string] ?? null}
+                      {header.column.getCanSort() && (
+                        <div className="text-slate-300 dark:text-zinc-700">
+                          {{
+                            asc: <ChevronUp size={12} className="text-blue-500" />,
+                            desc: <ChevronDown size={12} className="text-blue-500" />,
+                          }[header.column.getIsSorted() as string] ?? <ChevronsUpDown size={12} className="opacity-0 group-hover:opacity-100" />}
+                        </div>
+                      )}
                     </div>
                   </th>
                 ))}

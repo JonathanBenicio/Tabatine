@@ -17,7 +17,10 @@ import {
   ArrowDown,
   FileDown,
   Settings2,
-  X
+  X,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown
 } from 'lucide-react';
 import { format, parseISO, startOfYear, endOfYear, startOfMonth, endOfMonth, subDays, startOfDay, endOfDay } from 'date-fns';
 import { useRouter } from 'next/navigation';
@@ -548,14 +551,13 @@ export default function VendasTable() {
                             onClick={header.column.getToggleSortingHandler()}
                           >
                             {flexRender(header.column.columnDef.header, header.getContext())}
-                            {header.column.getCanSort() && (
-                              <div className="text-orange-500 font-bold transition-colors">
-                                {{
-                                  asc: <span>↑</span>,
-                                  desc: <span>↓</span>,
-                                }[header.column.getIsSorted() as string] ?? null}
-                              </div>
-                            )}
+                            {header.column.getIsSorted() === 'asc' ? (
+                              <ChevronUp className="w-3 h-3 text-orange-500" />
+                            ) : header.column.getIsSorted() === 'desc' ? (
+                              <ChevronDown className="w-3 h-3 text-orange-500" />
+                            ) : header.column.getCanSort() ? (
+                              <ChevronsUpDown className="w-3 h-3 text-slate-400 group-hover/header:text-orange-500 opacity-30 group-hover/header:opacity-100 transition-all" />
+                            ) : null}
                           </div>
                           
                           {header.column.getCanFilter() && showColumnFilters && (

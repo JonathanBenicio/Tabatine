@@ -82,26 +82,10 @@ test.describe('Módulo: Notas Fiscais', () => {
   });
 
   // ─────────────────────────────────────────────────────────
-  // 3. ORDENAÇÃO (SORTING)
+  // 3. PAGINAÇÃO E NAVEGAÇÃO
   // ─────────────────────────────────────────────────────────
 
-  test('3.1 deve ordenar por Emissão ao clicar no cabeçalho', async ({ page }) => {
-    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
-
-    const headerEmissao = page.getByRole('columnheader', { name: /emissão/i }).first();
-    await headerEmissao.click({ force: true });
-    await page.waitForTimeout(800);
-
-    // Ícone de ordenação deve aparecer
-    await expect(headerEmissao.locator('svg')).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
-  });
-
-  // ─────────────────────────────────────────────────────────
-  // 4. PAGINAÇÃO
-  // ─────────────────────────────────────────────────────────
-
-  test('4.1 deve desabilitar "Anterior" na pág 1 e avançar paginação', async ({ page }) => {
+  test('3.1 deve desabilitar "Anterior" na pág 1 e avançar paginação', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
     const prevButton = page.getByRole('button', { name: /anterior/i });
@@ -119,7 +103,7 @@ test.describe('Módulo: Notas Fiscais', () => {
     }
   });
 
-  test('4.2 deve manter o filtro de busca ao trocar de página', async ({ page }) => {
+  test('3.2 deve manter o filtro de busca ao trocar de página', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
     const searchInput = page.getByPlaceholder(/localizar nf-e/i);
@@ -135,7 +119,23 @@ test.describe('Módulo: Notas Fiscais', () => {
   });
 
   // ─────────────────────────────────────────────────────────
-  // 5. NAVEGAÇÃO E DRILL-DOWN
+  // 4. ORDENAÇÃO (SORTING)
+  // ─────────────────────────────────────────────────────────
+
+  test('4.1 deve ordenar por Emissão ao clicar no cabeçalho', async ({ page }) => {
+    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
+
+    const headerEmissao = page.getByRole('columnheader', { name: /emissão/i }).first();
+    await headerEmissao.click({ force: true });
+    await page.waitForTimeout(800);
+
+    // Ícone de ordenação deve aparecer
+    await expect(headerEmissao.locator('svg')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
+  });
+
+  // ─────────────────────────────────────────────────────────
+  // 5. DRILL-DOWN E DETALHES
   // ─────────────────────────────────────────────────────────
 
   test('5.1 deve navegar para tela de detalhes e exibir dados técnicos', async ({ page }) => {
@@ -171,7 +171,7 @@ test.describe('Módulo: Notas Fiscais', () => {
   });
 
   // ─────────────────────────────────────────────────────────
-  // 6. REFRESH
+  // 6. AÇÕES AUXILIARES (REFRESH / EXPORT)
   // ─────────────────────────────────────────────────────────
 
   test('6.1 deve recarregar dados via botão de refresh', async ({ page }) => {

@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { useVendedoresStore, Vendedor } from '@/store/useVendedoresStore';
-import { Search, UserCheck, AlertCircle, RefreshCw, Eye, Mail, Percent, Ban, CheckCircle2 } from 'lucide-react';
+import { Search, UserCheck, AlertCircle, RefreshCw, Eye, Mail, Percent, Ban, CheckCircle2, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import Pagination from './Pagination';
 import { useVendedoresQuery } from '@/hooks/useVendedoresQuery';
 import { useRouter } from 'next/navigation';
@@ -208,11 +208,11 @@ export default function VendedoresTable() {
                       {header.column.getCanSort() && (
                         <div className="flex flex-col opacity-20 group-hover/header:opacity-100 transition-opacity">
                           {header.column.getIsSorted() === 'asc' ? (
-                            <div className="text-blue-500 text-[14px] font-bold">↑</div>
+                            <ChevronUp className="w-3 h-3 text-blue-500" />
                           ) : header.column.getIsSorted() === 'desc' ? (
-                            <div className="text-blue-500 text-[14px] font-bold">↓</div>
+                            <ChevronDown className="w-3 h-3 text-blue-500" />
                           ) : (
-                            <div className="text-slate-400 text-[10px] grayscale group-hover/header:grayscale-0">⇅</div>
+                            <ChevronsUpDown className="w-3 h-3 text-slate-400 grayscale group-hover/header:grayscale-0" />
                           )}
                         </div>
                       )}

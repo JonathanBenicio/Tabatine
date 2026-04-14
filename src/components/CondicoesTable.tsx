@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo } from 'react';
 import { useCondicoesStore, CondicaoPlana } from '@/store/useCondicoesStore';
-import { CreditCard, CalendarDays, Eye, RefreshCw, AlertCircle, Ban, CheckCircle2 } from 'lucide-react';
+import { CreditCard, CalendarDays, Eye, RefreshCw, AlertCircle, Ban, CheckCircle2, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
   useReactTable,
@@ -200,7 +200,17 @@ export default function CondicoesTable() {
                     key={header.id} 
                     className={`py-5 px-6 text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] font-sans ${header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''}`}
                   >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    <div className="flex items-center gap-2">
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.column.getCanSort() && (
+                        <div className="text-slate-300 dark:text-zinc-700">
+                          {{
+                            asc: <ChevronUp size={12} className="text-blue-500" />,
+                            desc: <ChevronDown size={12} className="text-blue-500" />,
+                          }[header.column.getIsSorted() as string] ?? <ChevronsUpDown size={12} className="opacity-0 group-hover:opacity-100" />}
+                        </div>
+                      )}
+                    </div>
                   </th>
                 ))}
               </tr>
