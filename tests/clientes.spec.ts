@@ -154,10 +154,45 @@ test.describe('Módulo: Clientes', () => {
   });
 
   // ─────────────────────────────────────────────────────────
-  // 4. NAVEGAÇÃO PARA DETALHES (DRILL-DOWN)
+  // 4. ORDENAÇÃO (SORTING)
   // ─────────────────────────────────────────────────────────
 
-  test('4.1 deve navegar para página de detalhes ao clicar em "Ver Perfil"', async ({ page }) => {
+  test('4.1 deve ordenar ao clicar no cabeçalho (Empresa)', async ({ page }) => {
+    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
+
+    const headerEmpresa = page.getByRole('columnheader', { name: /empresa/i }).first();
+    await expect(headerEmpresa).toBeVisible();
+
+    // Primeiro clique: ordena ASC
+    await headerEmpresa.click({ force: true });
+    await page.waitForTimeout(800);
+
+    // Ícone de ordenação deve estar visível
+    const sortIcon = headerEmpresa.locator('svg');
+    await expect(sortIcon).toBeVisible({ timeout: 10000 });
+
+    // A tabela deve continuar exibindo dados
+    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test('4.2 deve inverter a ordenação ao clicar novamente', async ({ page }) => {
+    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
+
+    const headerEmpresa = page.getByRole('columnheader', { name: /empresa/i }).first();
+    
+    await headerEmpresa.click({ force: true }); // ASC
+    await page.waitForTimeout(500);
+    await headerEmpresa.click({ force: true }); // DESC
+    await page.waitForTimeout(800);
+
+    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
+  });
+
+  // ─────────────────────────────────────────────────────────
+  // 5. NAVEGAÇÃO PARA DETALHES (DRILL-DOWN)
+  // ─────────────────────────────────────────────────────────
+
+  test('5.1 deve navegar para página de detalhes ao clicar em "Ver Perfil"', async ({ page }) => {
     const firstRow = page.locator('tbody tr:not(.animate-pulse)').first();
     await expect(firstRow).toBeVisible({ timeout: 20000 });
 
@@ -174,7 +209,7 @@ test.describe('Módulo: Clientes', () => {
     await expect(page).toHaveURL(/\/clientes\/\d+/, { timeout: 10000 });
   });
 
-  test('4.2 a página de detalhes deve exibir informações do cliente', async ({ page }) => {
+  test('5.2 a página de detalhes deve exibir informações do cliente', async ({ page }) => {
     const firstRow = page.locator('tbody tr:not(.animate-pulse)').first();
     await expect(firstRow).toBeVisible({ timeout: 20000 });
     await firstRow.hover();
@@ -193,7 +228,7 @@ test.describe('Módulo: Clientes', () => {
     await expect(page.getByText(/últimos pedidos/i)).toBeVisible();
   });
 
-  test('4.3 o botão Voltar na página de detalhes deve retornar à listagem', async ({ page }) => {
+  test('5.3 o botão Voltar na página de detalhes deve retornar à listagem', async ({ page }) => {
     const firstRow = page.locator('tbody tr:not(.animate-pulse)').first();
     await expect(firstRow).toBeVisible({ timeout: 20000 });
     await firstRow.hover();
@@ -215,10 +250,10 @@ test.describe('Módulo: Clientes', () => {
   });
 
   // ─────────────────────────────────────────────────────────
-  // 5. AÇÕES AUXILIARES
+  // 6. AÇÕES AUXILIARES
   // ─────────────────────────────────────────────────────────
 
-  test('5.1 deve atualizar dados ao clicar no botão de refresh', async ({ page }) => {
+  test('6.1 deve atualizar dados ao clicar no botão de refresh', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
     // Botão de refresh - tem título "Atualizar dados"
