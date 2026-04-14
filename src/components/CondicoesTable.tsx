@@ -131,7 +131,7 @@ export default function CondicoesTable() {
         <div className="flex items-center gap-3 w-full lg:w-auto">
           <TableSearch
             value={searchTerm}
-            onChange={setSearchTerm}
+            onChange={(val) => setSearchTerm(val)}
             placeholder="Pesquisar condições..."
             isLoading={loading}
           />

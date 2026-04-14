@@ -7,16 +7,7 @@ test.describe('Dashboard de Desempenho', () => {
   });
 
   test('deve renderizar o banner e o título principal', async ({ page }) => {
-    // Diagnóstico se falhar
-    try {
-      await expect(page.getByRole('heading', { name: /dashboard de desempenho/i }).first()).toBeVisible({ timeout: 15000 });
-    } catch (e) {
-      console.log('FALHA Dashboard: URL atual é', page.url());
-      if (page.url().includes('/auth/login')) {
-         console.log('ALERTA: Redirecionado para Login! Sessão pode estar inválida.');
-      }
-      throw e;
-    }
+    await expect(page.getByRole('heading', { name: /dashboard de desempenho/i }).first()).toBeVisible({ timeout: 15000 });
     await expect(page.getByText(/acompanhe o faturamento|resumo/i).first()).toBeVisible();
   });
 
@@ -67,7 +58,7 @@ test.describe('Dashboard de Desempenho', () => {
     await prevBtn.click();
     await page.waitForTimeout(500);
     await expect(weekLabel).toBeVisible();
-    
+
     await nextBtn.click();
     await page.waitForTimeout(500);
     await expect(weekLabel).toBeVisible();
