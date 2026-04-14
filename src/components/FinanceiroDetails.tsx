@@ -10,7 +10,7 @@ import { DetailNotFound } from '@/components/ui/DetailNotFound';
 import { DetailLoading } from '@/components/ui/DetailLoading';
 import { 
   Receipt, User, Calendar, 
-  DollarSign, Clock, Shield, 
+  Clock, Shield, 
   ArrowUpRight, ArrowDownLeft 
 } from 'lucide-react';
 

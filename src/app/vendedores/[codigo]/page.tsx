@@ -2,20 +2,22 @@
 
 import React, { useEffect, useState } from 'react';
 import { useVendedoresStore, Vendedor } from '@/store/useVendedoresStore';
+import { VendaPlana } from '@/store/useVendasStore';
 import { useParams, useRouter } from 'next/navigation';
 import { useVendasQuery } from '@/hooks/useVendasQuery';
 import {
-  ArrowLeft, UserCheck, Mail, Percent, 
-  AlertCircle, RefreshCw, Database, 
-  Info, ShieldCheck, User,
-  Ban, CheckCircle2, History, TrendingUp,
-  DollarSign, Briefcase, Hash, ShoppingCart
+  ArrowLeft, User, TrendingUp, DollarSign, 
+  Briefcase, Percent, ShoppingCart, 
+  Database, ShieldCheck, RefreshCw, AlertCircle,
+  Ban, CheckCircle2, LucideProps
 } from 'lucide-react';
+
+type LucideIcon = React.ComponentType<LucideProps>;
 
 // ── Reusable Components ────────────────────────────────────
 
 function SectionCard({ icon: Icon, iconColor, title, children }: {
-  icon: any; iconColor: string; title: string; children: React.ReactNode;
+  icon: LucideIcon; iconColor: string; title: string; children: React.ReactNode;
 }) {
   return (
     <div className="p-6 rounded-2xl bg-zinc-900/30 border border-zinc-800/50 backdrop-blur-xl">
@@ -24,15 +26,6 @@ function SectionCard({ icon: Icon, iconColor, title, children }: {
         {title}
       </h2>
       {children}
-    </div>
-  );
-}
-
-function InfoRow({ label, value, className = 'text-zinc-300' }: { label: string; value: React.ReactNode; className?: string }) {
-  return (
-    <div className="flex justify-between items-center py-3 border-b border-zinc-800/30 last:border-0">
-      <span className="text-xs text-zinc-500 shrink-0">{label}</span>
-      <span className={`text-sm font-medium text-right ml-4 ${className}`}>{value || '--'}</span>
     </div>
   );
 }
@@ -49,7 +42,7 @@ function DataField({ label, value, className = 'text-zinc-300', large = false }:
 }
 
 function StatCard({ icon: Icon, iconBg, label, value, subValue }: {
-  icon: any; iconBg: string; label: string; value: string; subValue?: string;
+  icon: LucideIcon; iconBg: string; label: string; value: string; subValue?: string;
 }) {
   return (
     <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/50 flex items-center gap-4">
@@ -82,7 +75,7 @@ function RecentOrdersSection({ vendedorOmieId }: { vendedorOmieId: number }) {
         </div>
       ) : orders.length > 0 ? (
         <div className="space-y-2">
-          {orders.map((order: any) => (
+          {orders.map((order) => (
             <div 
               key={order.id_linha}
               onClick={() => router.push(`/vendas?search=${order.numeroPedido}`)}
@@ -182,7 +175,7 @@ export default function VendedorDetailsPage() {
   if (!vendedor) return null;
 
   const totalVendasCount = vendasData?.totalRegistros || 0;
-  const totalVolume = (vendasData?.vendas || []).reduce((acc: number, curr: any) => acc + curr.valorTotal, 0);
+  const totalVolume = (vendasData?.vendas || []).reduce((acc: number, curr: VendaPlana) => acc + curr.valorTotal, 0);
   const ticketMedio = totalVendasCount > 0 ? totalVolume / totalVendasCount : 0;
 
   return (

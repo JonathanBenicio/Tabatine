@@ -25,8 +25,8 @@ export async function GET(
     }
 
     return NextResponse.json({ forma });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API /formas-pagamento/[id] Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: (error instanceof Error ? (error instanceof Error ? error.message : 'Internal Server Error') : 'Internal Server Error') }, { status: 500 });
   }
 }

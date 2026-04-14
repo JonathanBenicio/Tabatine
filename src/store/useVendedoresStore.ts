@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { mapSupabaseToVendedores, mapSupabaseToVendedor } from '@/lib/vendedores-mapper'
-import { SortingState } from '@tanstack/react-table'
+import { SortingState, Updater } from '@tanstack/react-table'
 
 export interface Vendedor {
   codigo: number
@@ -24,7 +24,7 @@ interface VendedoresStoreState {
   sorting: SortingState
   setSearchTerm: (term: string) => void
   setCurrentPage: (page: number) => void
-  setSorting: (updater: any) => void
+  setSorting: (updater: Updater<SortingState>) => void
   fetchVendedores: (page?: number, search?: string) => Promise<void>
   fetchVendedorByCodigo: (codigo: number) => Promise<Vendedor | null>
 }
@@ -43,7 +43,7 @@ export const useVendedoresStore = create<VendedoresStoreState>((set, get) => ({
   sorting: [{ id: 'nome', desc: false }],
   setSearchTerm: (term: string) => set({ searchTerm: term, currentPage: 1 }),
   setCurrentPage: (page: number) => set({ currentPage: page }),
-  setSorting: (updaterOrValue: any) => {
+  setSorting: (updaterOrValue: Updater<SortingState>) => {
     const nextState = typeof updaterOrValue === 'function' 
       ? updaterOrValue(get().sorting) 
       : updaterOrValue;

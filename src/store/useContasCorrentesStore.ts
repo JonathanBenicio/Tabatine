@@ -1,5 +1,6 @@
-import { create } from 'zustand'
+import { create } from 'zustand';
 import { mapSupabaseToContasCorrentes, mapSupabaseToContaCorrente } from '@/lib/contas-mapper';
+import { SortingState } from '@tanstack/react-table';
 
 export interface ContaCorrente {
   nCodCC: number
@@ -25,11 +26,11 @@ interface ContasCorrentesStoreState {
   totalRegistros: number
   currentPage: number
   searchTerm: string
-  sorting: any[]
+  sorting: SortingState
   setSearchTerm: (term: string) => void
   setCurrentPage: (page: number) => void
-  setSorting: (sorting: any[]) => void
-  fetchContas: (page?: number, search?: string, sorting?: any[]) => Promise<void>
+  setSorting: (sorting: SortingState) => void
+  fetchContas: (page?: number, search?: string, sorting?: SortingState) => Promise<void>
   fetchContaByCodCC: (nCodCC: number) => Promise<ContaCorrente | null>
 }
 
@@ -47,9 +48,9 @@ export const useContasCorrentesStore = create<ContasCorrentesStoreState>((set, g
   sorting: [{ id: 'descricao', desc: false }],
   setSearchTerm: (term: string) => set({ searchTerm: term }),
   setCurrentPage: (page: number) => set({ currentPage: page }),
-  setSorting: (sorting: any[]) => set({ sorting }),
+  setSorting: (sorting: SortingState) => set({ sorting }),
 
-  fetchContas: async (page = 1, search, sorting) => {
+  fetchContas: async (page = 1, search, sorting: SortingState | undefined) => {
     const currentSearch = search !== undefined ? search : get().searchTerm
     const currentSorting = sorting !== undefined ? sorting : get().sorting
     set({ loading: true, error: null })
@@ -80,8 +81,8 @@ export const useContasCorrentesStore = create<ContasCorrentesStoreState>((set, g
         currentPage: data.pagina || page,
         loading: false,
       })
-    } catch (error: any) {
-      set({ error: error.message, loading: false })
+    } catch (error: unknown) {
+      set({ error: (error as Error).message, loading: false })
     }
   },
 
@@ -117,8 +118,8 @@ export const useContasCorrentesStore = create<ContasCorrentesStoreState>((set, g
         }
         set({ loading: false })
         return null
-      } catch (error: any) {
-        set({ error: error.message, loading: false })
+      } catch (error: unknown) {
+        set({ error: (error as Error).message, loading: false })
         return null
       } finally {
         fetchingPromises.delete(nCodCC);

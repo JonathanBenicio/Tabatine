@@ -37,8 +37,8 @@ export async function GET(request: NextRequest) {
       pagina: page
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API Error (Financeiro Pagar):', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: (error instanceof Error ? (error instanceof Error ? error.message : 'Internal Server Error') : 'Internal Server Error') }, { status: 500 });
   }
 }

@@ -4,7 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { useVendasStore, VendaPlana } from '@/store/useVendasStore';
 import { useLookupStore } from '@/store/useLookupStore';
 import { 
-  Search, 
+  Search,
   TrendingUp, 
   AlertCircle, 
   RefreshCw, 
@@ -12,9 +12,6 @@ import {
   Package, 
   User, 
   Filter,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
   FileDown,
   Settings2,
   X,
@@ -38,6 +35,36 @@ import { TableSearch } from './ui/TableSearch';
 import { TableSummaryCard } from './ui/TableSummaryCard';
 
 const columnHelper = createColumnHelper<VendaPlana>();
+
+const formatCurrency = (val: number) => {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
+};
+
+const formatDate = (dateStr: string) => {
+  if (!dateStr || dateStr === '--') return '--';
+  try {
+    if (dateStr.includes('/')) return dateStr; 
+    return format(parseISO(dateStr), 'dd/MM/yyyy');
+  } catch {
+    return dateStr;
+  }
+};
+
+const etapaMap: Record<string, { label: string; color: string }> = {
+  '10': { label: 'Pedido', color: 'text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(59,130,246,0.1)]' },
+  '20': { label: 'Separar', color: 'text-yellow-600 dark:text-yellow-400 bg-yellow-500/10 border-yellow-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(234,179,8,0.1)]' },
+  '30': { label: 'Faturar', color: 'text-purple-600 dark:text-purple-400 bg-purple-500/10 border-purple-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(168,85,247,0.1)]' },
+  '50': { label: 'Faturado', color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(16,185,129,0.1)]' },
+  '60': { label: 'Entregue', color: 'text-teal-600 dark:text-teal-400 bg-teal-500/10 border-teal-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(20,184,166,0.1)]' },
+  '70': { label: 'Cancelado', color: 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(244,63,94,0.1)]' },
+  '80': { label: 'Devolvido', color: 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(239,68,68,0.1)]' },
+};
+
+const formatEtapa = (etapa: string) => {
+  const mapped = etapaMap[etapa];
+  if (mapped) return mapped;
+  return { label: etapa || 'Pendente', color: 'text-slate-600 dark:text-zinc-400 bg-slate-100 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700' };
+};
 
 export default function VendasTable() {
   const router = useRouter();
@@ -63,127 +90,82 @@ export default function VendasTable() {
     filters
   );
 
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
-  };
-
-  const formatDate = (dateStr: string) => {
-    if (!dateStr || dateStr === '--') return '--';
-    try {
-      if (dateStr.includes('/')) return dateStr; 
-      return format(parseISO(dateStr), 'dd/MM/yyyy');
-    } catch {
-      return dateStr;
-    }
-  };
-
-  const etapaMap: Record<string, { label: string; color: string }> = {
-    '10': { label: 'Pedido', color: 'text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(59,130,246,0.1)]' },
-    '20': { label: 'Separar', color: 'text-yellow-600 dark:text-yellow-400 bg-yellow-500/10 border-yellow-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(234,179,8,0.1)]' },
-    '30': { label: 'Faturar', color: 'text-purple-600 dark:text-purple-400 bg-purple-500/10 border-purple-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(168,85,247,0.1)]' },
-    '50': { label: 'Faturado', color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(16,185,129,0.1)]' },
-    '60': { label: 'Entregue', color: 'text-teal-600 dark:text-teal-400 bg-teal-500/10 border-teal-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(20,184,166,0.1)]' },
-    '70': { label: 'Cancelado', color: 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(244,63,94,0.1)]' },
-    '80': { label: 'Devolvido', color: 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(239,68,68,0.1)]' },
-  };
-
-  const formatEtapa = (etapa: string) => {
-    const mapped = etapaMap[etapa];
-    if (mapped) return mapped;
-    return { label: etapa || 'Pendente', color: 'text-slate-600 dark:text-zinc-400 bg-slate-100 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700' };
-  };
-
   const columns = useMemo(() => [
-    {
+    columnHelper.accessor('data', {
       header: '📅 DATA',
-      accessorKey: 'data',
-      cell: (info: any) => <span className="text-xs font-mono text-zinc-400">{formatDate(info.getValue())}</span>,
-    },
-    {
+      cell: (info) => <span className="text-xs font-mono text-zinc-400">{formatDate(info.getValue())}</span>,
+    }),
+    columnHelper.accessor('cliente', {
       header: '👥 CLIENTE',
-      accessorKey: 'cliente',
       id: 'cliente',
-      cell: (info: any) => (
+      cell: (info) => (
         <div className="flex items-center gap-2 group-hover/row:translate-x-1 transition-transform">
           <User size={12} className="text-slate-400 dark:text-zinc-600" />
           <span className="text-xs font-bold text-slate-900 dark:text-white group-hover/row:text-orange-500 dark:group-hover/row:text-orange-400 transition-colors">
-            {getClienteNome(info.getValue())}
+            {getClienteNome(info.getValue() || '')}
           </span>
         </div>
       ),
       minSize: 220,
-    },
-    {
+    }),
+    columnHelper.accessor('vendedor', {
       header: '👤 VENDEDOR',
-      accessorKey: 'vendedor',
-      cell: (info: any) => <span className="text-[11px] text-zinc-400 font-medium">{getVendedorNome(info.getValue())}</span>,
+      cell: (info) => <span className="text-[11px] text-zinc-400 font-medium">{getVendedorNome(info.getValue() || '')}</span>,
       minSize: 150,
-    },
-    {
+    }),
+    columnHelper.accessor('pedido', {
       header: '📦 PEDIDO',
-      accessorKey: 'pedido',
-      cell: (info: any) => <span className="text-[11px] font-black text-orange-500/80 bg-orange-500/5 px-2 py-0.5 rounded-lg border border-orange-500/10">#{info.getValue()}</span>,
-    },
-    {
+      cell: (info) => <span className="text-[11px] font-black text-orange-500/80 bg-orange-500/5 px-2 py-0.5 rounded-lg border border-orange-500/10">#{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('nf', {
       header: '📄 NF',
-      accessorKey: 'nf',
-      cell: (info: any) => <span className="text-[11px] text-zinc-500 font-mono">{info.getValue() || '---'}</span>,
-    },
-    {
+      cell: (info) => <span className="text-[11px] text-zinc-500 font-mono">{info.getValue() || '---'}</span>,
+    }),
+    columnHelper.accessor('produto', {
       header: '🛒 PRODUTO',
-      accessorKey: 'produto',
-      cell: (info: any) => (
+      cell: (info) => (
         <div className="flex items-center gap-2">
           <Package size={12} className="text-slate-400 dark:text-zinc-600" />
           <span className="text-xs font-medium text-slate-700 dark:text-zinc-300 truncate max-w-[180px]">{info.getValue()}</span>
         </div>
       ),
       minSize: 200,
-    },
-    {
+    }),
+    columnHelper.accessor('und', {
       header: '📦 UND',
-      accessorKey: 'und',
-      cell: (info: any) => <span className="text-[11px] font-bold text-zinc-500 uppercase">{info.getValue()}</span>,
-    },
-    {
+      cell: (info) => <span className="text-[11px] font-bold text-zinc-500 uppercase">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('valorVenda', {
       header: '💰 VALOR VENDA',
-      accessorKey: 'valorVenda',
-      cell: (info: any) => <span className="text-xs font-bold text-emerald-400">{formatCurrency(info.getValue())}</span>,
-    },
-    {
+      cell: (info) => <span className="text-xs font-bold text-emerald-400">{formatCurrency(info.getValue())}</span>,
+    }),
+    columnHelper.accessor('condPagto', {
       header: '💳 COND. PAGTO.',
-      accessorKey: 'condPagto',
-      cell: (info: any) => <span className="text-[11px] text-zinc-400 font-medium italic">{info.getValue()}</span>,
-    },
-    {
+      cell: (info) => <span className="text-[11px] text-zinc-400 font-medium italic">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('frete', {
       header: '🚚 FRETE',
-      accessorKey: 'frete',
-      cell: (info: any) => <span className="text-[11px] text-zinc-500">{formatCurrency(info.getValue())}</span>,
-    },
-    {
+      cell: (info) => <span className="text-[11px] text-zinc-500">{formatCurrency(info.getValue())}</span>,
+    }),
+    columnHelper.accessor('percComissao', {
       header: '📈 COMS. %',
-      accessorKey: 'percComissao',
-      cell: (info: any) => <span className="text-[11px] font-bold text-indigo-400">{info.getValue()}%</span>,
-    },
-    {
+      cell: (info) => <span className="text-[11px] font-bold text-indigo-400">{info.getValue()}%</span>,
+    }),
+    columnHelper.accessor('valorTotal', {
       header: '🎯 VALOR TOTAL',
-      accessorKey: 'valorTotal',
-      cell: (info: any) => <span className="text-xs font-black text-slate-900 dark:text-white">{formatCurrency(info.getValue())}</span>,
-    },
-    {
+      cell: (info) => <span className="text-xs font-black text-slate-900 dark:text-white">{formatCurrency(info.getValue())}</span>,
+    }),
+    columnHelper.accessor('formaPg', {
       header: '🏦 FORMA PG',
-      accessorKey: 'formaPg',
-      cell: (info: any) => <span className="text-[11px] text-zinc-400 uppercase tracking-tighter">{info.getValue()}</span>,
-    },
-    {
+      cell: (info) => <span className="text-[11px] text-zinc-400 uppercase tracking-tighter">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('banco', {
       header: '🏛️ BANCO',
-      accessorKey: 'banco',
-      cell: (info: any) => <span className="text-[10px] text-zinc-500 font-medium">{getContaNome(info.getValue())}</span>,
-    },
-    {
+      cell: (info) => <span className="text-[10px] text-zinc-500 font-medium">{getContaNome(info.getValue() || '')}</span>,
+    }),
+    columnHelper.accessor('vencimentoStatus', {
       header: '🚦 Status Venc.',
-      accessorKey: 'vencimentoStatus',
-      cell: (info: any) => {
+      cell: (info) => {
         const status = formatEtapa(info.getValue());
         return (
           <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-tighter border ${status.color}`}>
@@ -191,11 +173,11 @@ export default function VendasTable() {
           </span>
         );
       },
-    },
-    {
+    }),
+    columnHelper.display({
       id: 'actions',
       header: '⚡ AÇÕES',
-      cell: (info: any) => (
+      cell: (info) => (
         <button 
           onClick={() => router.push(`/vendas/${info.row.original.id_linha}`)}
           className="p-2 rounded-lg bg-slate-100 dark:bg-zinc-800/50 hover:bg-orange-500/10 dark:hover:bg-orange-500/20 text-slate-500 dark:text-zinc-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors border border-slate-200 dark:border-zinc-700/50 hover:border-orange-500/30 group"
@@ -204,9 +186,10 @@ export default function VendasTable() {
           <Eye size={16} className="group-hover:scale-110 transition-transform" />
         </button>
       ),
-    },
+    }),
   ], [getClienteNome, getVendedorNome, getContaNome, router]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: data?.vendas || [],
     columns,

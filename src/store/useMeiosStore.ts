@@ -6,7 +6,7 @@ export interface MeioPlano {
   id: string;
   codigo: string;
   descricao: string;
-  omieData?: any;
+  omieData?: Record<string, unknown>;
 }
 
 interface MeiosStoreState {
@@ -58,8 +58,8 @@ export const useMeiosStore = create<MeiosStoreState>((set, get) => ({
         currentPage: data.pagina || page,
         loading: false,
       });
-    } catch (error: any) {
-      set({ error: error.message, loading: false });
+    } catch (error: unknown) {
+      set({ error: (error as Error).message, loading: false });
     }
   },
 }));

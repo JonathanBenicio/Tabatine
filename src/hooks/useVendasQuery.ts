@@ -3,6 +3,7 @@ import { VendaPlana, VendasFilters } from '@/store/useVendasStore';
 import { useLookupStore } from '@/store/useLookupStore';
 import { mapOrderToFlatVendas } from '@/lib/vendas-mapper';
 import { SortingState, ColumnFiltersState } from '@tanstack/react-table';
+import { OmiePedidoVendaProduto } from '@/types/omie-raw';
 
 interface FetchVendasResponse {
   vendas: VendaPlana[];
@@ -54,14 +55,14 @@ export const useVendasQuery = (
         throw new Error(data.error || 'Failed to fetch Vendas');
       }
 
-      const rawPedidos = data.pedido_venda_produto || [];
+      const rawPedidos = (data.pedido_venda_produto || []) as OmiePedidoVendaProduto[];
       const lookupStore = useLookupStore.getState();
 
       const clientesMap: Record<number, string> = {};
       const vendedoresMap: Record<number, string> = {};
       const contasMap: Record<number, string> = {};
 
-      rawPedidos.forEach((ped: any) => {
+      rawPedidos.forEach((ped) => {
         if (ped.cabecalho?.codigo_cliente && ped.infoCadastro?.cliente_nome) {
           clientesMap[ped.cabecalho.codigo_cliente] = ped.infoCadastro.cliente_nome;
         }
@@ -78,7 +79,7 @@ export const useVendasQuery = (
       lookupStore.setContas(contasMap);
 
       const flatVendas: VendaPlana[] = [];
-      rawPedidos.forEach((ped: any) => {
+      rawPedidos.forEach((ped) => {
         flatVendas.push(...mapOrderToFlatVendas(ped));
       });
 

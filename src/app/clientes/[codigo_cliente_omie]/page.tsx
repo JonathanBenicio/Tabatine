@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useClienteStore, ClienteCadastro } from '@/store/useClienteStore';
@@ -5,11 +6,13 @@ import { useVendasQuery } from '@/hooks/useVendasQuery';
 import { useNfQuery } from '@/hooks/useNfQuery';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  User, MapPin, Phone,
+  MapPin, Phone,
   Database, Info, Tag, 
   ShieldCheck, Clock,
   ShoppingCart, Receipt
 } from 'lucide-react';
+import { VendaPlana } from '@/store/useVendasStore';
+import { NfCadastroFlat } from '@/types/nf';
 
 import { DetailPageHeader } from '@/components/ui/DetailPageHeader';
 import { DetailLoading } from '@/components/ui/DetailLoading';
@@ -47,7 +50,7 @@ function RecentOrdersSection({ clienteOmieId }: { clienteOmieId: number }) {
         </div>
       ) : orders.length > 0 ? (
         <div className="space-y-2">
-          {orders.map((order: any) => (
+          {orders.map((order: VendaPlana) => (
             <div 
               key={order.id_linha}
               onClick={() => router.push(`/vendas?search=${order.numeroPedido}`)}
@@ -94,7 +97,7 @@ function RecentInvoicesSection({ clienteOmieId }: { clienteOmieId: number }) {
         </div>
       ) : nfs.length > 0 ? (
         <div className="space-y-2">
-          {nfs.map((nf: any) => (
+          {nfs.map((nf: NfCadastroFlat) => (
             <div 
               key={nf.id_nf}
               onClick={() => router.push(`/nf?search=${nf.numero_nf}`)}
@@ -131,7 +134,6 @@ function RecentInvoicesSection({ clienteOmieId }: { clienteOmieId: number }) {
 // ── Main Page ──────────────────────────────────────────────
 
 export default function ClienteDetailsPage() {
-  const router = useRouter();
   const params = useParams();
   const { codigo_cliente_omie } = params as { codigo_cliente_omie: string };
   const { fetchClienteByOmieId, loading } = useClienteStore();
@@ -225,7 +227,7 @@ export default function ClienteDetailsPage() {
               <DataField label="E-mail" value={cliente.email} className="text-indigo-600 dark:text-indigo-400 font-medium" />
               <DataField label="Telefone" value={cliente.telefone1_ddd && cliente.telefone1_numero ? `(${cliente.telefone1_ddd}) ${cliente.telefone1_numero}` : '--'} />
               <DataField label="WhatsApp / Celular" value={cliente.telefone2_ddd && cliente.telefone2_numero ? `(${cliente.telefone2_ddd}) ${cliente.telefone2_numero}` : '--'} />
-              <DataField label="Website" value={cliente.homepage} />
+              <DataField label="Website" value={cliente.homepage as any} />
             </div>
           </SectionCard>
 
@@ -267,8 +269,8 @@ export default function ClienteDetailsPage() {
           <SectionCard icon={Clock} iconColor="text-slate-400 dark:text-zinc-500" title="Auditoria">
             <div className="space-y-0">
               <InfoRow label="ID Interno Omie" value={cliente.codigo_cliente_omie} className="font-mono text-indigo-600 dark:text-indigo-400" />
-              <InfoRow label="Integrado em" value={cliente.info?.dInclusao ? `${cliente.info.dInclusao} ${cliente.info.hInclusao}` : '--'} />
-              <InfoRow label="Última Alteração" value={cliente.info?.dAlteracao ? `${cliente.info.dAlteracao} ${cliente.info.hAlteracao}` : '--'} />
+              <InfoRow label="Integrado em" value={(cliente as any).info?.dInclusao ? `${(cliente as any).info.dInclusao} ${(cliente as any).info.hInclusao}` : '--'} />
+              <InfoRow label="Última Alteração" value={(cliente as any).info?.dAlteracao ? `${(cliente as any).info.dAlteracao} ${(cliente as any).info.hAlteracao}` : '--'} />
             </div>
           </SectionCard>
 

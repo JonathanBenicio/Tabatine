@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import { NfCadastroFlat } from '@/store/useNfStore'
+import { NfCadastroFlat } from '@/types/nf'
 import { mapSupabaseToNfs } from '@/lib/nf-mapper'
 import { SortingState } from '@tanstack/react-table'
+import { OmieNF } from '@/types/omie-raw'
 
 interface FetchNfsResponse {
   nfs: NfCadastroFlat[]
@@ -34,14 +35,14 @@ export const useNfQuery = (page: number, search: string, sorting: SortingState =
         throw new Error(data.error || 'Failed to fetch NFs')
       }
 
-      const rawNfs = data.nf_resumo_lista || []
+      const rawNfs = (data.nf_resumo_lista || []) as OmieNF[]
 
       // --- Passive Lookup Population ---
       const { useLookupStore } = await import('@/store/useLookupStore')
       const lookupStore = useLookupStore.getState()
       const clientesMap: Record<number, string> = {}
 
-      rawNfs.forEach((nf: any) => {
+      rawNfs.forEach((nf) => {
         if (nf.nfDestInt?.nCodCli && nf.nfDestInt?.xNome) {
           clientesMap[nf.nfDestInt.nCodCli] = nf.nfDestInt.xNome
         }

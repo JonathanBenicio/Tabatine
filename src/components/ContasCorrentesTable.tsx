@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { useContasCorrentesStore, ContaCorrente } from '@/store/useContasCorrentesStore';
-import { Search, Banknote, AlertCircle, RefreshCw, Eye, Building2, CreditCard, Ban, CheckCircle2, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { Banknote, AlertCircle, RefreshCw, Eye, Building2, CreditCard, Ban, CheckCircle2, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import Pagination from './Pagination';
 import { useContasCorrentesQuery } from '@/hooks/useContasCorrentesQuery';
 import { useRouter } from 'next/navigation';
@@ -11,7 +11,6 @@ import {
   getCoreRowModel,
   flexRender,
   createColumnHelper,
-  SortingState,
 } from '@tanstack/react-table';
 import { TableContainer } from './ui/TableContainer';
 import { TableSearch } from './ui/TableSearch';
@@ -103,8 +102,9 @@ export default function ContasCorrentesTable() {
       ),
       meta: { align: 'center' }
     }),
-  ], []);
+  ], [router]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: data?.contas || [],
     columns,

@@ -214,7 +214,8 @@ node --experimental-strip-types --test src/lib/ofxParser.test.ts
 node --experimental-strip-types --test src/**/*.test.ts
 ```
 
-## ESLint Configuration
-- Uses `eslint-config-next/core-web-vitals` + TypeScript rules
-- Ignores: `.next/**`, `out/**`, `build/**`
-- Run `npm run lint` before committing
+## ESLint Compliance & Code Quality
+- **Zero Tolerance**: All code MUST pass `npm run lint` with 0 errors and 0 warnings before being committed or considered "done".
+- **Pre-flight Check**: Always run `npm run lint` and `npx tsc --noEmit` before concluding any task.
+- **Auto-Fix**: Use `npm run lint -- --fix` to resolve stylistic issues, but manual fixes are required for architectural rules (like `no-explicit-any`).
+- **Typing**: Explicit `any` is forbidden. Use proper interfaces or `Record<string, unknown>` for dynamic data.

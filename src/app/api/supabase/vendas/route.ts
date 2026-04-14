@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from '@/utils/supabase/server';
 import { escapeFilterValue } from '@/utils/supabase/filter-utils';
 import { NextResponse } from 'next/server';
@@ -68,7 +69,7 @@ export async function GET(req: Request) {
           clientQuery = clientQuery.or(`razao_social.ilike.${escapedSearch},nome_fantasia.ilike.${escapedSearch},nome.ilike.${escapedSearch}`);
         }
         const { data: cData } = await clientQuery;
-        if (cData) searchFilterIds.cliente = cData.map(c => (c as any).id);
+        if (cData) searchFilterIds.cliente = cData.map(c => (c as Record<string, unknown>).id as string);
       }
 
       // Lookup Vendedores matching search or specific vendor filter
@@ -81,14 +82,14 @@ export async function GET(req: Request) {
           vendorQuery = vendorQuery.ilike('nome', escapedSearch);
         }
         const { data: vData } = await vendorQuery;
-        if (vData) searchFilterIds.vendedor = vData.map(v => (v as any).id);
+        if (vData) searchFilterIds.vendedor = vData.map(v => (v as Record<string, unknown>).id as string);
       }
 
       // Lookup Bancos matching banco filter
       const bancoFilter = activeFilters.find(f => f.field === 'banco');
       if (bancoFilter) {
         const { data: bData } = await supabase.from('contas_corrente').select('id').ilike('descricao', `%${bancoFilter.value}%`);
-        if (bData) searchFilterIds.banco = bData.map(b => (b as any).id);
+        if (bData) searchFilterIds.banco = bData.map(b => (b as Record<string, unknown>).id as string);
       }
     }
 
@@ -169,11 +170,11 @@ export async function GET(req: Request) {
       throw error;
     }
 
-    const num = (v: any) => v === null || v === undefined ? 0 : Number(v);
+    const num = (v: unknown) => v === null || v === undefined ? 0 : Number(v);
 
-    const mappedData = (data || []).map((order: any) => {
-      const itens = order.itens_pedido || [];
-      const nf = (order.notas_fiscais || [])[0];
+    const mappedData = (data || []).map((order: Record<string, unknown>) => {
+      const itens = (order.itens_pedido as any) || [];
+      const nf = (order.notas_fiscais as any || [])[0];
 
       return {
         cabecalho: {
@@ -182,15 +183,15 @@ export async function GET(req: Request) {
           etapa: order.etapa,
           data_pedido: order.data_inclusao || order.created_at,
           data_previsao: order.data_previsao,
-          codigo_cliente: order.clientes?.omie_id,
+          codigo_cliente: (order as any).clientes?.omie_id,
           codigo_parcela: order.codigo_parcela,
-          meio_pagamento: order.formas_pagamento?.descricao || order.meio_pagamento || '',
+          meio_pagamento: (order as any).formas_pagamento?.descricao || order.meio_pagamento || '',
           quantidade_itens: itens.length,
           qtde_parcelas: order.quantidade_parcelas || 0,
           faturado: order.faturado ? 'S' : 'N',
           devolvido: order.devolvido ? 'S' : 'N'
         },
-        det: itens.map((item: any) => ({
+        det: (itens as any[]).map((item: any) => ({
           produto: {
             codigo: item.produtos?.codigo_produto,
             descricao: item.produtos?.descricao,
@@ -244,7 +245,7 @@ export async function GET(req: Request) {
           }
         })),
         lista_parcelas: {
-          parcela: (order.pedido_parcelas || []).map((p: any) => ({
+          parcela: (order.pedido_parcelas as Record<string, unknown>[] || []).map((p: Record<string, unknown>) => ({
             numero_parcela: p.numero_parcela,
             valor: num(p.valor),
             data_vencimento: p.data_vencimento,
@@ -255,10 +256,10 @@ export async function GET(req: Request) {
           }))
         },
         informacoes_adicionais: {
-          codVend: order.vendedores?.omie_id,
-          vendedor_nome: order.vendedores?.nome,
-          codigo_conta_corrente: order.contas_corrente?.omie_id,
-          conta_corrente_nome: order.contas_corrente?.descricao || '',
+          codVend: (order as any).vendedores?.omie_id,
+          vendedor_nome: (order as any).vendedores?.nome,
+          codigo_conta_corrente: (order as any).contas_corrente?.omie_id,
+          conta_corrente_nome: (order as any).contas_corrente?.descricao || '',
           perc_comissao: num(order.comissao_vendedor),
           contato: order.contato,
           numero_pedido_cliente: order.numero_pedido_cliente || '',
@@ -278,7 +279,7 @@ export async function GET(req: Request) {
           cancelado: order.cancelado ? 'S' : 'N',
           autorizado: order.autorizado ? 'S' : 'N',
           denegado: order.denegado ? 'S' : 'N',
-          cliente_nome: order.clientes?.razao_social || order.clientes?.nome_fantasia
+          cliente_nome: (order as any).clientes?.razao_social || (order as any).clientes?.nome_fantasia
         },
         total_pedido: {
           valor_total_pedido: num(order.valor_total),
@@ -326,8 +327,8 @@ export async function GET(req: Request) {
       total_de_registros: count,
       pagina: page
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API Error (Supabase Vendas):', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Internal Server Error' }, { status: 500 });
   }
 }

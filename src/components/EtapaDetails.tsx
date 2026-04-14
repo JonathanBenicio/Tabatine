@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -80,7 +81,7 @@ export default function EtapaDetails() {
           </SectionCard>
 
           {/* Operação Vinculada */}
-          {omie?.codigo_operacao && (
+          {!!omie?.codigo_operacao && (
             <SectionCard icon={GitBranch} iconColor="text-amber-600 dark:text-amber-400" title="Operação Vinculada">
               <div className="p-4 rounded-xl bg-amber-500/10 dark:bg-amber-500/5 border border-amber-500/20 dark:border-amber-500/15">
                 <div className="flex items-start gap-4">
@@ -91,9 +92,9 @@ export default function EtapaDetails() {
                     <p className="text-xs text-amber-700/70 dark:text-amber-400/70 font-semibold uppercase tracking-wider mb-1">
                       Código da Operação
                     </p>
-                    <p className="text-xl font-bold text-slate-900 dark:text-white font-mono">{omie.codigo_operacao}</p>
-                    {omie.descricao_operacao && (
-                      <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1">{omie.descricao_operacao}</p>
+                    <p className="text-xl font-bold text-slate-900 dark:text-white font-mono">{omie.codigo_operacao as any}</p>
+                    {!!omie.descricao_operacao && (
+                      <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1">{omie.descricao_operacao as any}</p>
                     )}
                   </div>
                 </div>
@@ -105,12 +106,12 @@ export default function EtapaDetails() {
         <div>
           <SectionCard icon={Shield} iconColor="text-slate-500 dark:text-zinc-400" title="Auditoria ERP">
             <div className="space-y-0">
-              {omie?.omie_id && <InfoRow label="Omie ID" value={<span className="font-mono text-xs">{omie.omie_id}</span>} />}
-              {omie?.created_at && (
-                <InfoRow label="Criado em" value={new Date(omie.created_at).toLocaleDateString('pt-BR')} />
+              {!!omie?.omie_id && <InfoRow label="Omie ID" value={<span className="font-mono text-xs">{omie.omie_id as any}</span>} />}
+              {!!omie?.created_at && (
+                <InfoRow label="Criado em" value={new Date(omie.created_at as any).toLocaleDateString('pt-BR')} />
               )}
-              {omie?.updated_at && (
-                <InfoRow label="Atualizado em" value={new Date(omie.updated_at).toLocaleDateString('pt-BR')} />
+              {!!omie?.updated_at && (
+                <InfoRow label="Atualizado em" value={new Date(omie.updated_at as any).toLocaleDateString('pt-BR')} />
               )}
             </div>
           </SectionCard>

@@ -65,7 +65,7 @@ export async function GET(req: Request) {
       activeWeeks: Array.from(activeWeeks).sort((a, b) => a - b)
     });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Erro interno';
+    const message = error instanceof Error ? (error instanceof Error ? (error instanceof Error ? error.message : 'Internal Server Error') : 'Internal Server Error') : 'Erro interno';
     console.error('API Error (Vendas Resumo):', error);
     return NextResponse.json({ error: message }, { status: 500 });
   }

@@ -3,12 +3,8 @@
 import React, { useMemo, useState } from 'react';
 import { useProdutosStore, Produto } from '@/store/useProdutosStore';
 import { 
-  Search, 
   Package, 
   Filter, 
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
   FileDown,
   RefreshCcw,
   Tag,
@@ -37,6 +33,17 @@ import { TableSummaryCard } from './ui/TableSummaryCard';
 
 const columnHelper = createColumnHelper<Produto>();
 
+const formatCurrency = (value: number | string | undefined | null) => {
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  if (numValue === null || numValue === undefined || isNaN(numValue)) {
+    return 'R$ 0,00';
+  }
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(numValue);
+};
+
 export default function ProdutosTable() {
   const router = useRouter();
   const { 
@@ -54,17 +61,6 @@ export default function ProdutosTable() {
     sorting, 
     filters
   );
-
-  const formatCurrency = (value: number | string | undefined | null) => {
-    const numValue = typeof value === 'string' ? parseFloat(value) : value;
-    if (numValue === null || numValue === undefined || isNaN(numValue)) {
-      return 'R$ 0,00';
-    }
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(numValue);
-  };
 
   const columns = useMemo(() => [
     columnHelper.accessor('descricao', {
@@ -160,6 +156,7 @@ export default function ProdutosTable() {
     }),
   ], [router]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: data?.produtos || [],
     columns,

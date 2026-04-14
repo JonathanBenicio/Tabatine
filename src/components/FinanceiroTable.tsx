@@ -5,7 +5,7 @@ import { useFinanceiroStore } from '@/store/useFinanceiroStore';
 import { useFinanceiroQuery } from '@/hooks/useFinanceiroQuery';
 import { TituloFinanceiro } from '@/lib/financeiro-mapper';
 import { 
-  Search, Banknote, AlertCircle, RefreshCw, CheckCircle2, 
+  Banknote, AlertCircle, RefreshCw, CheckCircle2, 
   XCircle, Clock, Hash, User, ArrowUpRight, ArrowDownLeft,
   ChevronUp, ChevronDown, ChevronsUpDown, Eye 
 } from 'lucide-react';
@@ -171,6 +171,7 @@ export default function FinanceiroTable({ type }: FinanceiroTableProps) {
     }),
   ], [type, router]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: data?.titulos || [],
     columns,

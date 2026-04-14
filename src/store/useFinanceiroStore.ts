@@ -1,6 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
+import { SortingState } from '@tanstack/react-table';
 import { TituloFinanceiro } from '@/lib/financeiro-mapper';
 
 interface FinanceiroState {
@@ -18,8 +19,8 @@ interface FinanceiroState {
   totalReceber: number;
   receberTotalPaginas: number;
 
-  pagarSorting: any[];
-  receberSorting: any[];
+  pagarSorting: SortingState;
+  receberSorting: SortingState;
 
   isLoading: boolean;
   error: string | null;
@@ -33,8 +34,8 @@ interface FinanceiroState {
   setReceberPage: (page: number) => void;
   setReceberSearch: (search: string) => void;
   
-  setPagarSorting: (sorting: any[]) => void;
-  setReceberSorting: (sorting: any[]) => void;
+  setPagarSorting: (sorting: SortingState) => void;
+  setReceberSorting: (sorting: SortingState) => void;
 
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;

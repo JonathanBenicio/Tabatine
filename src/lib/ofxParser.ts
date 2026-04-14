@@ -79,7 +79,6 @@ export function parseOfx(ofxString: string): OfxData {
       });
     }
 
-    const typeRaw = rawTags['TRNTYPE'] || '';
     const dateRaw = rawTags['DTPOSTED'] || '';
     const amtRaw = rawTags['TRNAMT'] || '0';
     const id = rawTags['FITID'] || crypto.randomUUID();

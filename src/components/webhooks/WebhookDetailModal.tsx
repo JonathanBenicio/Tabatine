@@ -91,14 +91,15 @@ export function WebhookDetailModal({ webhookId, onClose, onRetry, onDismiss }: W
     setTimeout(() => setCopiedPayload(false), 2000);
   };
 
+  const payload = webhook?.payload;
   const formattedPayload = React.useMemo(() => {
-    if (!webhook?.payload) return null;
+    if (!payload) return null;
     try {
-      return JSON.stringify(JSON.parse(webhook.payload), null, 2);
+      return JSON.stringify(JSON.parse(payload), null, 2);
     } catch {
-      return webhook.payload;
+      return payload;
     }
-  }, [webhook?.payload]);
+  }, [payload]);
 
   if (!webhookId) return null;
 

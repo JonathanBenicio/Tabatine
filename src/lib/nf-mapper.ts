@@ -1,10 +1,13 @@
-import { NfCadastroFlat } from '@/store/useNfStore';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { NfCadastroFlat, NfItem, NfTitulo } from '@/types/nf';
+import { OmieNF } from '@/types/omie-raw';
 
 /**
  * Maps a raw Supabase/Omie NF record to the NfCadastroFlat interface.
  * This function centralizes the complex extraction of taxes, items, and headers.
  */
 export function mapSupabaseToNf(nf: any): NfCadastroFlat {
+  const raw = nf as unknown as OmieNF;
   if (!nf) {
     return {
       id_nf: 0,
@@ -65,16 +68,16 @@ export function mapSupabaseToNf(nf: any): NfCadastroFlat {
     };
   }
 
-  const ide = nf.ide || {};
-  const dest = nf.nfDestInt || {};
-  const emit = nf.nfEmitInt || {};
-  const compl = nf.compl || {};
-  const info = nf.info || {};
-  const total = nf.total || {};
+  const ide = raw.ide || {};
+  const dest = raw.nfDestInt || {};
+  const emit = raw.nfEmitInt || {};
+  const compl = raw.compl || {};
+  const info = raw.info || {};
+  const total = raw.total || {};
   const icmsTot = total.ICMSTot || {};
   const issqnTot = total.ISSQNtot || {};
-  const det = nf.det || [];
-  const titulos = nf.titulos || [];
+  const det = raw.det || [];
+  const titulos = raw.titulos || [];
 
   const cDeneg = ide.cDeneg || 'N';
   let statusLabel = '';
@@ -91,7 +94,7 @@ export function mapSupabaseToNf(nf: any): NfCadastroFlat {
 
   const retencoes = total.Retencoes || {};
   
-  const itensMapped = det.map((item: any) => {
+  const itensMapped: NfItem[] = det.map((item) => {
     const prod = item.prod || {};
     const nfProdInt = item.nfProdInt || {};
     return {
@@ -115,7 +118,7 @@ export function mapSupabaseToNf(nf: any): NfCadastroFlat {
     };
   });
 
-  const titulosMapped = titulos.map((t: any) => ({
+  const titulosMapped: NfTitulo[] = titulos.map((t) => ({
     numero_titulo: t.cNumTitulo || '',
     documento: t.cDoc || '',
     parcela: t.nParcela || 0,
@@ -129,7 +132,7 @@ export function mapSupabaseToNf(nf: any): NfCadastroFlat {
   }));
 
   return {
-    id_nf: compl.nIdNF || nf.id_nf || 0,
+    id_nf: Number(compl.nIdNF || nf.id_nf || 0),
     numero_nf: (ide.nNF || '---').toString(),
     serie: ide.serie || '---',
     modelo: ide.mod || '---',

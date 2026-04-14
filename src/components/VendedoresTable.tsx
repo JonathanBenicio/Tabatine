@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { useVendedoresStore, Vendedor } from '@/store/useVendedoresStore';
-import { Search, UserCheck, AlertCircle, RefreshCw, Eye, Mail, Percent, Ban, CheckCircle2, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { UserCheck, AlertCircle, RefreshCw, Eye, Mail, Percent, Ban, CheckCircle2, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import Pagination from './Pagination';
 import { useVendedoresQuery } from '@/hooks/useVendedoresQuery';
 import { useRouter } from 'next/navigation';
@@ -99,8 +99,9 @@ export default function VendedoresTable() {
       ),
       meta: { align: 'center' }
     }),
-  ], []);
+  ], [router]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: data?.vendedores || [],
     columns,

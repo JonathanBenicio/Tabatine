@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { ContaCorrente } from '@/store/useContasCorrentesStore'
 import { mapSupabaseToContasCorrentes } from '@/lib/contas-mapper'
+import { SortingState } from '@tanstack/react-table'
 
 interface FetchContasResponse {
   contas: ContaCorrente[]
@@ -9,7 +10,7 @@ interface FetchContasResponse {
   currentPage: number
 }
 
-export const useContasCorrentesQuery = (page: number, search: string, sorting: any[] = []) => {
+export const useContasCorrentesQuery = (page: number, search: string, sorting: SortingState = []) => {
   return useQuery<FetchContasResponse>({
     queryKey: ['contas-correntes', page, search, sorting],
     queryFn: async () => {

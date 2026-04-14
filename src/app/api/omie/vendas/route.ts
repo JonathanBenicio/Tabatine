@@ -50,11 +50,17 @@ export async function POST(req: Request) {
 
     return NextResponse.json(response.data);
   } catch (error: unknown) {
-    const axiosError = error as any;
-    console.error('Error proxying Omie request (Pedidos):', axiosError.response?.data || axiosError.message);
+    if (axios.isAxiosError(error)) {
+      console.error('Error proxying Omie request (Pedidos):', error.response?.data || error.message);
+      return NextResponse.json(
+        { error: error.response?.data?.faultstring || 'Internal Server Error', details: error.message },
+        { status: error.response?.status || 500 }
+      );
+    }
+    console.error('Non-Axios error (Pedidos):', error);
     return NextResponse.json(
-      { error: axiosError.response?.data?.faultstring || 'Internal Server Error', details: axiosError.message },
-      { status: axiosError.response?.status || 500 }
+      { error: 'Internal Server Error', details: error instanceof Error ? error.message : String(error) },
+      { status: 500 }
     );
   }
 }

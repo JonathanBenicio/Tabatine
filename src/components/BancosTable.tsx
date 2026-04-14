@@ -2,14 +2,13 @@
 
 import React, { useEffect, useMemo } from 'react';
 import { useBancosStore, BancoPlano } from '@/store/useBancosStore';
-import { Landmark, Eye, RefreshCw, AlertCircle, ChevronRight, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { Landmark, Eye, RefreshCw, AlertCircle, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
   useReactTable,
   getCoreRowModel,
   flexRender,
   createColumnHelper,
-  SortingState,
 } from '@tanstack/react-table';
 import { TableContainer } from './ui/TableContainer';
 import { TableSearch } from './ui/TableSearch';
@@ -93,6 +92,7 @@ export default function BancosTable() {
     }),
   ], [router]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: bancos,
     columns,

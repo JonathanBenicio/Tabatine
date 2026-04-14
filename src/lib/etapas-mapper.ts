@@ -1,24 +1,35 @@
 // src/lib/etapas-mapper.ts
 import { EtapaPlana } from '@/store/useEtapasStore';
 
-export function mapSupabaseToEtapa(raw: any): EtapaPlana {
-  if (!raw) return { id: '', codigo: '', descricao: '', descricaoPadrao: '', operacao: '', ativos: false, omieData: null };
+interface RawEtapa {
+  id: string;
+  codigo?: string;
+  descricao?: string;
+  descricao_padrao?: string;
+  codigo_operacao?: string;
+  descricao_operacao?: string;
+  inativa?: boolean;
+}
 
-  const descOperacao = raw.descricao_operacao ? ` - ${raw.descricao_operacao}` : '';
-  const codigoOperacao = raw.codigo_operacao || 'N/A';
+export function mapSupabaseToEtapa(raw: Record<string, unknown>): EtapaPlana {
+  const r = raw as unknown as RawEtapa;
+  if (!raw) return { id: '', codigo: '', descricao: '', descricaoPadrao: '', operacao: '', ativos: false, omieData: undefined };
+
+  const descOperacao = r.descricao_operacao ? ` - ${r.descricao_operacao}` : '';
+  const codigoOperacao = r.codigo_operacao || 'N/A';
 
   return {
-    id: raw.id,
-    codigo: raw.codigo || 'N/A',
-    descricao: raw.descricao || 'Sem Descrição',
-    descricaoPadrao: raw.descricao_padrao || raw.descricao || '---',
+    id: r.id,
+    codigo: r.codigo || 'N/A',
+    descricao: r.descricao || 'Sem Descrição',
+    descricaoPadrao: r.descricao_padrao || r.descricao || '---',
     operacao: `${codigoOperacao}${descOperacao}`,
-    ativos: !raw.inativa, // if inativa is false, it's 'ativo'
+    ativos: !r.inativa, // if inativa is false, it's 'ativo'
     omieData: raw
   };
 }
 
-export function mapSupabaseToEtapas(rawArray: any[]): EtapaPlana[] {
+export function mapSupabaseToEtapas(rawArray: Record<string, unknown>[]): EtapaPlana[] {
   if (!Array.isArray(rawArray)) return [];
   return rawArray.map(mapSupabaseToEtapa);
 }

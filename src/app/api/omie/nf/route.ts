@@ -8,7 +8,7 @@ const APP_SECRET = process.env.APP_SECRET;
 
 interface CacheEntry {
   timestamp: number;
-  data: any;
+  data: unknown;
 }
 
 const cache = new Map<string, CacheEntry>();
@@ -50,11 +50,18 @@ export async function POST(req: Request) {
     cache.set(cacheKey, { timestamp: Date.now(), data: response.data });
 
     return NextResponse.json(response.data);
-  } catch (error: any) {
-    console.error('Error proxying Omie request:', error.response?.data || error.message);
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      console.error('Error proxying Omie request (NF):', error.response?.data || error.message);
+      return NextResponse.json(
+        { error: error.response?.data?.faultstring || 'Internal Server Error', details: error.message },
+        { status: error.response?.status || 500 }
+      );
+    }
+    console.error('Non-Axios error (NF):', error);
     return NextResponse.json(
-      { error: error.response?.data?.faultstring || 'Internal Server Error', details: error.message },
-      { status: error.response?.status || 500 }
+      { error: 'Internal Server Error', details: error instanceof Error ? error.message : String(error) },
+      { status: 500 }
     );
   }
 }

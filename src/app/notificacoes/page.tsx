@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useEffect } from "react";
@@ -77,7 +78,7 @@ export default function NotificationsPage() {
             <div>
               <p className="text-sm text-slate-400">Última NF</p>
               <p className="text-lg font-bold">
-                {notifications[0] ? `NF #${notifications[0].payload.data?.numero_nf || '?'}` : 'Nenhuma'}
+                {notifications[0] ? `NF #${(notifications[0].payload as any).data?.numero_nf || '?'}` : 'Nenhuma'}
               </p>
             </div>
           </div>
@@ -116,17 +117,17 @@ export default function NotificationsPage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="font-bold text-slate-100 italic">
-                            NF-e Emitida: #{notif.payload.data?.numero_nf || 'N/A'}
+                            NF-e Emitida: #{(notif.payload as any).data?.numero_nf || 'N/A'}
                           </h3>
                           <span className="text-[10px] uppercase tracking-wider bg-slate-700 text-slate-300 px-2 py-0.5 rounded">
-                            {notif.payload.topic || 'WEBHOOK'}
+                            {(notif.payload as any).topic || 'WEBHOOK'}
                           </span>
                         </div>
                         <p className="text-sm text-slate-400 mt-1">
-                          Cliente: <span className="text-slate-200">{notif.payload.data?.cliente || 'Não informado'}</span>
+                          Cliente: <span className="text-slate-200">{(notif.payload as any).data?.cliente || 'Não informado'}</span>
                         </p>
                         <p className="text-sm text-slate-400">
-                          Valor: <span className="text-emerald-400 font-medium">R$ {notif.payload.data?.valor_total || '0,00'}</span>
+                          Valor: <span className="text-emerald-400 font-medium">R$ {(notif.payload as any).data?.valor_total || '0,00'}</span>
                         </p>
                       </div>
                     </div>

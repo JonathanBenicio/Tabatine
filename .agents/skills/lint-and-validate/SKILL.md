@@ -33,7 +33,7 @@ allowed-tools: Read, Glob, Grep, Bash
 
 ---
 **Strict Rule:** No code should be committed or reported as "done" without passing these checks.
-
+**Zero Tolerance Policy**: 100% compliance required. Error-free output (`npm run lint` and `tsc --noEmit`) is a prerequisite for any task completion.
 ---
 
 ## Scripts

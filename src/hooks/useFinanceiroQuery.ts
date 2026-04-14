@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { mapSupabaseToFinanceiros, TituloFinanceiro } from '@/lib/financeiro-mapper';
+import { SortingState } from '@tanstack/react-table';
 
 interface FetchFinanceiroResponse {
   titulos: TituloFinanceiro[];
@@ -12,7 +13,7 @@ export const useFinanceiroQuery = (
   type: 'pagar' | 'receber',
   page: number,
   search: string,
-  sorting: any[] = [],
+  sorting: SortingState = [],
   enabled: boolean = true
 ) => {
   return useQuery<FetchFinanceiroResponse>({
@@ -37,7 +38,7 @@ export const useFinanceiroQuery = (
         throw new Error(data.error || `Failed to fetch financeiro ${type}`);
       }
 
-      const flatTitulos = mapSupabaseToFinanceiros(data.titulos || [], type);
+      const flatTitulos = mapSupabaseToFinanceiros(data.titulos || [] as Record<string, unknown>[], type);
 
       return {
         titulos: flatTitulos,

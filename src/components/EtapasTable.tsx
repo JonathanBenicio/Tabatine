@@ -107,6 +107,7 @@ export default function EtapasTable() {
     }),
   ], [router]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: etapas,
     columns,

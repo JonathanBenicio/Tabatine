@@ -7,7 +7,7 @@ export interface BancoPlano {
   nome: string;
   tipo: string;
   ispb: string;
-  omieData?: any;
+  omieData?: Record<string, unknown>;
 }
 
 interface BancosStoreState {
@@ -70,8 +70,8 @@ export const useBancosStore = create<BancosStoreState>((set, get) => ({
         currentPage: data.pagina || page,
         loading: false,
       });
-    } catch (error: any) {
-      set({ error: error.message, loading: false });
+    } catch (error: unknown) {
+      set({ error: (error as Error).message, loading: false });
     }
   },
 
@@ -92,8 +92,8 @@ export const useBancosStore = create<BancosStoreState>((set, get) => ({
       const mapped = mapSupabaseToBanco(data.banco);
       set({ loading: false });
       return mapped;
-    } catch (error: any) {
-      set({ error: error.message, loading: false });
+    } catch (error: unknown) {
+      set({ error: (error as Error).message, loading: false });
       return null;
     }
   },

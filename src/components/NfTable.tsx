@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { useNfStore, NfCadastroFlat } from '@/store/useNfStore';
-import { Search, FileText, AlertCircle, RefreshCw, Eye, CheckCircle2, XCircle, Clock, Hash, User, ShieldCheck, DollarSign, Ban, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { useNfStore } from '@/store/useNfStore';
+import { NfCadastroFlat } from '@/types/nf';
+import { FileText, AlertCircle, RefreshCw, Eye, CheckCircle2, XCircle, Clock, User, ShieldCheck, DollarSign, Ban, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import Pagination from './Pagination';
 import Link from 'next/link';
@@ -19,6 +20,54 @@ import { TableSummaryCard } from '@/components/ui/TableSummaryCard';
 
 const columnHelper = createColumnHelper<NfCadastroFlat>();
 
+const formatCurrency = (val: number) => {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
+};
+
+const formatDate = (dateStr: string) => {
+  try {
+    if (!dateStr) return '---';
+    if (dateStr.includes('/')) return dateStr;
+    return format(parseISO(dateStr), 'dd/MM/yyyy');
+  } catch {
+    return dateStr;
+  }
+};
+
+const getStatusBadge = (status: string) => {
+  const s = status?.toLowerCase();
+  if (s === 'faturado' || s === 'concluido' || s === 'f' || s === 'autorizado' || s === 'a') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 dark:bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 rounded-full text-[10px] font-black tracking-tight uppercase ">
+        <CheckCircle2 size={10} />
+        {status}
+      </span>
+    );
+  }
+  if (s === 'cancelado' || s === 'c') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 rounded-full text-[10px] font-black tracking-tight uppercase ">
+        <XCircle size={10} />
+        {status}
+      </span>
+    );
+  }
+  if (s === 'denegado' || s === 'd') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-500/20 rounded-full text-[10px] font-black tracking-tight uppercase ">
+        <Ban size={10} />
+        {status}
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 rounded-full text-[10px] font-black tracking-tight uppercase ">
+      <Clock size={10} />
+      {status || 'Pendente'}
+    </span>
+  );
+};
+
 export default function NfTable() {
   const { 
     currentPage, searchTerm, setSearchTerm, setCurrentPage,
@@ -26,54 +75,6 @@ export default function NfTable() {
   } = useNfStore();
 
   const { data, isLoading, error, refetch } = useNfQuery(currentPage, searchTerm, sorting);
-
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
-  };
-
-  const formatDate = (dateStr: string) => {
-    try {
-      if (!dateStr) return '---';
-      if (dateStr.includes('/')) return dateStr;
-      return format(parseISO(dateStr), 'dd/MM/yyyy');
-    } catch {
-      return dateStr;
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const s = status?.toLowerCase();
-    if (s === 'faturado' || s === 'concluido' || s === 'f' || s === 'autorizado' || s === 'a') {
-      return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 dark:bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 rounded-full text-[10px] font-black tracking-tight uppercase ">
-          <CheckCircle2 size={10} />
-          {status}
-        </span>
-      );
-    }
-    if (s === 'cancelado' || s === 'c') {
-      return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 rounded-full text-[10px] font-black tracking-tight uppercase ">
-          <XCircle size={10} />
-          {status}
-        </span>
-      );
-    }
-    if (s === 'denegado' || s === 'd') {
-      return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-500/20 rounded-full text-[10px] font-black tracking-tight uppercase ">
-          <Ban size={10} />
-          {status}
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 rounded-full text-[10px] font-black tracking-tight uppercase ">
-        <Clock size={10} />
-        {status || 'Pendente'}
-      </span>
-    );
-  };
 
   const stats = useMemo(() => {
     const nfs = data?.nfs || [];
@@ -148,6 +149,7 @@ export default function NfTable() {
     }),
   ], []);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: data?.nfs || [],
     columns,

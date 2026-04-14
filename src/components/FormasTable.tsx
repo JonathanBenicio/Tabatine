@@ -105,6 +105,7 @@ export default function FormasTable() {
     }),
   ], [router]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: formas,
     columns,

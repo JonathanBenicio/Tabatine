@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { useClienteStore, ClienteCadastro } from '@/store/useClienteStore';
-import { Search, Users as UsersIcon, AlertCircle, RefreshCw, Eye, MapPin, Mail, Phone, ShieldCheck, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { Users as UsersIcon, AlertCircle, RefreshCw, Eye, MapPin, Mail, Phone, ShieldCheck, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import Pagination from './Pagination';
 import { useRouter } from 'next/navigation';
 import { useClientesQuery } from '@/hooks/useClientesQuery';
@@ -21,7 +21,7 @@ const columnHelper = createColumnHelper<ClienteCadastro>();
 export default function ClientesTable() {
   const router = useRouter();
   const { 
-    currentPage, totalPaginas, totalRegistros, 
+    currentPage, 
     searchTerm, setSearchTerm, setCurrentPage,
     sorting, setSorting
   } = useClienteStore();
@@ -126,6 +126,7 @@ export default function ClientesTable() {
     }),
   ], [router]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: data?.clientes || [],
     columns,
