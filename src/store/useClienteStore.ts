@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { mapSupabaseToClientes, mapSupabaseToCliente } from '@/lib/clientes-mapper'
+import { SortingState } from '@tanstack/react-table'
 
 export interface ClienteCadastro {
   codigo_cliente_omie: number
@@ -31,8 +32,10 @@ interface ClienteStoreState {
   totalRegistros: number
   currentPage: number
   searchTerm: string
+  sorting: SortingState
   setSearchTerm: (term: string) => void
   setCurrentPage: (page: number) => void
+  setSorting: (updater: any) => void
   fetchClientes: (page?: number, search?: string) => Promise<void>
   fetchClienteByOmieId: (omieId: number) => Promise<ClienteCadastro | null>
 }
@@ -48,8 +51,15 @@ export const useClienteStore = create<ClienteStoreState>((set, get) => ({
   totalRegistros: 0,
   currentPage: 1,
   searchTerm: '',
-  setSearchTerm: (term: string) => set({ searchTerm: term }),
+  sorting: [{ id: 'razao_social', desc: false }],
+  setSearchTerm: (term: string) => set({ searchTerm: term, currentPage: 1 }),
   setCurrentPage: (page: number) => set({ currentPage: page }),
+  setSorting: (updaterOrValue: any) => {
+    const nextState = typeof updaterOrValue === 'function' 
+      ? updaterOrValue(get().sorting) 
+      : updaterOrValue;
+    set({ sorting: nextState, currentPage: 1 });
+  },
 
   fetchClientes: async (page = 1, search) => {
     const currentSearch = search !== undefined ? search : get().searchTerm

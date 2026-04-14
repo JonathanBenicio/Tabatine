@@ -75,7 +75,7 @@ export default function MeiosTable() {
           <button 
             onClick={() => router.push(`/meios-pagamento/${info.row.original.id}`)}
             className="p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors shadow-lg shadow-blue-500/20" 
-            title="Ver Detalhes"
+            title="Abrir Detalhes"
           >
             <Eye size={14} />
           </button>

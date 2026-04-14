@@ -21,10 +21,11 @@ const columnHelper = createColumnHelper<NfCadastroFlat>();
 
 export default function NfTable() {
   const { 
-    currentPage, searchTerm, setSearchTerm, setCurrentPage 
+    currentPage, searchTerm, setSearchTerm, setCurrentPage,
+    sorting, setSorting
   } = useNfStore();
 
-  const { data, isLoading, error, refetch } = useNfQuery(currentPage, searchTerm);
+  const { data, isLoading, error, refetch } = useNfQuery(currentPage, searchTerm, sorting);
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
@@ -150,7 +151,12 @@ export default function NfTable() {
   const table = useReactTable({
     data: data?.nfs || [],
     columns,
+    state: {
+      sorting,
+    },
+    onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
+    manualSorting: true,
   });
 
   return (
@@ -248,9 +254,16 @@ export default function NfTable() {
                 {headerGroup.headers.map(header => (
                   <th 
                     key={header.id} 
-                    className={`py-5 px-6 text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] font-sans ${header.column.columnDef.meta?.align === 'right' ? 'text-right' : header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''}`}
+                    className={`py-5 px-6 text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] font-sans ${header.column.columnDef.meta?.align === 'right' ? 'text-right' : header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''} ${header.column.getCanSort() ? 'cursor-pointer select-none' : ''}`}
+                    onClick={header.column.getToggleSortingHandler()}
                   >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    <div className={`flex items-center gap-2 ${header.column.columnDef.meta?.align === 'right' ? 'justify-end' : header.column.columnDef.meta?.align === 'center' ? 'justify-center' : ''}`}>
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {{
+                        asc: <span className="text-blue-500">↑</span>,
+                        desc: <span className="text-blue-500">↓</span>,
+                      }[header.column.getIsSorted() as string] ?? null}
+                    </div>
                   </th>
                 ))}
               </tr>

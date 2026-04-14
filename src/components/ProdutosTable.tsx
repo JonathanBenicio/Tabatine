@@ -148,7 +148,7 @@ export default function ProdutosTable() {
           <button 
             onClick={() => router.push(`/produtos/${info.row.original.codigo_produto}`)}
             className="p-2 text-slate-400 dark:text-zinc-500 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all"
-            title="Ver Detalhes"
+            title="Abrir Detalhes"
           >
             <Eye size={16} />
           </button>
@@ -377,11 +377,11 @@ export default function ProdutosTable() {
                     <div className={`flex items-center gap-2 ${header.column.columnDef.meta?.align === 'right' ? 'justify-end' : header.column.columnDef.meta?.align === 'center' ? 'justify-center' : ''}`}>
                       {flexRender(header.column.columnDef.header, header.getContext())}
                       {header.column.getCanSort() && (
-                        <div className="text-slate-400 dark:text-zinc-600 transition-colors">
+                        <div className="text-blue-500 font-bold transition-colors">
                           {{
-                            asc: <ArrowUp className="w-3 h-3 text-blue-500" />,
-                            desc: <ArrowDown className="w-3 h-3 text-blue-500" />,
-                          }[header.column.getIsSorted() as string] ?? <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100" />}
+                            asc: <span>↑</span>,
+                            desc: <span>↓</span>,
+                          }[header.column.getIsSorted() as string] ?? null}
                         </div>
                       )}
                     </div>

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Vendedor } from '@/store/useVendedoresStore'
 import { mapSupabaseToVendedores } from '@/lib/vendedores-mapper'
+import { SortingState } from '@tanstack/react-table'
 
 interface FetchVendedoresResponse {
   vendedores: Vendedor[]
@@ -9,14 +10,16 @@ interface FetchVendedoresResponse {
   currentPage: number
 }
 
-export const useVendedoresQuery = (page: number, search: string) => {
+export const useVendedoresQuery = (page: number, search: string, sorting?: SortingState) => {
   return useQuery<FetchVendedoresResponse>({
-    queryKey: ['vendedores', page, search],
+    queryKey: ['vendedores', page, search, sorting],
     queryFn: async () => {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '10',
-        search: search
+        search: search,
+        sortField: sorting?.[0]?.id || 'nome',
+        sortOrder: sorting?.[0]?.desc ? 'desc' : 'asc'
       })
       const response = await fetch(`/api/supabase/vendedores?${params}`)
       const data = await response.json()

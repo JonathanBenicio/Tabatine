@@ -22,10 +22,11 @@ export default function ClientesTable() {
   const router = useRouter();
   const { 
     currentPage, totalPaginas, totalRegistros, 
-    searchTerm, setSearchTerm, setCurrentPage 
+    searchTerm, setSearchTerm, setCurrentPage,
+    sorting, setSorting
   } = useClienteStore();
 
-  const { data, isLoading, error, refetch } = useClientesQuery(currentPage, searchTerm);
+  const { data, isLoading, error, refetch } = useClientesQuery(currentPage, searchTerm, sorting);
 
   const columns = useMemo(() => [
     columnHelper.accessor('razao_social', {
@@ -115,7 +116,7 @@ export default function ClientesTable() {
           <button 
             onClick={() => router.push(`/clientes/${info.row.original.codigo_cliente_omie}`)}
             className="p-2 bg-indigo-500 hover:bg-indigo-400 text-white rounded-lg transition-colors shadow-lg shadow-indigo-500/20" 
-            title="Perfil do Cliente"
+            title="Abrir Detalhes"
           >
             <Eye size={14} />
           </button>
@@ -128,7 +129,12 @@ export default function ClientesTable() {
   const table = useReactTable({
     data: data?.clientes || [],
     columns,
+    state: {
+      sorting,
+    },
+    onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
+    manualSorting: true,
   });
 
   return (
@@ -213,11 +219,16 @@ export default function ClientesTable() {
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id} className="border-b border-slate-200/50 dark:border-zinc-800/50 bg-slate-100/50 dark:bg-zinc-900/20">
                 {headerGroup.headers.map(header => (
-                  <th 
-                    key={header.id} 
-                    className={`py-5 px-6 text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] font-sans ${header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''}`}
+                    className={`py-5 px-6 text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] font-sans ${header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''} ${header.column.getCanSort() ? 'cursor-pointer select-none' : ''}`}
+                    onClick={header.column.getToggleSortingHandler()}
                   >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    <div className="flex items-center gap-2">
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {{
+                        asc: <span className="text-indigo-500">↑</span>,
+                        desc: <span className="text-indigo-500">↓</span>,
+                      }[header.column.getIsSorted() as string] ?? null}
+                    </div>
                   </th>
                 ))}
               </tr>

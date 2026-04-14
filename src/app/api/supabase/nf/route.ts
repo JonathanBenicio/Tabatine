@@ -19,6 +19,8 @@ export async function GET(req: Request) {
     const year = searchParams.get('year') || 'all';
     const search = searchParams.get('search') || '';
     const clienteOmieId = searchParams.get('clienteOmieId');
+    const sortField = searchParams.get('sortField') || 'data_emissao';
+    const sortOrder = searchParams.get('sortOrder') || 'desc';
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -77,8 +79,13 @@ export async function GET(req: Request) {
         query = query.gte('data_emissao', startOfYear).lte('data_emissao', endOfYear);
       }
 
+      // Map frontend field to DB column
+      let dbSortField = sortField;
+      if (sortField === 'valor_total_nf') dbSortField = 'valor_total';
+      if (sortField === 'razao_social') dbSortField = 'cliente_id'; // Placeholder for complex join sort
+
       const { data: listData, error: listError, count } = await query
-        .order('data_emissao', { ascending: false })
+        .order(dbSortField, { ascending: sortOrder === 'asc' })
         .range(from, to);
 
       if (listError) throw listError;

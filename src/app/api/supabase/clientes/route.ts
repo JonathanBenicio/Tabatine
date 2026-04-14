@@ -17,6 +17,8 @@ export async function GET(req: Request) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '100');
     const search = searchParams.get('search') || '';
+    const sortField = searchParams.get('sortField') || 'razao_social';
+    const sortOrder = searchParams.get('sortOrder') || 'asc';
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -44,7 +46,7 @@ export async function GET(req: Request) {
     }
 
     const { data, error, count } = await query
-      .order('razao_social', { ascending: true })
+      .order(sortField, { ascending: sortOrder === 'asc' })
       .range(from, to);
 
     if (error) throw error;

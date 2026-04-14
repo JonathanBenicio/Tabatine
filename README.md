@@ -67,7 +67,7 @@ A navegação está organizada por categorias lógicas no `LayoutWrapper`:
 
 ## 🧪 Testes e Qualidade
 
-A aplicação possui uma suíte robusta de testes unitários e de ponta a ponta (E2E).
+A aplicação possui uma suíte robusta de testes unitários e de ponta a ponta (E2E), orientada pelo **Roteiro Universal de Testes para Data Tables**, garantindo a qualidade em 5 pilares fundamentais: Renderização, Busca, Paginação, Ordenação e Drill-down.
 
 ```bash
 # Testes Unitários (Node.js Test Runner)
@@ -82,6 +82,7 @@ npm run test:e2e:ui     # Interface visual do Playwright
 Os testes E2E geram relatórios automáticos de cobertura de código (V8 Coverage) utilizando o `monocart-reporter`.
 - **Relatório HTML**: Disponível em `playwright-report/index.html` após a execução.
 - **Cobertura**: Detalhes em `coverage/html/index.html`.
+- **E2E Roadmap**: Documentado em [docs/test-roadmap.md](file:///c:/Users/Jonathan/Documents/Developer/GitHub/Tabatine/docs/test-roadmap.md).
 
 ## 📮 Postman
 

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { mapSupabaseToNfs, mapSupabaseToNf } from '@/lib/nf-mapper'
+import { SortingState } from '@tanstack/react-table'
 
 export interface NfCadastroFlat {
   id_nf: number
@@ -71,8 +72,10 @@ interface NfStoreState {
   totalRegistros: number
   currentPage: number
   searchTerm: string
+  sorting: SortingState
   setSearchTerm: (term: string) => void
   setCurrentPage: (page: number) => void
+  setSorting: (updater: any) => void
   fetchNfs: (page?: number, search?: string) => Promise<void>
   fetchNFById: (id: number) => Promise<NfCadastroFlat | null>
 }
@@ -89,8 +92,15 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
   totalRegistros: 0,
   currentPage: 1,
   searchTerm: '',
-  setSearchTerm: (term: string) => set({ searchTerm: term }),
+  sorting: [{ id: 'data_emissao', desc: true }],
+  setSearchTerm: (term: string) => set({ searchTerm: term, currentPage: 1 }),
   setCurrentPage: (page: number) => set({ currentPage: page }),
+  setSorting: (updaterOrValue: any) => {
+    const nextState = typeof updaterOrValue === 'function' 
+      ? updaterOrValue(get().sorting) 
+      : updaterOrValue;
+    set({ sorting: nextState, currentPage: 1 });
+  },
 
   fetchNfs: async (page = 1, search) => {
     const currentSearch = search !== undefined ? search : get().searchTerm

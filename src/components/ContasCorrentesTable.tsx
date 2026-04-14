@@ -94,7 +94,7 @@ export default function ContasCorrentesTable() {
           <button 
             onClick={() => router.push(`/contas-correntes/${info.row.original.nCodCC}`)}
             className="p-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors shadow-lg shadow-emerald-500/20" 
-            title="Ver Detalhes"
+            title="Abrir Detalhes"
           >
             <Eye size={14} />
           </button>

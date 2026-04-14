@@ -27,9 +27,10 @@ npm run test:e2e:ui                   # Run E2E tests with UI runner
 
 ### Testing Conventions
 - **Unit Tests**: `*.test.ts` suffix in same directory as source. Use `node:test`.
-- **E2E Tests**: Found in `/tests` directory. Suffix `*.spec.ts`.
+- **E2E Tests**: Found in `/tests` directory. Suffix `*.spec.ts`. Devem seguir os 5 pilares do [test-roadmap.md](file:///c:/Users/Jonathan/Documents/Developer/GitHub/Tabatine/docs/test-roadmap.md).
 - **E2E Auth**: Tests requiring login should depend on the `setup` project.
 - **Coverage**: E2E tests track V8 coverage via `monocart-reporter`.
+- **Roadmap Universal**: Todas as Data Tables devem validar (1) Renderização, (2) Busca, (3) Paginação, (4) Ordenação e (5) Drill-down.
 - Structure: `describe()` blocks with `test()` cases inside.
 - Assertions: Use `assert.strictEqual()` for unit, `expect()` for Playwright.
 

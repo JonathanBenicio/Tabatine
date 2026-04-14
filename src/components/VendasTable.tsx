@@ -196,7 +196,7 @@ export default function VendasTable() {
         <button 
           onClick={() => router.push(`/vendas/${info.row.original.id_linha}`)}
           className="p-2 rounded-lg bg-slate-100 dark:bg-zinc-800/50 hover:bg-orange-500/10 dark:hover:bg-orange-500/20 text-slate-500 dark:text-zinc-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors border border-slate-200 dark:border-zinc-700/50 hover:border-orange-500/30 group"
-          title="Ver Detalhes"
+          title="Abrir Detalhes"
         >
           <Eye size={16} className="group-hover:scale-110 transition-transform" />
         </button>
@@ -549,11 +549,11 @@ export default function VendasTable() {
                           >
                             {flexRender(header.column.columnDef.header, header.getContext())}
                             {header.column.getCanSort() && (
-                              <div className="text-orange-500/50 transition-colors">
+                              <div className="text-orange-500 font-bold transition-colors">
                                 {{
-                                  asc: <ArrowUp className="w-3 h-3 text-orange-400" />,
-                                  desc: <ArrowDown className="w-3 h-3 text-orange-400" />,
-                                }[header.column.getIsSorted() as string] ?? <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100" />}
+                                  asc: <span>↑</span>,
+                                  desc: <span>↓</span>,
+                                }[header.column.getIsSorted() as string] ?? null}
                               </div>
                             )}
                           </div>

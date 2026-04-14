@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { NfCadastroFlat } from '@/store/useNfStore'
 import { mapSupabaseToNfs } from '@/lib/nf-mapper'
+import { SortingState } from '@tanstack/react-table'
 
 interface FetchNfsResponse {
   nfs: NfCadastroFlat[]
@@ -9,18 +10,20 @@ interface FetchNfsResponse {
   currentPage: number
 }
 
-export const useNfQuery = (page: number, search: string, filters?: { 
+export const useNfQuery = (page: number, search: string, sorting?: SortingState, filters?: { 
   clienteOmieId?: number,
   enabled?: boolean
 }) => {
   return useQuery<FetchNfsResponse>({
-    queryKey: ['nfs', page, search, filters],
+    queryKey: ['nfs', page, search, sorting, filters],
     enabled: filters?.enabled ?? true,
     queryFn: async () => {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '10',
-        search: search
+        search: search,
+        sortField: sorting?.[0]?.id || 'data_emissao',
+        sortOrder: sorting?.[0]?.desc ? 'desc' : 'asc'
       })
       if (filters?.clienteOmieId) params.append('clienteOmieId', filters.clienteOmieId.toString());
 
