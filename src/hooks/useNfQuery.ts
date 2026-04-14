@@ -10,7 +10,7 @@ interface FetchNfsResponse {
   currentPage: number
 }
 
-export const useNfQuery = (page: number, search: string, sorting?: SortingState, filters?: { 
+export const useNfQuery = (page: number, search: string, sorting: SortingState = [], filters?: { 
   clienteOmieId?: number,
   enabled?: boolean
 }) => {

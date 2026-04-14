@@ -78,7 +78,7 @@ function RecentOrdersSection({ clienteOmieId }: { clienteOmieId: number }) {
 }
 
 function RecentInvoicesSection({ clienteOmieId }: { clienteOmieId: number }) {
-  const { data, isLoading } = useNfQuery(1, '', { clienteOmieId });
+  const { data, isLoading } = useNfQuery(1, '', [], { clienteOmieId });
   const router = useRouter();
   const nfs = data?.nfs?.slice(0, 5) || [];
 
