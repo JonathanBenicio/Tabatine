@@ -30,7 +30,7 @@ A navegação está organizada por categorias lógicas no `LayoutWrapper`:
 - **Notas Fiscais** (`/nf`): Acompanhamento e detalhes de NF-es emitidas.
 
 ### 🏦 Financeiro
-- **Contas a Pagar/Receber**: Gestão de fluxo de caixa sincronizado.
+- **Contas a Pagar/Receber**: Gestão de fluxo de caixa sincronizado, agora com páginas de detalhes completas para cada título.
 - **Bancos** (`/contas-correntes`): Saldos e extratos das contas cadastradas.
 - **Conciliação** (`/conciliacao`): Ferramenta para bater extratos bancários com o ERP.
 

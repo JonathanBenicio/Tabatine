@@ -56,14 +56,27 @@ test.describe('Módulo: Financeiro (Pagar e Receber)', () => {
     });
 
     // 5. DRILL-DOWN
-    test('5.1 deve navegar para página de detalhes via seletor "Abrir Detalhes"', async ({ page }) => {
+    test('5.1 deve navegar para página de detalhes e validar conteúdo em Pagar', async ({ page }) => {
       const rows = page.locator('tbody tr:not(.animate-pulse)');
       if (await rows.count() === 0) return;
 
       const viewButton = rows.first().locator('[title="Abrir Detalhes"]').first();
-      if (await viewButton.isVisible()) {
-        await viewButton.click({ force: true });
-        await expect(page).toHaveURL(/\/financeiro\/pagar\/\d+/, { timeout: 10000 });
+      await expect(viewButton).toBeVisible();
+      await viewButton.click({ force: true });
+
+      // Valida Navegação e URL
+      await expect(page).toHaveURL(/\/financeiro\/pagar\/\d+/, { timeout: 10000 });
+      
+      // Valida Presença de Componentes de Detalhes
+      await expect(page.getByText(/dados do título/i)).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText(/valores e pagamento/i)).toBeVisible();
+      await expect(page.getByText(/cronograma/i)).toBeVisible();
+
+      // Testa Botão Voltar (Pilar 5 Checklist)
+      const backButton = page.getByRole('button', { name: /voltar/i });
+      if (await backButton.isVisible()) {
+        await backButton.click();
+        await expect(page).toHaveURL(/\/financeiro\/pagar/);
       }
     });
   });
@@ -117,14 +130,26 @@ test.describe('Módulo: Financeiro (Pagar e Receber)', () => {
     });
 
     // 5. DRILL-DOWN
-    test('5.1 deve navegar para detalhes em Receber via "Abrir Detalhes"', async ({ page }) => {
+    test('5.1 deve navegar para página de detalhes e validar conteúdo em Receber', async ({ page }) => {
       const rows = page.locator('tbody tr:not(.animate-pulse)');
       if (await rows.count() === 0) return;
 
       const viewButton = rows.first().locator('[title="Abrir Detalhes"]').first();
-      if (await viewButton.isVisible()) {
-        await viewButton.click({ force: true });
-        await expect(page).toHaveURL(/\/financeiro\/receber\/\d+/, { timeout: 10000 });
+      await expect(viewButton).toBeVisible();
+      await viewButton.click({ force: true });
+
+      // Valida Navegação e URL
+      await expect(page).toHaveURL(/\/financeiro\/receber\/\d+/, { timeout: 10000 });
+
+      // Valida Presença de Componentes de Detalhes
+      await expect(page.getByText(/dados do título/i)).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText(/valores e pagamento/i)).toBeVisible();
+      
+      // Testa Botão Voltar
+      const backButton = page.getByRole('button', { name: /voltar/i });
+      if (await backButton.isVisible()) {
+        await backButton.click();
+        await expect(page).toHaveURL(/\/financeiro\/receber/);
       }
     });
   });
