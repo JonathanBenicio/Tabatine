@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
 import { getISOWeek, parseISO, getYear } from 'date-fns';
+import { apiError } from '@/utils/api-error';
 
 interface PedidoResumoRow {
   data_inclusao: string | null;
@@ -65,8 +66,6 @@ export async function GET(req: Request) {
       activeWeeks: Array.from(activeWeeks).sort((a, b) => a - b)
     });
   } catch (error: unknown) {
-    const message = error instanceof Error ? (error instanceof Error ? (error instanceof Error ? error.message : 'Internal Server Error') : 'Internal Server Error') : 'Erro interno';
-    console.error('API Error (Vendas Resumo):', error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiError(error, 'GET /api/supabase/vendas/resumo');
   }
 }
