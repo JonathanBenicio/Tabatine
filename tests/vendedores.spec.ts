@@ -15,13 +15,13 @@ test.describe('Módulo: Vendedores', () => {
   // ─────────────────────────────────────────────────────────
 
   test('1.1 deve exibir o banner e título da página', async ({ page }) => {
-    const heading = page.getByRole('heading', { name: /equipe de vendas/i });
+    const heading = page.getByRole('heading', { name: /listagem de vendedores/i });
     await expect(heading).toBeVisible({ timeout: 15000 });
   });
 
   test('1.2 deve renderizar a tabela com dados reais e summary cards', async ({ page }) => {
     await expect(page.getByText(/total de vendedores/i)).toBeVisible();
-    await expect(page.getByText(/melhor performance/i)).toBeVisible();
+    await expect(page.getByText(/média comissão/i)).toBeVisible();
     
     // Aguarda dados reais
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
@@ -31,7 +31,7 @@ test.describe('Módulo: Vendedores', () => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
     const table = page.getByRole('table');
     
-    const expectedHeaders = ['Foto/Código', 'Nome do Vendedor', 'E-mail / Contato', 'Comissão (%)', 'Status', 'Ações'];
+    const expectedHeaders = ['Vendedor / Nome', 'Código', 'Email', 'Comissão', 'Status', 'Ações'];
     for (const header of expectedHeaders) {
       await expect(table.locator('th', { hasText: new RegExp(header.replace('.', '\\.'), 'i') }).first()).toBeVisible();
     }
@@ -44,7 +44,7 @@ test.describe('Módulo: Vendedores', () => {
   test('2.1 deve filtrar ao digitar no campo de busca', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
-    const searchInput = page.getByPlaceholder(/localizar vendedor/i);
+    const searchInput = page.getByPlaceholder(/pesquisar vendedores/i);
     await searchInput.click({ force: true });
     await searchInput.fill('a'); 
     await page.waitForTimeout(800);
@@ -57,7 +57,7 @@ test.describe('Módulo: Vendedores', () => {
   test('2.2 deve limpar a busca e restaurar dados', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
-    const searchInput = page.getByPlaceholder(/localizar vendedor/i);
+    const searchInput = page.getByPlaceholder(/pesquisar vendedores/i);
     await searchInput.fill('VENDEDOR_INEXISTENTE_XYZ');
     await page.waitForTimeout(800);
 
@@ -95,7 +95,7 @@ test.describe('Módulo: Vendedores', () => {
   test('4.1 deve ordenar por Nome do Vendedor ao clicar no cabeçalho', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
-    const headerNome = page.getByRole('columnheader', { name: /nome do vendedor/i }).first();
+    const headerNome = page.getByRole('columnheader', { name: /vendedor \/ nome/i }).first();
     await headerNome.click({ force: true });
     await page.waitForTimeout(800);
 
@@ -111,28 +111,28 @@ test.describe('Módulo: Vendedores', () => {
     const firstRow = page.locator('tbody tr:not(.animate-pulse)').first();
     await expect(firstRow).toBeVisible({ timeout: 20000 });
 
-    const viewLink = firstRow.locator('a[title="Abrir Detalhes"]').first();
+    const viewLink = firstRow.locator('button[title="Abrir Detalhes"]').first();
     await viewLink.click({ force: true });
     
     await expect(page).toHaveURL(/\/vendedores\/\d+/, { timeout: 10000 });
     
     // Valida seções do Vendedor
-    await expect(page.getByText(/informações do vendedor/i)).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText(/comissões e metas/i)).toBeVisible();
+    await expect(page.getByText(/perfil do vendedor/i)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/integração omie/i)).toBeVisible();
   });
 
   test('5.2 o botão Voltar deve retornar à equipe de vendas', async ({ page }) => {
     const firstRow = page.locator('tbody tr:not(.animate-pulse)').first();
     await expect(firstRow).toBeVisible({ timeout: 10000 });
-    const viewLink = firstRow.locator('a[title="Abrir Detalhes"]').first();
+    const viewLink = firstRow.locator('button[title="Abrir Detalhes"]').first();
     await viewLink.click({ force: true });
     await page.waitForURL(/\/vendedores\/\d+/, { timeout: 10000 });
 
-    const backBtn = page.getByRole('link', { name: /voltar/i }).first();
+    const backBtn = page.getByRole('button', { name: /voltar/i }).or(page.locator('button:has(svg.lucide-arrow-left)')).first();
     await backBtn.click();
 
     await expect(page).toHaveURL('/vendedores', { timeout: 10000 });
-    await expect(page.getByRole('heading', { name: /equipe de vendas/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /listagem de vendedores/i })).toBeVisible();
   });
 
   // ─────────────────────────────────────────────────────────

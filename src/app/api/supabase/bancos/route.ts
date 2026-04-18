@@ -19,8 +19,18 @@ export async function GET(request: NextRequest) {
 
     const offset = (page - 1) * limit;
 
-    const sortField = searchParams.get('sortField') || 'codigo_banco';
+    const sortFieldRaw = searchParams.get('sortField') || 'codigo_banco';
     const sortOrder = searchParams.get('sortOrder') || 'asc';
+
+    // Map frontend fields to database columns
+    const fieldMapping: Record<string, string> = {
+      'codigo': 'codigo_banco',
+      'nome': 'nome',
+      'tipo': 'tipo',
+      'ispb': 'codigo_ispb'
+    };
+
+    const sortField = fieldMapping[sortFieldRaw] || sortFieldRaw;
 
     let query = supabase.from('bancos').select('*', { count: 'exact' });
 

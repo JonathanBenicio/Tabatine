@@ -15,13 +15,13 @@ test.describe('Módulo: Produtos', () => {
   // ─────────────────────────────────────────────────────────
 
   test('1.1 deve exibir o banner e título da página', async ({ page }) => {
-    const heading = page.getByRole('heading', { name: /gestão de produtos/i });
+    const heading = page.getByRole('heading', { name: /^produtos$/i });
     await expect(heading).toBeVisible({ timeout: 15000 });
   });
 
   test('1.2 deve renderizar a tabela com dados reais e summary cards', async ({ page }) => {
-    await expect(page.getByText(/total de produtos/i)).toBeVisible();
-    await expect(page.getByText(/valor total estoque/i)).toBeVisible();
+    await expect(page.getByText(/total produtos/i)).toBeVisible();
+    await expect(page.getByText(/ativos/i)).toBeVisible();
     
     // Aguarda dados reais
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
@@ -31,7 +31,7 @@ test.describe('Módulo: Produtos', () => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
     const table = page.getByRole('table');
     
-    const expectedHeaders = ['Imagem', 'Cód. Produto', 'Nome do Produto', 'NCM', 'Preço Unit.', 'Estoque', 'Ações'];
+    const expectedHeaders = ['Produto', 'SKU / Cód.', 'Família', 'Unidade', 'Preço', 'NCM', 'Status', 'Ações'];
     for (const header of expectedHeaders) {
       await expect(table.locator('th', { hasText: new RegExp(header.replace('.', '\\.'), 'i') }).first()).toBeVisible();
     }
@@ -44,7 +44,7 @@ test.describe('Módulo: Produtos', () => {
   test('2.1 deve filtrar ao digitar no campo de busca', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
-    const searchInput = page.getByPlaceholder(/localizar produto/i);
+    const searchInput = page.getByPlaceholder(/pesquisar por nome ou sku/i);
     await searchInput.click({ force: true });
     await searchInput.fill('00'); 
     await page.waitForTimeout(800);
@@ -57,7 +57,7 @@ test.describe('Módulo: Produtos', () => {
   test('2.2 deve limpar a busca e restaurar dados', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
-    const searchInput = page.getByPlaceholder(/localizar produto/i);
+    const searchInput = page.getByPlaceholder(/pesquisar por nome ou sku/i);
     await searchInput.fill('PRODUTO_TEST_99');
     await page.waitForTimeout(800);
 
@@ -95,7 +95,7 @@ test.describe('Módulo: Produtos', () => {
   test('4.1 deve ordenar por Nome do Produto ao clicar no cabeçalho', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
-    const headerNome = page.getByRole('columnheader', { name: /nome do produto/i }).first();
+    const headerNome = page.getByRole('columnheader', { name: /produto/i }).first();
     await headerNome.click({ force: true });
     await page.waitForTimeout(800);
 
@@ -111,29 +111,29 @@ test.describe('Módulo: Produtos', () => {
     const firstRow = page.locator('tbody tr:not(.animate-pulse)').first();
     await expect(firstRow).toBeVisible({ timeout: 20000 });
 
-    const viewLink = firstRow.locator('a[title="Abrir Detalhes"]').first();
+    const viewLink = firstRow.locator('button[title="Abrir Detalhes"]').first();
     await viewLink.click({ force: true });
     
     await expect(page).toHaveURL(/\/produtos\/\d+/, { timeout: 10000 });
     
     // Valida seções detalhes do Produto
-    await expect(page.getByText(/descrição do produto/i)).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText(/informações fiscais/i)).toBeVisible();
-    await expect(page.getByText(/estoque e logística/i)).toBeVisible();
+    await expect(page.getByText(/identificação do produto/i)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/preços e comercial/i)).toBeVisible();
+    await expect(page.getByText(/dados fiscais/i)).toBeVisible();
   });
 
   test('5.2 o botão Voltar deve retornar à gestão de produtos', async ({ page }) => {
     const firstRow = page.locator('tbody tr:not(.animate-pulse)').first();
     await expect(firstRow).toBeVisible({ timeout: 10000 });
-    const viewLink = firstRow.locator('a[title="Abrir Detalhes"]').first();
+    const viewLink = firstRow.locator('button[title="Abrir Detalhes"]').first();
     await viewLink.click({ force: true });
     await page.waitForURL(/\/produtos\/\d+/, { timeout: 10000 });
 
-    const backBtn = page.getByRole('link', { name: /voltar/i }).first();
+    const backBtn = page.getByRole('button', { name: /voltar/i }).or(page.locator('button:has(svg.lucide-arrow-left)')).first();
     await backBtn.click();
 
     await expect(page).toHaveURL('/produtos', { timeout: 10000 });
-    await expect(page.getByRole('heading', { name: /gestão de produtos/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^produtos$/i })).toBeVisible();
   });
 
   // ─────────────────────────────────────────────────────────

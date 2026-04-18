@@ -240,7 +240,7 @@ export default function NfDetailsPage() {
       {/* ═══ HEADER ═══ */}
       <div className="flex items-center gap-4 mb-2">
         <button 
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/nf')}
           className="p-3 bg-white/50 dark:bg-zinc-900/50 hover:bg-slate-100 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-all active:scale-95 group shadow-sm backdrop-blur-sm"
         >
           <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />

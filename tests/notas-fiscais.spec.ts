@@ -48,7 +48,7 @@ test.describe('Módulo: Notas Fiscais', () => {
   test('2.1 deve filtrar ao digitar no campo de busca', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
-    const searchInput = page.getByPlaceholder(/localizar nf-e/i);
+    const searchInput = page.getByPlaceholder(/localizar nf-e ou cliente/i);
     await searchInput.click({ force: true });
     await searchInput.fill('000'); 
     await page.waitForTimeout(800);
@@ -61,7 +61,7 @@ test.describe('Módulo: Notas Fiscais', () => {
   test('2.2 deve exibir empty state para busca sem resultados', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
-    const searchInput = page.getByPlaceholder(/localizar nf-e/i);
+    const searchInput = page.getByPlaceholder(/localizar nf-e ou cliente/i);
     await searchInput.fill('NF_INEXISTENTE_999999');
     await page.waitForTimeout(800);
 
@@ -71,7 +71,7 @@ test.describe('Módulo: Notas Fiscais', () => {
   test('2.3 deve limpar a busca e restaurar dados', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
-    const searchInput = page.getByPlaceholder(/localizar nf-e/i);
+    const searchInput = page.getByPlaceholder(/localizar nf-e ou cliente/i);
     await searchInput.fill('001');
     await page.waitForTimeout(800);
 
@@ -106,7 +106,7 @@ test.describe('Módulo: Notas Fiscais', () => {
   test('3.2 deve manter o filtro de busca ao trocar de página', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
-    const searchInput = page.getByPlaceholder(/localizar nf-e/i);
+    const searchInput = page.getByPlaceholder(/localizar nf-e ou cliente/i);
     await searchInput.fill('00');
     await page.waitForTimeout(800);
 
@@ -148,10 +148,10 @@ test.describe('Módulo: Notas Fiscais', () => {
     await expect(page).toHaveURL(/\/nf\/\d+/, { timeout: 10000 });
     
     // Valida seções técnicas do detalhe da NF
-    await expect(page.getByText(/identificação da nf-e/i)).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText(/informações do destinatário/i)).toBeVisible();
-    await expect(page.getByText(/totais e impostos/i)).toBeVisible();
-    await expect(page.getByText(/natureza da operação/i)).toBeVisible();
+    await expect(page.getByText(/identificação da nf/i).first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/destinatário/i).first()).toBeVisible();
+    await expect(page.getByText(/totais & impostos/i).first()).toBeVisible();
+    await expect(page.getByText(/dados complementares/i).first()).toBeVisible();
   });
 
   test('5.2 o botão Voltar deve retornar à central de notas', async ({ page }) => {
@@ -163,7 +163,7 @@ test.describe('Módulo: Notas Fiscais', () => {
     await page.waitForURL(/\/nf\/\d+/, { timeout: 10000 });
 
     // Clica em Voltar
-    const backBtn = page.getByRole('link', { name: /voltar/i }).first();
+    const backBtn = page.getByRole('button', { name: /voltar/i }).or(page.locator('button:has(svg.lucide-arrow-left)')).first();
     await backBtn.click();
 
     await expect(page).toHaveURL('/nf', { timeout: 10000 });
