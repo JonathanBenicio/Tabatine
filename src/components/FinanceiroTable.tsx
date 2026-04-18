@@ -5,8 +5,9 @@ import { useFinanceiroStore } from '@/store/useFinanceiroStore';
 import { useFinanceiroQuery } from '@/hooks/useFinanceiroQuery';
 import { TituloFinanceiro } from '@/lib/financeiro-mapper';
 import { 
-  Search, Banknote, AlertCircle, RefreshCw, CheckCircle2, 
-  XCircle, Clock, Hash, User, ArrowUpRight, ArrowDownLeft 
+  Banknote, AlertCircle, RefreshCw, CheckCircle2, 
+  XCircle, Clock, Hash, User, ArrowUpRight, ArrowDownLeft,
+  ChevronUp, ChevronDown, ChevronsUpDown, Eye 
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import Pagination from './Pagination';
@@ -20,6 +21,8 @@ import { TableContainer } from '@/components/ui/TableContainer';
 import { TableSearch } from '@/components/ui/TableSearch';
 import { TableSummaryCard } from '@/components/ui/TableSummaryCard';
 
+import { useRouter } from 'next/navigation';
+
 const columnHelper = createColumnHelper<TituloFinanceiro>();
 
 interface FinanceiroTableProps {
@@ -27,17 +30,22 @@ interface FinanceiroTableProps {
 }
 
 export default function FinanceiroTable({ type }: FinanceiroTableProps) {
-  const { 
+  const router = useRouter();
+  const {
     pagarPage, pagarSearch, setPagarPage, setPagarSearch,
-    receberPage, receberSearch, setReceberPage, setReceberSearch 
+    receberPage, receberSearch, setReceberPage, setReceberSearch,
+    pagarSorting, setPagarSorting, receberSorting, setReceberSorting
   } = useFinanceiroStore();
 
   const currentPage = type === 'pagar' ? pagarPage : receberPage;
   const searchTerm = type === 'pagar' ? pagarSearch : receberSearch;
+  const sorting = type === 'pagar' ? pagarSorting : receberSorting;
+  
   const setCurrentPage = type === 'pagar' ? setPagarPage : setReceberPage;
   const setSearchTerm = type === 'pagar' ? setPagarSearch : setReceberSearch;
+  const setSorting = type === 'pagar' ? setPagarSorting : setReceberSorting;
 
-  const { data, isLoading, error, refetch } = useFinanceiroQuery(type, currentPage, searchTerm);
+  const { data, isLoading, error, refetch } = useFinanceiroQuery(type, currentPage, searchTerm, sorting);
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
@@ -145,11 +153,34 @@ export default function FinanceiroTable({ type }: FinanceiroTableProps) {
       header: 'Situação',
       cell: info => getStatusBadge(info.getValue()),
     }),
-  ], [type]);
+    columnHelper.display({
+      id: 'actions',
+      header: 'Ações',
+      cell: info => (
+        <div className="flex justify-center opacity-0 group-hover/row:opacity-100 transition-all translate-x-1 group-hover/row:translate-x-0">
+          <button 
+            onClick={() => router.push(`/financeiro/${type}/${info.row.original.id}`)}
+            className="p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors shadow-lg shadow-blue-500/20" 
+            title="Abrir Detalhes"
+          >
+            <Eye size={14} />
+          </button>
+        </div>
+      ),
+      meta: { align: 'center' }
+    }),
+  ], [type, router]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: data?.titulos || [],
     columns,
+    state: { sorting },
+    onSortingChange: (updater) => {
+      const newSorting = typeof updater === 'function' ? updater(sorting) : updater;
+      setSorting(newSorting);
+    },
+    manualSorting: true,
     getCoreRowModel: getCoreRowModel(),
   });
 
@@ -171,6 +202,26 @@ export default function FinanceiroTable({ type }: FinanceiroTableProps) {
           isCurrency
           isLoading={isLoading}
           variant={type === 'pagar' ? 'rose' : 'emerald'}
+        />
+        <TableSummaryCard 
+          icon={AlertCircle}
+          label={type === 'pagar' ? "Títulos Vencidos" : "Títulos em Aberto"}
+          value={data?.titulos?.filter(t => {
+            const s = t.status?.toLowerCase();
+            return type === 'pagar' ? s === 'vencido' : s === 'em aberto' || s === 'pendente';
+          }).length || 0}
+          isLoading={isLoading}
+          variant="amber"
+        />
+        <TableSummaryCard 
+          icon={CheckCircle2}
+          label={type === 'pagar' ? "Títulos Pagos" : "Títulos Recebidos"}
+          value={data?.titulos?.filter(t => {
+            const s = t.status?.toLowerCase();
+            return s === 'baixado' || s === 'pago' || s === 'recebido' || s === 'liquidado';
+          }).length || 0}
+          isLoading={isLoading}
+          variant="emerald"
         />
       </div>
 
@@ -236,9 +287,20 @@ export default function FinanceiroTable({ type }: FinanceiroTableProps) {
                 {headerGroup.headers.map(header => (
                   <th 
                     key={header.id} 
-                    className={`py-5 px-6 text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] font-sans ${header.column.columnDef.meta?.align === 'right' ? 'text-right' : ''}`}
+                    className={`py-5 px-6 text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] font-sans ${header.column.columnDef.meta?.align === 'right' ? 'text-right' : ''} ${header.column.getCanSort() ? 'cursor-pointer select-none hover:text-blue-500 transition-colors' : ''}`}
+                    onClick={header.column.getToggleSortingHandler()}
                   >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    <div className={`flex items-center gap-2 ${header.column.columnDef.meta?.align === 'right' ? 'justify-end' : ''} ${header.column.columnDef.meta?.align === 'center' ? 'justify-center' : ''}`}>
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.column.getCanSort() && (
+                        <div className="text-slate-300 dark:text-zinc-700">
+                          {{
+                            asc: <ChevronUp size={12} className="text-blue-500" />,
+                            desc: <ChevronDown size={12} className="text-blue-500" />,
+                          }[header.column.getIsSorted() as string] ?? <ChevronsUpDown size={12} className="opacity-0 group-hover:opacity-100" />}
+                        </div>
+                      )}
+                    </div>
                   </th>
                 ))}
               </tr>

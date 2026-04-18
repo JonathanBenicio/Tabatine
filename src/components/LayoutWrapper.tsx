@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { 
   Building2, 
@@ -331,10 +332,13 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
                 <p className="text-xs text-zinc-500 tracking-tight">Ver Perfil</p>
               </div>
               <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-slate-200 to-slate-100 dark:from-zinc-800 dark:to-zinc-700 border border-slate-300 dark:border-zinc-600 flex items-center justify-center p-0.5 relative ring-0 group-hover:ring-4 group-hover:ring-blue-500/10 transition-all">
-                <img 
+                <Image 
                   src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=transparent" 
                   alt="Avatar" 
+                  width={40}
+                  height={40}
                   className="w-full h-full rounded-full object-cover bg-zinc-900"
+                  unoptimized // Use unoptimized for external SVGs if not configured in next.config
                 />
                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-zinc-900"></div>
               </div>

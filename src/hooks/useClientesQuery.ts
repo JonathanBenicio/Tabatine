@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { ClienteCadastro } from '@/store/useClienteStore'
 import { mapSupabaseToClientes } from '@/lib/clientes-mapper'
+import { SortingState } from '@tanstack/react-table'
 
 interface FetchClientesResponse {
   clientes: ClienteCadastro[]
@@ -9,14 +10,16 @@ interface FetchClientesResponse {
   currentPage: number
 }
 
-export const useClientesQuery = (page: number, search: string) => {
+export const useClientesQuery = (page: number, search: string, sorting?: SortingState) => {
   return useQuery<FetchClientesResponse>({
-    queryKey: ['clientes', page, search],
+    queryKey: ['clientes', page, search, sorting],
     queryFn: async () => {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '10',
-        search: search
+        search: search,
+        sortField: sorting?.[0]?.id || 'razao_social',
+        sortOrder: sorting?.[0]?.desc ? 'desc' : 'asc'
       })
       const response = await fetch(`/api/supabase/clientes?${params}`)
       const data = await response.json()

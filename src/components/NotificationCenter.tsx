@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { useNotifications, Notification } from '@/hooks/useNotifications';
+import { useNotifications } from '@/hooks/useNotifications';
 import { 
   Bell, 
-  Check, 
   CheckCheck, 
   ShoppingCart, 
   FileText, 

@@ -1,66 +1,8 @@
 import { create } from 'zustand'
 import { mapSupabaseToNfs, mapSupabaseToNf } from '@/lib/nf-mapper'
-
-export interface NfCadastroFlat {
-  id_nf: number
-  numero_nf: string
-  serie: string
-  modelo: string
-  data_emissao: string
-  hora_emissao: string
-  data_registro: string
-  data_saida_entrada: string
-  hora_saida_entrada: string
-  status_nf: string
-  tipo_nf: string
-  finalidade_nfe: string
-  tipo_ambiente: string
-  indicador_pagamento: string
-  denegado: string
-  data_cancelamento: string
-  data_inutilizacao: string
-  razao_social: string
-  cnpj_cpf: string
-  cod_cliente: number
-  cod_empresa: number
-  valor_total_nf: number
-  valor_produtos: number
-  valor_icms: number
-  valor_bc_icms: number
-  valor_ipi: number
-  valor_pis: number
-  valor_cofins: number
-  valor_frete: number
-  valor_seguro: number
-  valor_desconto: number
-  valor_outras: number
-  valor_total_tributos: number
-  valor_bc_st: number
-  valor_st: number
-  valor_icms_desonerado: number
-  valor_ii: number
-  valor_servicos: number
-  valor_iss: number
-  natureza_operacao: string
-  chave_nfe: string
-  cod_categoria: string
-  modalidade_frete: string
-  id_pedido: number
-  id_recebimento: number
-  id_transportador: number
-  importado_api: string
-  data_alteracao: string
-  hora_alteracao: string
-  data_inclusao: string
-  hora_inclusao: string
-  usuario_alteracao: string
-  usuario_inclusao: string
-  itens: any[]
-  titulos: any[]
-  omieData?: any
-  id?: string
-  [key: string]: any
-}
+import { NfCadastroFlat } from '@/types/nf'
+import { OmieNFSummary } from '@/types/omie-raw'
+import { SortingState, Updater } from '@tanstack/react-table'
 
 interface NfStoreState {
   nfs: NfCadastroFlat[]
@@ -71,8 +13,10 @@ interface NfStoreState {
   totalRegistros: number
   currentPage: number
   searchTerm: string
+  sorting: SortingState
   setSearchTerm: (term: string) => void
   setCurrentPage: (page: number) => void
+  setSorting: (updater: Updater<SortingState>) => void
   fetchNfs: (page?: number, search?: string) => Promise<void>
   fetchNFById: (id: number) => Promise<NfCadastroFlat | null>
 }
@@ -89,8 +33,15 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
   totalRegistros: 0,
   currentPage: 1,
   searchTerm: '',
-  setSearchTerm: (term: string) => set({ searchTerm: term }),
+  sorting: [{ id: 'data_emissao', desc: true }],
+  setSearchTerm: (term: string) => set({ searchTerm: term, currentPage: 1 }),
   setCurrentPage: (page: number) => set({ currentPage: page }),
+  setSorting: (updaterOrValue: Updater<SortingState>) => {
+    const nextState = typeof updaterOrValue === 'function' 
+      ? updaterOrValue(get().sorting) 
+      : updaterOrValue;
+    set({ sorting: nextState, currentPage: 1 });
+  },
 
   fetchNfs: async (page = 1, search) => {
     const currentSearch = search !== undefined ? search : get().searchTerm
@@ -115,7 +66,7 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
       const lookupStore = useLookupStore.getState()
       const clientesMap: Record<number, string> = {}
 
-      rawNfs.forEach((nf: any) => {
+      rawNfs.forEach((nf: OmieNFSummary) => {
         if (nf.nfDestInt?.nCodCli && nf.nfDestInt?.xNome) {
           clientesMap[nf.nfDestInt.nCodCli] = nf.nfDestInt.xNome
         }
@@ -124,7 +75,7 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
 
       const flatNfs = mapSupabaseToNfs(rawNfs);
 
-      const nfsMap = flatNfs.reduce((acc: any, nf: any) => {
+      const nfsMap = flatNfs.reduce((acc: Record<string, NfCadastroFlat>, nf: NfCadastroFlat) => {
         acc[nf.id_nf.toString()] = nf
         return acc
       }, {} as Record<string, NfCadastroFlat>)
@@ -137,8 +88,8 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
         currentPage: data.pagina || page,
         loading: false,
       })
-    } catch (error: any) {
-      set({ error: error.message, loading: false })
+    } catch (error: unknown) {
+      set({ error: (error as Error).message, loading: false })
     }
   },
 
@@ -175,8 +126,8 @@ export const useNfStore = create<NfStoreState>((set, get) => ({
           loading: false
         }))
         return mapped
-      } catch (error: any) {
-        set({ error: error.message, loading: false })
+      } catch (error: unknown) {
+        set({ error: (error as Error).message, loading: false })
         return null
       } finally {
         fetchingPromises.delete(id);

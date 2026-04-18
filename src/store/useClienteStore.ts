@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { mapSupabaseToClientes, mapSupabaseToCliente } from '@/lib/clientes-mapper'
+import { SortingState, Updater } from '@tanstack/react-table'
 
 export interface ClienteCadastro {
   codigo_cliente_omie: number
@@ -20,7 +21,7 @@ export interface ClienteCadastro {
   inscricao_municipal?: string
   optante_simples_nacional?: boolean
   tags: { tag: string }[]
-  [key: string]: any
+  [key: string]: string | number | boolean | object | undefined | null
 }
 
 interface ClienteStoreState {
@@ -31,8 +32,10 @@ interface ClienteStoreState {
   totalRegistros: number
   currentPage: number
   searchTerm: string
+  sorting: SortingState
   setSearchTerm: (term: string) => void
   setCurrentPage: (page: number) => void
+  setSorting: (updater: Updater<SortingState>) => void
   fetchClientes: (page?: number, search?: string) => Promise<void>
   fetchClienteByOmieId: (omieId: number) => Promise<ClienteCadastro | null>
 }
@@ -48,8 +51,15 @@ export const useClienteStore = create<ClienteStoreState>((set, get) => ({
   totalRegistros: 0,
   currentPage: 1,
   searchTerm: '',
-  setSearchTerm: (term: string) => set({ searchTerm: term }),
+  sorting: [{ id: 'razao_social', desc: false }],
+  setSearchTerm: (term: string) => set({ searchTerm: term, currentPage: 1 }),
   setCurrentPage: (page: number) => set({ currentPage: page }),
+  setSorting: (updaterOrValue: Updater<SortingState>) => {
+    const nextState = typeof updaterOrValue === 'function' 
+      ? updaterOrValue(get().sorting) 
+      : updaterOrValue;
+    set({ sorting: nextState, currentPage: 1 });
+  },
 
   fetchClientes: async (page = 1, search) => {
     const currentSearch = search !== undefined ? search : get().searchTerm
@@ -76,8 +86,8 @@ export const useClienteStore = create<ClienteStoreState>((set, get) => ({
         currentPage: data.pagina || page,
         loading: false,
       })
-    } catch (error: any) {
-      set({ error: error.message, loading: false })
+    } catch (error: unknown) {
+      set({ error: (error as Error).message, loading: false })
     }
   },
 
@@ -113,8 +123,8 @@ export const useClienteStore = create<ClienteStoreState>((set, get) => ({
         }))
 
         return mapped
-      } catch (error: any) {
-        set({ error: error.message, loading: false })
+      } catch (error: unknown) {
+        set({ error: (error as Error).message, loading: false })
         return null
       } finally {
         fetchingPromises.delete(omieId);

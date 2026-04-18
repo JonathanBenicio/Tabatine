@@ -7,7 +7,7 @@ export interface BancoPlano {
   nome: string;
   tipo: string;
   ispb: string;
-  omieData?: any;
+  omieData?: Record<string, unknown>;
 }
 
 interface BancosStoreState {
@@ -18,9 +18,11 @@ interface BancosStoreState {
   totalRegistros: number;
   currentPage: number;
   searchTerm: string;
+  sorting: { id: string; desc: boolean }[];
+  setSorting: (sorting: { id: string; desc: boolean }[]) => void;
   setSearchTerm: (term: string) => void;
   setCurrentPage: (page: number) => void;
-  fetchBancos: (page?: number, search?: string) => Promise<void>;
+  fetchBancos: (page?: number, search?: string, sortField?: string, sortOrder?: string) => Promise<void>;
   fetchBancoById: (id: string) => Promise<BancoPlano | null>;
 }
 
@@ -32,17 +34,25 @@ export const useBancosStore = create<BancosStoreState>((set, get) => ({
   totalRegistros: 0,
   currentPage: 1,
   searchTerm: '',
+  sorting: [{ id: 'codigo', desc: false }],
+  setSorting: (sorting) => set({ sorting }),
   setSearchTerm: (term: string) => set({ searchTerm: term }),
   setCurrentPage: (page: number) => set({ currentPage: page }),
 
-  fetchBancos: async (page = 1, search) => {
+  fetchBancos: async (page = 1, search, sortField, sortOrder) => {
     const currentSearch = search !== undefined ? search : get().searchTerm;
+    const currentSorting = get().sorting[0];
+    const sField = sortField || currentSorting?.id || 'codigo';
+    const sOrder = sortOrder || (currentSorting?.desc ? 'desc' : 'asc');
+
     set({ loading: true, error: null });
     try {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '20',
-        search: currentSearch
+        search: currentSearch,
+        sortField: sField,
+        sortOrder: sOrder
       });
       const response = await fetch(`/api/supabase/bancos?${params}`);
       const data = await response.json();
@@ -60,8 +70,8 @@ export const useBancosStore = create<BancosStoreState>((set, get) => ({
         currentPage: data.pagina || page,
         loading: false,
       });
-    } catch (error: any) {
-      set({ error: error.message, loading: false });
+    } catch (error: unknown) {
+      set({ error: (error as Error).message, loading: false });
     }
   },
 
@@ -82,8 +92,8 @@ export const useBancosStore = create<BancosStoreState>((set, get) => ({
       const mapped = mapSupabaseToBanco(data.banco);
       set({ loading: false });
       return mapped;
-    } catch (error: any) {
-      set({ error: error.message, loading: false });
+    } catch (error: unknown) {
+      set({ error: (error as Error).message, loading: false });
       return null;
     }
   },

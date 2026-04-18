@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { createClient } from '@/utils/supabase/server';
 import { 
   Mail, 
@@ -36,10 +37,13 @@ export default async function PerfilPage() {
           <div className="p-6 rounded-3xl bg-zinc-900/40 border border-zinc-800/50 backdrop-blur-xl flex flex-col items-center text-center">
             <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 p-1 mb-4 shadow-lg shadow-blue-500/20">
               <div className="w-full h-full rounded-full bg-zinc-900 flex items-center justify-center overflow-hidden">
-                <img 
+                <Image 
                   src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}&backgroundColor=transparent`} 
                   alt="Avatar" 
+                  width={96}
+                  height={96}
                   className="w-full h-full object-cover"
+                  unoptimized // External SVG
                 />
               </div>
             </div>

@@ -4,17 +4,18 @@ import React, { useEffect, useState } from 'react';
 import { useProdutosStore, Produto } from '@/store/useProdutosStore';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  ArrowLeft, Package, Tag, Hash, 
+  ArrowLeft, Package, Hash, 
   AlertCircle, RefreshCw, Database, 
-  Info, BarChart3, Scale, 
-  ShieldCheck, DollarSign, Box,
-  ClipboardList, ShoppingCart
+  Info, ShieldCheck, DollarSign, Box,
+  LucideProps
 } from 'lucide-react';
+
+type LucideIcon = React.ComponentType<LucideProps>;
 
 // ── Reusable Components ────────────────────────────────────
 
 function SectionCard({ icon: Icon, iconColor, title, children }: {
-  icon: any; iconColor: string; title: string; children: React.ReactNode;
+  icon: LucideIcon; iconColor: string; title: string; children: React.ReactNode;
 }) {
   return (
     <div className="p-6 rounded-2xl bg-zinc-900/30 border border-zinc-800/50 backdrop-blur-xl">
@@ -23,15 +24,6 @@ function SectionCard({ icon: Icon, iconColor, title, children }: {
         {title}
       </h2>
       {children}
-    </div>
-  );
-}
-
-function InfoRow({ label, value, className = 'text-zinc-300' }: { label: string; value: React.ReactNode; className?: string }) {
-  return (
-    <div className="flex justify-between items-center py-3 border-b border-zinc-800/30 last:border-0">
-      <span className="text-xs text-zinc-500 shrink-0">{label}</span>
-      <span className={`text-sm font-medium text-right ml-4 ${className}`}>{value || '--'}</span>
     </div>
   );
 }
@@ -48,7 +40,7 @@ function DataField({ label, value, className = 'text-zinc-300', large = false }:
 }
 
 function StatCard({ icon: Icon, iconBg, label, value, subValue }: {
-  icon: any; iconBg: string; label: string; value: string; subValue?: string;
+  icon: LucideIcon; iconBg: string; label: string; value: string; subValue?: string;
 }) {
   return (
     <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/50 flex items-center gap-4">

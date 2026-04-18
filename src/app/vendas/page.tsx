@@ -1,7 +1,9 @@
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import VendasTabs from '@/components/VendasTabs';
-import { TrendingUp, ShoppingBag } from 'lucide-react';
+import { ShoppingBag } from 'lucide-react';
+
+export const dynamic = 'force-dynamic';
 
 export default async function VendasPage() {
   const supabase = await createClient();

@@ -19,6 +19,19 @@ export async function GET(request: NextRequest) {
 
     const offset = (page - 1) * limit;
 
+    const sortFieldRaw = searchParams.get('sortField') || 'codigo_banco';
+    const sortOrder = searchParams.get('sortOrder') || 'asc';
+
+    // Map frontend fields to database columns
+    const fieldMapping: Record<string, string> = {
+      'codigo': 'codigo_banco',
+      'nome': 'nome',
+      'tipo': 'tipo',
+      'ispb': 'codigo_ispb'
+    };
+
+    const sortField = fieldMapping[sortFieldRaw] || sortFieldRaw;
+
     let query = supabase.from('bancos').select('*', { count: 'exact' });
 
     if (omieId) {
@@ -28,7 +41,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { data, count, error } = await query
-      .order('codigo_banco', { ascending: true })
+      .order(sortField, { ascending: sortOrder === 'asc' })
       .range(offset, offset + limit - 1);
 
     if (error) throw error;
@@ -39,8 +52,8 @@ export async function GET(request: NextRequest) {
       total_de_paginas: count ? Math.ceil(count / limit) : 1,
       total_de_registros: count || 0
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API /bancos Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: (error instanceof Error ? (error instanceof Error ? error.message : 'Internal Server Error') : 'Internal Server Error') }, { status: 500 });
   }
 }

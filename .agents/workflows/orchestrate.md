@@ -26,11 +26,11 @@ $ARGUMENTS
 
 | Task Type | REQUIRED Agents (minimum) |
 |-----------|---------------------------|
-| **Web App** | frontend-specialist, backend-specialist, test-engineer |
+| **Web App** | react-nextjs-expert, backend-specialist, test-engineer |
 | **API** | backend-specialist, security-auditor, test-engineer |
-| **UI/Design** | frontend-specialist, seo-specialist, performance-optimizer |
+| **UI/Design** | react-nextjs-expert, seo-specialist, performance-optimizer |
 | **Database** | database-architect, backend-specialist, security-auditor |
-| **Full Stack** | project-planner, frontend-specialist, backend-specialist, devops-engineer |
+| **Full Stack** | project-planner, react-nextjs-expert, backend-specialist, devops-engineer |
 | **Debug** | debugger, explorer-agent, test-engineer |
 | **Security** | security-auditor, penetration-tester, devops-engineer |
 
@@ -77,7 +77,7 @@ Do you approve? (Y/N)
 | Parallel Group | Agents |
 |----------------|--------|
 | Foundation | `database-architect`, `security-auditor` |
-| Core | `backend-specialist`, `frontend-specialist` |
+| Core | `backend-specialist`, `react-nextjs-expert` |
 | Polish | `test-engineer`, `devops-engineer` |
 
 > ✅ After user approval, invoke multiple agents in PARALLEL.
@@ -88,7 +88,7 @@ Do you approve? (Y/N)
 |-------|--------|----------|
 | `project-planner` | Planning | Task breakdown, PLAN.md |
 | `explorer-agent` | Discovery | Codebase mapping |
-| `frontend-specialist` | UI/UX | React, Vue, CSS, HTML |
+| `react-nextjs-expert` | UI/UX | Next.js, React, Tailwind |
 | `backend-specialist` | Server | API, Node.js, Python |
 | `database-architect` | Data | SQL, NoSQL, Schema |
 | `security-auditor` | Security | Vulnerabilities, Auth |
@@ -112,7 +112,7 @@ Identify ALL domains this task touches:
 ```
 □ Security     → security-auditor, penetration-tester
 □ Backend/API  → backend-specialist
-□ Frontend/UI  → frontend-specialist
+□ Frontend/UI  → react-nextjs-expert
 □ Database     → database-architect
 □ Testing      → test-engineer
 □ DevOps       → devops-engineer
@@ -141,7 +141,7 @@ Use the project-planner agent to create PLAN.md
 **PHASE 2 (Implementation - after approval):**
 ```
 Invoke agents in PARALLEL:
-Use the frontend-specialist agent to [task]
+Use the react-nextjs-expert agent to [task]
 Use the backend-specialist agent to [task]
 Use the test-engineer agent to [task]
 ```
@@ -198,7 +198,7 @@ Combine all agent outputs into unified report.
 | # | Agent | Focus Area | Status |
 |---|-------|------------|--------|
 | 1 | project-planner | Task breakdown | ✅ |
-| 2 | frontend-specialist | UI implementation | ✅ |
+| 2 | react-nextjs-expert | UI implementation | ✅ |
 | 3 | test-engineer | Verification scripts | ✅ |
 
 ### Verification Scripts Executed

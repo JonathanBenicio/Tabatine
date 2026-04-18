@@ -16,6 +16,8 @@ export async function GET(req: Request) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
     const search = searchParams.get('search') || '';
+    const sortField = searchParams.get('sortField') || 'nome';
+    const sortOrder = searchParams.get('sortOrder') || 'asc';
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -41,8 +43,18 @@ export async function GET(req: Request) {
       query = query.or(`nome.ilike.%${search}%,email.ilike.%${search}%`);
     }
 
+    // Map frontend sorting fields to database fields if they differ
+    const columnMap: Record<string, string> = {
+      'nome': 'nome',
+      'email': 'email',
+      'comissao': 'comissao',
+      'codigo': 'omie_id'
+    };
+
+    const actualSortField = columnMap[sortField] || 'nome';
+
     const { data, error, count } = await query
-      .order('nome', { ascending: true })
+      .order(actualSortField, { ascending: sortOrder === 'asc' })
       .range(from, to);
 
     if (error) throw error;
@@ -53,8 +65,8 @@ export async function GET(req: Request) {
       total_de_registros: count,
       pagina: page
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API Error (Supabase Vendedores):', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: (error instanceof Error ? (error instanceof Error ? error.message : 'Internal Server Error') : 'Internal Server Error') }, { status: 500 });
   }
 }

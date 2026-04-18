@@ -1,5 +1,8 @@
 import NfTable from '@/components/NfTable'
-import { Sparkles } from 'lucide-react'
+import React from 'react'
+import { Sparkles, RefreshCw } from 'lucide-react'
+
+export const dynamic = 'force-dynamic';
 
 export default function Home() {
   return (
@@ -23,7 +26,13 @@ export default function Home() {
       </div>
 
       {/* Invoices Table Component */}
-      <NfTable />
+      <React.Suspense fallback={
+        <div className="w-full h-96 flex items-center justify-center bg-slate-50 dark:bg-zinc-900/40 rounded-2xl border border-slate-200 dark:border-zinc-800 animate-pulse">
+          <RefreshCw className="w-8 h-8 text-blue-500 animate-spin" />
+        </div>
+      }>
+        <NfTable />
+      </React.Suspense>
 
     </div>
   )

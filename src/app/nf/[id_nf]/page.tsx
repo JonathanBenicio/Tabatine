@@ -1,16 +1,22 @@
-'use client';
+"use client"
 
-import React, { useEffect, useState } from 'react';
-import { useNfStore, NfCadastroFlat } from '@/store/useNfStore';
-import { useParams, useRouter } from 'next/navigation';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft, Package, User, Calendar, CreditCard, TrendingUp,
-  AlertCircle, RefreshCw, Database, Truck, FileText, Receipt,
-  Hash, Scale, ClipboardList, Copy, Check, ChevronDown, ChevronUp,
-  BarChart3, Percent, DollarSign, ShieldCheck, MapPin, Building2,
-  Landmark, Info, ScrollText
+  AlertCircle, RefreshCw, Database, FileText, Receipt,
+  ClipboardList, Copy, Check, ChevronDown, ChevronUp,
+  DollarSign, ShieldCheck, MapPin, 
+  Info, ScrollText, LucideProps
 } from 'lucide-react';
+import { useRouter, useParams } from 'next/navigation';
 import { format, parseISO } from 'date-fns';
+import { useNfStore } from '@/store/useNfStore';
+import { NfCadastroFlat, NfItem, NfTitulo } from '@/types/nf';
+
+
+
+type LucideIcon = React.ComponentType<LucideProps>;
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -27,12 +33,10 @@ const fmtDate = (dateStr: string | undefined) => {
   }
 };
 
-const fmtPerc = (val: number | undefined) => `${(val || 0).toFixed(2)}%`;
-
 // ── Reusable Components ────────────────────────────────────
 
 function SectionCard({ icon: Icon, iconColor, title, children }: {
-  icon: any; iconColor: string; title: string; children: React.ReactNode;
+  icon: LucideIcon; iconColor: string; title: string; children: React.ReactNode;
 }) {
   return (
     <div className="p-6 rounded-2xl bg-white/50 dark:bg-zinc-900/30 border border-slate-200/50 dark:border-zinc-800/50 backdrop-blur-xl shadow-sm">
@@ -66,7 +70,7 @@ function DataField({ label, value, className = 'text-slate-700 dark:text-zinc-30
 }
 
 function StatCard({ icon: Icon, iconBg, label, value, subValue }: {
-  icon: any; iconBg: string; label: string; value: string; subValue?: string;
+  icon: LucideIcon; iconBg: string; label: string; value: string; subValue?: string;
 }) {
   return (
     <div className="p-4 rounded-xl bg-white/50 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800/50 flex items-center gap-4 shadow-sm backdrop-blur-sm">
@@ -131,6 +135,20 @@ export default function NfDetailsPage() {
     }
     loadNf();
   }, [id_nf, fetchNFById]);
+
+  // ── Extract raw data sections ──
+  const raw = (nf?.omieData as any) || {};
+  const ide = (raw.ide || {}) as any;
+  const total = (raw.total || {}) as any;
+  const icmsTot = (total.ICMSTot || {}) as any;
+  const issqnTot = (total.ISSQNtot || {}) as any;
+  const compl = (raw.compl || {}) as any;
+  const dest = (raw.nfDestInt || raw.destinatario || {}) as any;
+  const info = (raw.info || {}) as any;
+  const pedido = (raw.pedido || {}) as any;
+  const detArray = nf?.itens || [];
+  const titulosArray = nf?.titulos || [];
+  const chaveNfe = nf?.chave_nfe || compl.cChaveNFe || info.cChaveNFe || ide.cChaveNFe || '';
 
   const handleCopyKey = () => {
     const chave = nf?.chave_nfe || raw?.compl?.cChaveNFe || raw?.info?.cChaveNFe || '';
@@ -213,20 +231,6 @@ export default function NfDetailsPage() {
 
   if (!nf) return null;
 
-  // ── Extract raw data sections ──
-  const raw = nf.omieData || {};
-  const ide = raw.ide || {};
-  const dest = raw.nfDestInt || raw.destinatario || {};
-  const info = raw.info || {};
-  const total = raw.total || {};
-  const icmsTot = total.ICMSTot || {};
-  const issqnTot = total.ISSQNtot || {};
-  const compl = raw.compl || {};
-  const detArray = raw.det || raw.detArray || [];
-  const titulosArray = raw.titulos || raw.titulosArray || [];
-  const pedido = raw.pedido || {};
-
-  const chaveNfe = nf.chave_nfe || compl.cChaveNFe || info.cChaveNFe || ide.cChaveNFe || '';
 
   // ── Render ──
 
@@ -236,7 +240,7 @@ export default function NfDetailsPage() {
       {/* ═══ HEADER ═══ */}
       <div className="flex items-center gap-4 mb-2">
         <button 
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/nf')}
           className="p-3 bg-white/50 dark:bg-zinc-900/50 hover:bg-slate-100 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-all active:scale-95 group shadow-sm backdrop-blur-sm"
         >
           <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
@@ -344,20 +348,18 @@ export default function NfDetailsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 dark:divide-zinc-800/30">
-                    {detArray.map((item: any, idx: number) => {
-                      const prod = item.prod || {};
-                      const itemPed = item.itemPedido || {};
+                    {detArray.map((item: NfItem, idx: number) => {
                       return (
                         <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/10 transition-colors">
                           <td className="py-3 px-6 text-xs text-slate-500 dark:text-zinc-500 font-mono">{idx + 1}</td>
-                          <td className="py-3 px-6 text-xs text-slate-500 dark:text-zinc-400 font-mono">{prod.cCodigo || prod.cProd || '--'}</td>
-                          <td className="py-3 px-6 text-sm text-slate-700 dark:text-zinc-300 font-medium max-w-[200px] truncate">{prod.cDescricao || prod.xProd || '--'}</td>
-                          <td className="py-3 px-6 text-xs text-slate-500 dark:text-zinc-400 font-mono">{prod.cNCM || prod.NCM || '--'}</td>
-                          <td className="py-3 px-6 text-xs text-slate-500 dark:text-zinc-400 font-mono">{prod.cCFOP || prod.CFOP || '--'}</td>
-                          <td className="py-3 px-6 text-xs text-slate-500 dark:text-zinc-400">{prod.cUnidade || prod.uCom || '--'}</td>
-                          <td className="py-3 px-6 text-xs text-slate-600 dark:text-zinc-300 font-mono text-right">{prod.nQuantidade || prod.qCom || 0}</td>
-                          <td className="py-3 px-6 text-xs text-slate-600 dark:text-zinc-300 text-right">{fmt(prod.nValorUnitario || prod.vUnCom || 0)}</td>
-                          <td className="py-3 px-6 text-sm font-bold text-emerald-500 dark:text-emerald-400 text-right">{fmt(prod.nValorTotal || prod.vProd || 0)}</td>
+                          <td className="py-3 px-6 text-xs text-slate-500 dark:text-zinc-400 font-mono">{item.codigo_produto || '--'}</td>
+                          <td className="py-3 px-6 text-sm text-slate-700 dark:text-zinc-300 font-medium max-w-[200px] truncate">{item.descricao || '--'}</td>
+                          <td className="py-3 px-6 text-xs text-slate-500 dark:text-zinc-400 font-mono">{item.ncm || '--'}</td>
+                          <td className="py-3 px-6 text-xs text-slate-500 dark:text-zinc-400 font-mono">{item.cfop || '--'}</td>
+                          <td className="py-3 px-6 text-xs text-slate-500 dark:text-zinc-400">{item.unidade || '--'}</td>
+                          <td className="py-3 px-6 text-xs text-slate-600 dark:text-zinc-300 font-mono text-right">{item.quantidade || 0}</td>
+                          <td className="py-3 px-6 text-xs text-slate-600 dark:text-zinc-300 text-right">{fmt(item.valor_unitario || 0)}</td>
+                          <td className="py-3 px-6 text-sm font-bold text-emerald-500 dark:text-emerald-400 text-right">{fmt(item.valor_total || 0)}</td>
                         </tr>
                       );
                     })}
@@ -366,7 +368,7 @@ export default function NfDetailsPage() {
                     <tr className="border-t border-slate-200 dark:border-zinc-700/50 bg-slate-50 dark:bg-zinc-900/30">
                       <td colSpan={8} className="py-3 px-6 text-xs font-bold text-slate-500 dark:text-zinc-400 text-right">Total dos Itens</td>
                       <td className="py-3 px-6 text-sm font-black text-emerald-500 dark:text-emerald-400 text-right">
-                        {fmt(detArray.reduce((sum: number, item: any) => sum + (item.prod?.nValorTotal || item.prod?.vProd || 0), 0))}
+                        {fmt(detArray.reduce((sum: number, item: NfItem) => sum + (item.valor_total || 0), 0))}
                       </td>
                     </tr>
                   </tfoot>
@@ -430,27 +432,24 @@ export default function NfDetailsPage() {
               <p className="text-sm text-slate-500 dark:text-zinc-500 italic">Nenhum título registrado para esta NF</p>
             ) : (
               <div className="space-y-3">
-                {titulosArray.map((titulo: any, idx: number) => (
+                {titulosArray.map((titulo: NfTitulo, idx: number) => (
                   <div key={idx} className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/10">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <span className="w-7 h-7 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-bold flex items-center justify-center">
-                          {titulo.nNumeroTitulo || titulo.numero_parcela || idx + 1}
+                          {titulo.parcela || idx + 1}
                         </span>
                         <span className="text-xs font-mono text-slate-500 dark:text-zinc-400">
-                          Venc: {fmtDate(titulo.dDataVencimento || titulo.data_vencimento || '')}
+                          Venc: {fmtDate(titulo.data_vencimento || '')}
                         </span>
                       </div>
                       <span className="text-sm font-bold text-amber-500 dark:text-amber-400">
-                        {fmt(titulo.nValorTitulo || titulo.valor || 0)}
+                        {fmt(titulo.valor || 0)}
                       </span>
                     </div>
                     <div className="flex items-center gap-3 text-[10px] text-slate-500 dark:text-zinc-500 flex-wrap">
-                      {titulo.cNumBancario && <span>Nº Bancário: {titulo.cNumBancario}</span>}
-                      {titulo.cCodCateg && <span>· Cat: {titulo.cCodCateg}</span>}
-                      {titulo.nPercentual > 0 && <span>· {fmtPerc(titulo.nPercentual)}</span>}
-                      {titulo.meio_pagamento && <span>· {titulo.meio_pagamento}</span>}
-                      {titulo.nsu && <span>· NSU: {titulo.nsu}</span>}
+                      {titulo.numero_titulo && <span>Nº Título: {titulo.numero_titulo}</span>}
+                      {titulo.cod_categoria && <span>· Cat: {titulo.cod_categoria}</span>}
                     </div>
                   </div>
                 ))}
@@ -534,7 +533,7 @@ export default function NfDetailsPage() {
               {info.hAlteracao && <InfoRow label="Hora Alteração" value={info.hAlteracao} />}
               {info.cImpresso && <InfoRow label="Impresso" value={info.cImpresso === 'S' ? 'Sim' : 'Não'} />}
               {info.cCancelado && <InfoRow label="Cancelada" value={info.cCancelado === 'S' ? 'Sim' : 'Não'} className={info.cCancelado === 'S' ? 'text-rose-500 dark:text-rose-400' : 'text-slate-700 dark:text-zinc-300'} />}
-              {info.cDenegado && <InfoRow label="Denegada" value={info.cDenegado === 'S' ? 'Sim' : 'Não'} className={info.cDenegado === 'S' ? 'text-rose-500 dark:text-rose-400' : 'text-slate-700 dark:text-zinc-300'} />}
+              {(info as any).cDenegado && <InfoRow label="Denegada" value={(info as any).cDenegado === 'S' ? 'Sim' : 'Não'} className={(info as any).cDenegado === 'S' ? 'text-rose-500 dark:text-rose-400' : 'text-slate-700 dark:text-zinc-300'} />}
             </div>
           </SectionCard>
 

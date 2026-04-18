@@ -1,5 +1,5 @@
 import React from 'react';
-import { LucideIcon, RefreshCw } from 'lucide-react';
+import { LucideIcon } from 'lucide-react';
 
 interface TableSummaryCardProps {
   label: string;

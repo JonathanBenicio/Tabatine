@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { useVendedoresStore, Vendedor } from '@/store/useVendedoresStore';
-import { Search, UserCheck, AlertCircle, RefreshCw, Eye, Mail, Percent, Ban, CheckCircle2 } from 'lucide-react';
+import { UserCheck, AlertCircle, RefreshCw, Eye, Mail, Percent, Ban, CheckCircle2, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import Pagination from './Pagination';
 import { useVendedoresQuery } from '@/hooks/useVendedoresQuery';
 import { useRouter } from 'next/navigation';
@@ -21,10 +21,11 @@ const columnHelper = createColumnHelper<Vendedor>();
 export default function VendedoresTable() {
   const router = useRouter();
   const { 
-    currentPage, searchTerm, setSearchTerm, setCurrentPage 
+    currentPage, searchTerm, setSearchTerm, setCurrentPage,
+    sorting, setSorting
   } = useVendedoresStore();
 
-  const { data, isLoading, error, refetch } = useVendedoresQuery(currentPage, searchTerm);
+  const { data, isLoading, error, refetch } = useVendedoresQuery(currentPage, searchTerm, sorting);
 
   const columns = useMemo(() => [
     columnHelper.accessor('nome', {
@@ -90,7 +91,7 @@ export default function VendedoresTable() {
           <button 
             onClick={() => router.push(`/vendedores/${info.row.original.codigo}`)}
             className="p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors shadow-lg shadow-blue-500/20" 
-            title="Ver Detalhes"
+            title="Abrir Detalhes"
           >
             <Eye size={14} />
           </button>
@@ -98,11 +99,15 @@ export default function VendedoresTable() {
       ),
       meta: { align: 'center' }
     }),
-  ], []);
+  ], [router]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: data?.vendedores || [],
     columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    manualSorting: true,
     getCoreRowModel: getCoreRowModel(),
   });
 
@@ -196,7 +201,23 @@ export default function VendedoresTable() {
                     key={header.id} 
                     className={`py-5 px-6 text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] font-sans ${header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''}`}
                   >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    <div 
+                      className={header.column.getCanSort() ? 'cursor-pointer select-none flex items-center gap-2 group/header' : ''}
+                      onClick={header.column.getToggleSortingHandler()}
+                    >
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.column.getCanSort() && (
+                        <div className="flex flex-col opacity-20 group-hover/header:opacity-100 transition-opacity">
+                          {header.column.getIsSorted() === 'asc' ? (
+                            <ChevronUp className="w-3 h-3 text-blue-500" />
+                          ) : header.column.getIsSorted() === 'desc' ? (
+                            <ChevronDown className="w-3 h-3 text-blue-500" />
+                          ) : (
+                            <ChevronsUpDown className="w-3 h-3 text-slate-400 grayscale group-hover/header:grayscale-0" />
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </th>
                 ))}
               </tr>

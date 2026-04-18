@@ -16,6 +16,7 @@ export function TableSearch({
   className = "",
   isLoading = false,
 }: TableSearchProps) {
+  const id = React.useId();
   return (
     <div className={`relative group ${className}`}>
       {isLoading ? (
@@ -24,6 +25,8 @@ export function TableSearch({
         <Search className="w-4 h-4 text-slate-400 dark:text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:text-orange-500 dark:group-focus-within:text-orange-400 transition-colors" />
       )}
       <input 
+        id={id}
+        data-testid="table-search-input"
         type="text" 
         placeholder={placeholder}
         value={value}

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo } from 'react';
 import { useMeiosStore, MeioPlano } from '@/store/useMeiosStore';
-import { Coins, Eye, RefreshCw, AlertCircle, Fingerprint, Receipt } from 'lucide-react';
+import { Coins, Eye, RefreshCw, AlertCircle, Fingerprint, Receipt, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
   useReactTable,
@@ -75,7 +75,7 @@ export default function MeiosTable() {
           <button 
             onClick={() => router.push(`/meios-pagamento/${info.row.original.id}`)}
             className="p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors shadow-lg shadow-blue-500/20" 
-            title="Ver Detalhes"
+            title="Abrir Detalhes"
           >
             <Eye size={14} />
           </button>
@@ -85,6 +85,7 @@ export default function MeiosTable() {
     }),
   ], [router]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: meios,
     columns,
@@ -180,7 +181,17 @@ export default function MeiosTable() {
                     key={header.id} 
                     className={`py-5 px-6 text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] font-sans ${header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''}`}
                   >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    <div className="flex items-center gap-2">
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.column.getCanSort() && (
+                        <div className="text-slate-300 dark:text-zinc-700">
+                          {{
+                            asc: <ChevronUp size={12} className="text-blue-500" />,
+                            desc: <ChevronDown size={12} className="text-blue-500" />,
+                          }[header.column.getIsSorted() as string] ?? <ChevronsUpDown size={12} className="opacity-0 group-hover:opacity-100" />}
+                        </div>
+                      )}
+                    </div>
                   </th>
                 ))}
               </tr>

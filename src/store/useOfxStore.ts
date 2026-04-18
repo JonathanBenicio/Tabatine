@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { OfxData, OfxTransaction, parseOfx } from '@/lib/ofxParser';
+import { OfxData, parseOfx } from '@/lib/ofxParser';
 
 interface OfxStoreState {
   data: OfxData | null;
@@ -26,8 +26,8 @@ export const useOfxStore = create<OfxStoreState>((set) => ({
       }
       
       set({ data: parsed, loading: false });
-    } catch (err: any) {
-      set({ error: err.message || 'Erro ao processar arquivo.', loading: false });
+    } catch (err: unknown) {
+      set({ error: (err as Error).message || 'Erro ao processar arquivo.', loading: false });
     }
   },
 

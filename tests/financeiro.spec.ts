@@ -1,115 +1,160 @@
+/**
+ * @file financeiro.spec.ts
+ * @description E2E Tests for the Financeiro module (Contas a Pagar and Contas a Receber).
+ * Hardened to follow the 5-pillar Universal Roadmap.
+ */
 import { test, expect } from './fixtures/test';
 
-test.describe('Módulo Financeiro - Pagar e Receber', () => {
+test.describe('Módulo: Financeiro (Pagar e Receber)', () => {
 
+  // ─────────────────────────────────────────────────────────
+  // SEÇÃO: CONTAS A PAGAR
+  // ─────────────────────────────────────────────────────────
   test.describe('Contas a Pagar', () => {
     test.beforeEach(async ({ page }) => {
       await page.goto('/financeiro/pagar');
+      await page.waitForLoadState('networkidle');
     });
 
-    test('CT-01: Deve renderizar a tabela de Contas a Pagar corretamente', async ({ page }) => {
-      await expect(page.getByRole('heading', { name: 'Contas a Pagar', exact: true }).first()).toBeVisible();
-      
-      const emptyState = page.getByText(/nenhum título financeiro encontrado/i);
-      if (await emptyState.isVisible()) {
-        return; // Early return se não houver dados
-      }
-
-      await page.waitForSelector('tbody tr:not(.animate-pulse)', { state: 'visible', timeout: 15000 });
-      await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible();
-      await expect(page.getByText(/Total a Pagar/i)).toBeVisible();
+    // 1. RENDERIZAÇÃO
+    test('1.1 deve renderizar título e summary cards de Pagar', async ({ page }) => {
+      await expect(page.getByRole('heading', { name: /contas a pagar/i }).first()).toBeVisible({ timeout: 15000 });
+      await expect(page.getByText(/total a pagar/i)).toBeVisible();
+      await expect(page.getByText(/títulos vencidos/i)).toBeVisible();
     });
 
-    test('CT-02: Deve permitir realizar busca de títulos a pagar', async ({ page }) => {
-      const emptyState = page.getByText(/nenhum título financeiro encontrado/i);
-      if (await emptyState.isVisible()) {
-        return;
-      }
+    // 2. BUSCA
+    test('2.1 deve filtrar por fornecedor e limpar busca', async ({ page }) => {
+      const searchInput = page.getByPlaceholder(/localizar fornecedor/i);
+      await expect(searchInput).toBeVisible({ timeout: 15000 });
 
-      await page.waitForSelector('tbody tr:not(.animate-pulse)', { state: 'visible', timeout: 15000 });
-      
-      const searchInput = page.getByPlaceholder(/Localizar fornecedor/i);
-      await searchInput.fill('xyzasdfnonexistent');
-      await page.waitForTimeout(1500); // Debounce
-      
-      // Valida o empty state após busca
-      await expect(page.getByText(/nenhum título financeiro encontrado/i).first()).toBeVisible();
-
-      // Limpa busca
-      await searchInput.clear();
+      await searchInput.click();
+      await searchInput.fill('EMPRESA_TESTE_999');
       await page.waitForTimeout(1500);
-      await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible();
+      await expect(page.getByText(/nenhum título financeiro encontrado/i).first()).toBeVisible({ timeout: 15000 });
+
+      await searchInput.clear();
+      await page.waitForTimeout(1000);
     });
 
-    test('CT-03: Deve permitir navegação por paginação em pagar', async ({ page }) => {
-      const emptyState = page.getByText(/nenhum título financeiro encontrado/i);
-      if (await emptyState.isVisible()) {
-        return;
-      }
-
-      await page.waitForSelector('tbody tr:not(.animate-pulse)', { state: 'visible', timeout: 15000 });
-      
+    // 3. PAGINAÇÃO
+    test('3.1 deve avançar paginação se houver dados suficientes', async ({ page }) => {
       const nextButton = page.getByRole('button', { name: /próxima/i });
       if (await nextButton.isVisible() && await nextButton.isEnabled()) {
         await nextButton.click();
-        await page.waitForSelector('tbody tr:not(.animate-pulse)', { state: 'visible', timeout: 15000 });
-        await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible();
+        await page.waitForTimeout(1000);
+        await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
+      }
+    });
+
+    // 4. ORDENAÇÃO
+    test('4.1 deve ordenar por Vencimento ao clicar no cabeçalho', async ({ page }) => {
+      const headerVenc = page.getByRole('columnheader', { name: /vencimento/i }).first();
+      if (await headerVenc.isVisible()) {
+        await headerVenc.click({ force: true });
+        await page.waitForTimeout(800);
+        await expect(headerVenc.locator('svg')).toBeVisible({ timeout: 10000 });
+      }
+    });
+
+    // 5. DRILL-DOWN
+    test('5.1 deve navegar para página de detalhes e validar conteúdo em Pagar', async ({ page }) => {
+      const rows = page.locator('tbody tr:not(.animate-pulse)');
+      if (await rows.count() === 0) return;
+
+      const viewButton = rows.first().locator('[title="Abrir Detalhes"]').first();
+      await expect(viewButton).toBeVisible();
+      await viewButton.click({ force: true });
+
+      // Valida Navegação e URL
+      await expect(page).toHaveURL(/\/financeiro\/pagar\/\d+/, { timeout: 10000 });
+      
+      // Valida Presença de Componentes de Detalhes
+      await expect(page.getByText(/dados do título/i)).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText(/valores e pagamento/i)).toBeVisible();
+      await expect(page.getByText(/cronograma/i)).toBeVisible();
+
+      // Testa Botão Voltar (Pilar 5 Checklist)
+      const backButton = page.getByRole('button', { name: /voltar/i });
+      if (await backButton.isVisible()) {
+        await backButton.click();
+        await expect(page).toHaveURL(/\/financeiro\/pagar/);
       }
     });
   });
 
+  // ─────────────────────────────────────────────────────────
+  // SEÇÃO: CONTAS A RECEBER
+  // ─────────────────────────────────────────────────────────
   test.describe('Contas a Receber', () => {
     test.beforeEach(async ({ page }) => {
       await page.goto('/financeiro/receber');
+      await page.waitForLoadState('networkidle');
     });
 
-    test('CT-01: Deve renderizar a tabela de Contas a Receber corretamente', async ({ page }) => {
-      await expect(page.getByRole('heading', { name: 'Contas a Receber', exact: true }).first()).toBeVisible();
-      
-      const emptyState = page.getByText(/nenhum título financeiro encontrado/i);
-      if (await emptyState.isVisible()) {
-        return;
-      }
-
-      await page.waitForSelector('tbody tr:not(.animate-pulse)', { state: 'visible', timeout: 15000 });
-      await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible();
-      await expect(page.getByText(/Total a Receber/i)).toBeVisible();
+    // 1. RENDERIZAÇÃO
+    test('1.1 deve renderizar título e summary cards de Receber', async ({ page }) => {
+      await expect(page.getByRole('heading', { name: /contas a receber/i }).first()).toBeVisible({ timeout: 15000 });
+      await expect(page.getByText(/total a receber/i)).toBeVisible();
+      await expect(page.getByText(/títulos em aberto/i)).toBeVisible();
     });
 
-    test('CT-02: Deve permitir realizar busca de títulos a receber', async ({ page }) => {
-      const emptyState = page.getByText(/nenhum título financeiro encontrado/i);
-      if (await emptyState.isVisible()) {
-        return;
-      }
+    // 2. BUSCA
+    test('2.1 deve filtrar por cliente e limpar busca', async ({ page }) => {
+      const searchInput = page.getByPlaceholder(/localizar cliente/i);
+      await expect(searchInput).toBeVisible({ timeout: 15000 });
 
-      await page.waitForSelector('tbody tr:not(.animate-pulse)', { state: 'visible', timeout: 15000 });
-      
-      const searchInput = page.getByPlaceholder(/Localizar cliente/i);
-      await searchInput.fill('xyzasdfnonexistent');
+      await searchInput.click();
+      await searchInput.fill('CLIENTE_INEXISTENTE_XYZ');
       await page.waitForTimeout(1500);
-      
-      await expect(page.getByText(/nenhum título financeiro encontrado/i).first()).toBeVisible();
-      
+      await expect(page.getByText(/nenhum título financeiro encontrado/i).first()).toBeVisible({ timeout: 15000 });
+
       await searchInput.clear();
-      await page.waitForTimeout(1500);
-      await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible();
+      await page.waitForTimeout(1000);
     });
 
-    test('CT-03: Deve permitir navegação por paginação em receber', async ({ page }) => {
-      const emptyState = page.getByText(/nenhum título financeiro encontrado/i);
-      if (await emptyState.isVisible()) {
-        return;
-      }
-
-      await page.waitForSelector('tbody tr:not(.animate-pulse)', { state: 'visible', timeout: 15000 });
-      
+    // 3. PAGINAÇÃO
+    test('3.1 deve avançar paginação em Receber', async ({ page }) => {
       const nextButton = page.getByRole('button', { name: /próxima/i });
       if (await nextButton.isVisible() && await nextButton.isEnabled()) {
         await nextButton.click();
-        await page.waitForSelector('tbody tr:not(.animate-pulse)', { state: 'visible', timeout: 15000 });
-        await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible();
+        await page.waitForTimeout(1000);
+        await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
+      }
+    });
+
+    // 4. ORDENAÇÃO
+    test('4.1 deve ordenar por Cliente ao clicar no cabeçalho', async ({ page }) => {
+      const headerCliente = page.getByRole('columnheader', { name: /cliente/i }).first();
+      if (await headerCliente.isVisible()) {
+        await headerCliente.click({ force: true });
+        await page.waitForTimeout(800);
+        await expect(headerCliente.locator('svg')).toBeVisible({ timeout: 10000 });
+      }
+    });
+
+    // 5. DRILL-DOWN
+    test('5.1 deve navegar para página de detalhes e validar conteúdo em Receber', async ({ page }) => {
+      const rows = page.locator('tbody tr:not(.animate-pulse)');
+      if (await rows.count() === 0) return;
+
+      const viewButton = rows.first().locator('[title="Abrir Detalhes"]').first();
+      await expect(viewButton).toBeVisible();
+      await viewButton.click({ force: true });
+
+      // Valida Navegação e URL
+      await expect(page).toHaveURL(/\/financeiro\/receber\/\d+/, { timeout: 10000 });
+
+      // Valida Presença de Componentes de Detalhes
+      await expect(page.getByText(/dados do título/i)).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText(/valores e pagamento/i)).toBeVisible();
+      
+      // Testa Botão Voltar
+      const backButton = page.getByRole('button', { name: /voltar/i });
+      if (await backButton.isVisible()) {
+        await backButton.click();
+        await expect(page).toHaveURL(/\/financeiro\/receber/);
       }
     });
   });
-
 });

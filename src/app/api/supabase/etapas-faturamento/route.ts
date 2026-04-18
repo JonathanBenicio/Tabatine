@@ -39,8 +39,8 @@ export async function GET(request: NextRequest) {
       total_de_paginas: count ? Math.ceil(count / limit) : 1,
       total_de_registros: count || 0
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API /etapas-faturamento Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: (error instanceof Error ? (error instanceof Error ? error.message : 'Internal Server Error') : 'Internal Server Error') }, { status: 500 });
   }
 }

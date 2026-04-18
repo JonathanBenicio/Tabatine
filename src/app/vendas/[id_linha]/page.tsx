@@ -3,11 +3,16 @@
 import React, { useEffect, useState } from 'react';
 import { useVendasStore, VendaPlana } from '@/store/useVendasStore';
 import { useLookupStore } from '@/store/useLookupStore';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import {
-  ArrowLeft, Package, DollarSign, Percent, Truck, Receipt,
-  RefreshCw, AlertCircle, ClipboardList, User, CreditCard, Calendar, FileText, Check, Copy, ShieldCheck
+  Package, User, Calendar, CreditCard,
+  RefreshCw, FileText, Receipt,
+  ClipboardList, Check, Copy, Truck, Percent,
+  ShieldCheck, DollarSign,
+  LucideProps
 } from 'lucide-react';
+
+type LucideIcon = React.ComponentType<LucideProps>;
 import { format, parseISO } from 'date-fns';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { InfoRow } from '@/components/ui/InfoRow';
@@ -21,7 +26,7 @@ const fmt = (val: number | undefined) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
 
 const fmtDate = (dateStr: string | undefined) => {
-  if (!dateStr || dateStr === '--') return '--';
+  if (!dateStr || dateStr === '--' || dateStr === '---') return '--';
   try {
     if (dateStr.includes('/')) return dateStr;
     return format(parseISO(dateStr), 'dd/MM/yyyy');
@@ -36,7 +41,7 @@ const fmtWeight = (val: number | undefined) => `${(val || 0).toFixed(3)} kg`;
 
 // ── Local Components ───────────────────────────────────────
 
-function DataField({ label, value, className = 'text-slate-600 dark:text-zinc-300', large = false }: {
+function DataField({ label, value, className = 'text-zinc-300', large = false }: {
   label: string; value: React.ReactNode; className?: string; large?: boolean;
 }) {
   return (
@@ -48,7 +53,7 @@ function DataField({ label, value, className = 'text-slate-600 dark:text-zinc-30
 }
 
 function StatCard({ icon: Icon, iconBg, label, value, subValue }: {
-  icon: any; iconBg: string; label: string; value: string; subValue?: string;
+  icon: LucideIcon; iconBg: string; label: string; value: string; subValue?: string;
 }) {
   return (
     <div className="p-4 rounded-xl bg-white/70 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800/50 flex items-center gap-4 shadow-sm dark:shadow-none">
@@ -128,7 +133,6 @@ function TaxRow({ name, color, data }: { name: string; color: string; data: { al
 // ── Main Page ──────────────────────────────────────────────
 
 export default function VendaDetailsPage() {
-  const router = useRouter();
   const params = useParams();
   const { id_linha } = params as { id_linha: string };
   const { fetchVendaByLinhaId, loading } = useVendasStore();
@@ -182,7 +186,7 @@ export default function VendaDetailsPage() {
           param: [{ codigo_pedido: venda.codigo_pedido }]
         })
       });
-      const data = await res.json();
+      const data = (await res.json()) as { ListaNfe?: { danfe?: string }[] };
       if (data.ListaNfe && data.ListaNfe.length > 0 && data.ListaNfe[0].danfe) {
         const url = data.ListaNfe[0].danfe;
         setDanfeUrl(url);

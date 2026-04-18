@@ -24,14 +24,15 @@ setup('authenticate', async ({ page }) => {
   await page.goto('/auth/login');
   await page.getByLabel(/e-mail|email/i).fill(TEST_EMAIL);
   await page.getByLabel(/senha|password/i).fill(TEST_PASSWORD);
-  // Clica no botão "Entrar"
-  await page.getByRole('button', { name: /entrar|login/i }).click();
+  
+  // Submete via tecla Enter para maior robustez
+  await page.keyboard.press('Enter');
 
-  // Aguarda chegar no dashboard e espera a rede ficar ociosa para garantir que cookies foram persistidos
+  // Aguarda chegar no dashboard e espera a rede ficar ociosa
   await expect(page).toHaveURL(/\/(dashboard)?/, { timeout: 30000 });
   await page.waitForLoadState('networkidle');
 
-  // Verifica um elemento visual que só aparece logado (ex: o nome/perfil no LayoutWrapper)
+  // Verifica um elemento visual que só aparece logado
   await expect(page.getByText(/Administrador/i).first()).toBeVisible({ timeout: 15000 });
   
   // Verifica se o cookie de sessão está presente

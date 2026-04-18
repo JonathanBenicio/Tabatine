@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export interface Notification {
@@ -13,7 +12,6 @@ export interface Notification {
 
 export function useNotifications() {
   const queryClient = useQueryClient();
-  const [unreadCount, setUnreadCount] = useState(0);
 
   // Fetch notifications with polling (100% server-side via API proxy)
   const { data: notifications = [] } = useQuery<Notification[]>({
@@ -55,11 +53,7 @@ export function useNotifications() {
     },
   });
 
-  useEffect(() => {
-    // Update unread count when notifications change
-    const count = notifications.filter(n => !n.is_read).length;
-    setUnreadCount(count);
-  }, [notifications]);
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return {
     notifications,

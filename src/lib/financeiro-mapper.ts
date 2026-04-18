@@ -14,7 +14,27 @@ export interface TituloFinanceiro {
   cliente_cnpj_cpf: string;
 }
 
-export function mapSupabaseToFinanceiro(raw: any, type: 'pagar' | 'receber'): TituloFinanceiro {
+interface RawFinanceiro {
+  id: string;
+  numero_documento?: string;
+  numero_parcela?: string;
+  numero_pedido?: string;
+  data_emissao: string;
+  data_vencimento: string;
+  data_baixa?: string;
+  valor_documento?: number | string;
+  valor_pago?: number | string;
+  valor_recebido?: number | string;
+  valor_saldo?: number | string;
+  status_titulo?: string;
+  clientes?: {
+    razao_social?: string;
+    cnpj_cpf?: string;
+  };
+}
+
+export function mapSupabaseToFinanceiro(rawRecord: Record<string, unknown>, type: 'pagar' | 'receber'): TituloFinanceiro {
+  const raw = rawRecord as unknown as RawFinanceiro;
   return {
     id: raw.id,
     numero_documento: raw.numero_documento || '---',
@@ -32,7 +52,7 @@ export function mapSupabaseToFinanceiro(raw: any, type: 'pagar' | 'receber'): Ti
   };
 }
 
-export function mapSupabaseToFinanceiros(rawArray: any[], type: 'pagar' | 'receber'): TituloFinanceiro[] {
+export function mapSupabaseToFinanceiros(rawArray: Record<string, unknown>[], type: 'pagar' | 'receber'): TituloFinanceiro[] {
   if (!Array.isArray(rawArray)) return [];
   return rawArray.map(raw => mapSupabaseToFinanceiro(raw, type));
 }

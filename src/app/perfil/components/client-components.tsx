@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { LogOut, Send, CheckCircle2, RefreshCw, Bell, AlertCircle } from 'lucide-react';
 import { toggleReceiveLogsAction } from '../actions';
 import { logout } from '@/app/auth/actions';
+import { UserProfile } from '@/types/auth';
 
 export function LogoutButton() {
   return (
@@ -19,7 +20,7 @@ export function LogoutButton() {
   );
 }
 
-export function TelegramIntegration({ profile }: { profile: any }) {
+export function TelegramIntegration({ profile }: { profile: UserProfile | null }) {
   const [telegramLoading, setTelegramLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,7 +35,7 @@ export function TelegramIntegration({ profile }: { profile: any }) {
       } else {
         setError(data.error || 'Erro ao gerar link.');
       }
-    } catch (err) {
+    } catch {
       setError('Erro de conexão.');
     } finally {
       setTelegramLoading(false);
@@ -109,7 +110,7 @@ export function TelegramIntegration({ profile }: { profile: any }) {
   );
 }
 
-export function ReceiveLogsToggle({ profile }: { profile: any }) {
+export function ReceiveLogsToggle({ profile }: { profile: UserProfile | null }) {
   const [receiving, setReceiving] = useState(profile?.receive_logs || false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -125,10 +126,10 @@ export function ReceiveLogsToggle({ profile }: { profile: any }) {
     try {
       const response = await toggleReceiveLogsAction(previousState);
       setReceiving(response.receive_logs);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Reverte se a API falhar
       setReceiving(previousState);
-      setError(err.message);
+      setError(err instanceof Error ? err.message : 'Erro ao salvar preferência');
     } finally {
       setSaving(false);
     }

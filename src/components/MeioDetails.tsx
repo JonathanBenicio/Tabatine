@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -62,7 +63,7 @@ export default function MeioDetails() {
             <div className="space-y-0">
               <InfoRow label="Código ABNT/Omie" value={<span className="font-mono text-amber-600 dark:text-amber-400">{meio.codigo}</span>} />
               <InfoRow label="Descrição" value={meio.descricao} className="text-slate-900 dark:text-white font-semibold" />
-              {omie?.tipo && <InfoRow label="Tipo" value={omie.tipo} />}
+              {!!omie?.tipo && <InfoRow label="Tipo" value={omie.tipo as any} />}
             </div>
           </SectionCard>
         </div>
@@ -70,12 +71,12 @@ export default function MeioDetails() {
         <div>
           <SectionCard icon={Shield} iconColor="text-slate-500 dark:text-zinc-400" title="Auditoria ERP">
             <div className="space-y-0">
-              {omie?.omie_id && <InfoRow label="Omie ID" value={<span className="font-mono text-xs">{omie.omie_id}</span>} />}
-              {omie?.created_at && (
-                <InfoRow label="Criado em" value={new Date(omie.created_at).toLocaleDateString('pt-BR')} />
+              {!!omie?.omie_id && <InfoRow label="Omie ID" value={<span className="font-mono text-xs">{omie.omie_id as any}</span>} />}
+              {!!omie?.created_at && (
+                <InfoRow label="Criado em" value={new Date(omie.created_at as any).toLocaleDateString('pt-BR')} />
               )}
-              {omie?.updated_at && (
-                <InfoRow label="Atualizado em" value={new Date(omie.updated_at).toLocaleDateString('pt-BR')} />
+              {!!omie?.updated_at && (
+                <InfoRow label="Atualizado em" value={new Date(omie.updated_at as any).toLocaleDateString('pt-BR')} />
               )}
             </div>
           </SectionCard>

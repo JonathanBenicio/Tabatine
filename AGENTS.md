@@ -27,9 +27,10 @@ npm run test:e2e:ui                   # Run E2E tests with UI runner
 
 ### Testing Conventions
 - **Unit Tests**: `*.test.ts` suffix in same directory as source. Use `node:test`.
-- **E2E Tests**: Found in `/tests` directory. Suffix `*.spec.ts`.
+- **E2E Tests**: Found in `/tests` directory. Suffix `*.spec.ts`. Devem seguir os 5 pilares do [test-roadmap.md](file:///c:/Users/Jonathan/Documents/Developer/GitHub/Tabatine/docs/test-roadmap.md).
 - **E2E Auth**: Tests requiring login should depend on the `setup` project.
 - **Coverage**: E2E tests track V8 coverage via `monocart-reporter`.
+- **Roadmap Universal**: Todas as Data Tables devem validar (1) Renderização, (2) Busca, (3) Paginação, (4) Ordenação e (5) Drill-down.
 - Structure: `describe()` blocks with `test()` cases inside.
 - Assertions: Use `assert.strictEqual()` for unit, `expect()` for Playwright.
 
@@ -213,7 +214,8 @@ node --experimental-strip-types --test src/lib/ofxParser.test.ts
 node --experimental-strip-types --test src/**/*.test.ts
 ```
 
-## ESLint Configuration
-- Uses `eslint-config-next/core-web-vitals` + TypeScript rules
-- Ignores: `.next/**`, `out/**`, `build/**`
-- Run `npm run lint` before committing
+## ESLint Compliance & Code Quality
+- **Zero Tolerance**: All code MUST pass `npm run lint` with 0 errors and 0 warnings before being committed or considered "done".
+- **Pre-flight Check**: Always run `npm run lint` and `npx tsc --noEmit` before concluding any task.
+- **Auto-Fix**: Use `npm run lint -- --fix` to resolve stylistic issues, but manual fixes are required for architectural rules (like `no-explicit-any`).
+- **Typing**: Explicit `any` is forbidden. Use proper interfaces or `Record<string, unknown>` for dynamic data.

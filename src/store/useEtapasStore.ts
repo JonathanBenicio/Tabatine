@@ -9,7 +9,7 @@ export interface EtapaPlana {
   descricaoPadrao: string;
   operacao: string;
   ativos: boolean;
-  omieData?: any;
+  omieData?: Record<string, unknown>;
 }
 
 interface EtapasStoreState {
@@ -61,8 +61,8 @@ export const useEtapasStore = create<EtapasStoreState>((set, get) => ({
         currentPage: data.pagina || page,
         loading: false,
       });
-    } catch (error: any) {
-      set({ error: error.message, loading: false });
+    } catch (error: unknown) {
+      set({ error: (error as Error).message, loading: false });
     }
   },
 }));

@@ -1,6 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
+import { SortingState } from '@tanstack/react-table';
 import { TituloFinanceiro } from '@/lib/financeiro-mapper';
 
 interface FinanceiroState {
@@ -18,6 +19,9 @@ interface FinanceiroState {
   totalReceber: number;
   receberTotalPaginas: number;
 
+  pagarSorting: SortingState;
+  receberSorting: SortingState;
+
   isLoading: boolean;
   error: string | null;
 
@@ -29,6 +33,9 @@ interface FinanceiroState {
   setReceber: (data: TituloFinanceiro[], total: number, paginas: number) => void;
   setReceberPage: (page: number) => void;
   setReceberSearch: (search: string) => void;
+  
+  setPagarSorting: (sorting: SortingState) => void;
+  setReceberSorting: (sorting: SortingState) => void;
 
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -47,6 +54,9 @@ export const useFinanceiroStore = create<FinanceiroState>((set) => ({
   totalReceber: 0,
   receberTotalPaginas: 1,
 
+  pagarSorting: [{ id: 'data_vencimento', desc: false }],
+  receberSorting: [{ id: 'data_vencimento', desc: false }],
+
   isLoading: false,
   error: null,
 
@@ -57,6 +67,9 @@ export const useFinanceiroStore = create<FinanceiroState>((set) => ({
   setReceber: (receber, totalReceber, receberTotalPaginas) => set({ receber, totalReceber, receberTotalPaginas, isLoading: false }),
   setReceberPage: (receberPage) => set({ receberPage }),
   setReceberSearch: (receberSearch) => set({ receberSearch, receberPage: 1 }),
+
+  setPagarSorting: (pagarSorting) => set({ pagarSorting }),
+  setReceberSorting: (receberSorting) => set({ receberSorting }),
 
   setLoading: (isLoading) => set({ isLoading }),
   setError: (error) => set({ error, isLoading: false }),

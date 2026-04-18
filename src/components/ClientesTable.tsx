@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { useClienteStore, ClienteCadastro } from '@/store/useClienteStore';
-import { Search, Users as UsersIcon, AlertCircle, RefreshCw, Eye, MapPin, Mail, Phone, ShieldCheck } from 'lucide-react';
+import { Users as UsersIcon, AlertCircle, RefreshCw, Eye, MapPin, Mail, Phone, ShieldCheck, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import Pagination from './Pagination';
 import { useRouter } from 'next/navigation';
 import { useClientesQuery } from '@/hooks/useClientesQuery';
@@ -21,11 +21,12 @@ const columnHelper = createColumnHelper<ClienteCadastro>();
 export default function ClientesTable() {
   const router = useRouter();
   const { 
-    currentPage, totalPaginas, totalRegistros, 
-    searchTerm, setSearchTerm, setCurrentPage 
+    currentPage, 
+    searchTerm, setSearchTerm, setCurrentPage,
+    sorting, setSorting
   } = useClienteStore();
 
-  const { data, isLoading, error, refetch } = useClientesQuery(currentPage, searchTerm);
+  const { data, isLoading, error, refetch } = useClientesQuery(currentPage, searchTerm, sorting);
 
   const columns = useMemo(() => [
     columnHelper.accessor('razao_social', {
@@ -115,7 +116,7 @@ export default function ClientesTable() {
           <button 
             onClick={() => router.push(`/clientes/${info.row.original.codigo_cliente_omie}`)}
             className="p-2 bg-indigo-500 hover:bg-indigo-400 text-white rounded-lg transition-colors shadow-lg shadow-indigo-500/20" 
-            title="Perfil do Cliente"
+            title="Abrir Detalhes"
           >
             <Eye size={14} />
           </button>
@@ -125,10 +126,16 @@ export default function ClientesTable() {
     }),
   ], [router]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: data?.clientes || [],
     columns,
+    state: {
+      sorting,
+    },
+    onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
+    manualSorting: true,
   });
 
   return (
@@ -215,9 +222,19 @@ export default function ClientesTable() {
                 {headerGroup.headers.map(header => (
                   <th 
                     key={header.id} 
-                    className={`py-5 px-6 text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] font-sans ${header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''}`}
+                    className={`py-5 px-6 text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] font-sans ${header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''} ${header.column.getCanSort() ? 'cursor-pointer select-none' : ''}`}
+                    onClick={header.column.getToggleSortingHandler()}
                   >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    <div className="flex items-center gap-2">
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.column.getIsSorted() === 'asc' ? (
+                        <ChevronUp className="w-4 h-4 text-indigo-500" />
+                      ) : header.column.getIsSorted() === 'desc' ? (
+                        <ChevronDown className="w-4 h-4 text-indigo-500" />
+                      ) : header.column.getCanSort() ? (
+                        <ChevronsUpDown className="w-4 h-4 text-slate-300 dark:text-zinc-700 opacity-30 group-hover:opacity-100 transition-opacity" />
+                      ) : null}
+                    </div>
                   </th>
                 ))}
               </tr>

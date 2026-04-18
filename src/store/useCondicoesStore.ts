@@ -8,7 +8,7 @@ export interface CondicaoPlana {
   descricao: string;
   parcelas: number;
   ativos: boolean;
-  omieData?: any;
+  omieData?: Record<string, unknown>;
 }
 
 interface CondicoesStoreState {
@@ -37,7 +37,7 @@ export const useCondicoesStore = create<CondicoesStoreState>((set, get) => ({
 
   fetchCondicoes: async (page = 1, search) => {
     const currentSearch = search !== undefined ? search : get().searchTerm;
-    set({ loading: true, error: null });
+    set({ loading: true, error: null, condicoes: [] }); // Limpa lista ao buscar
     try {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -60,8 +60,8 @@ export const useCondicoesStore = create<CondicoesStoreState>((set, get) => ({
         currentPage: data.pagina || page,
         loading: false,
       });
-    } catch (error: any) {
-      set({ error: error.message, loading: false });
+    } catch (error: unknown) {
+      set({ error: (error as Error).message, loading: false });
     }
   },
 }));

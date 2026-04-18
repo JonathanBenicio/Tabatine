@@ -1,40 +1,36 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
-import { useVendasStore, VendaPlana } from '@/store/useVendasStore';
+import React, { useMemo, useState, useTransition } from 'react';
+import { useVendasStore } from '@/store/useVendasStore';
 import { useLookupStore } from '@/store/useLookupStore';
 import { 
-  Search, 
+  Search,
   TrendingUp, 
   AlertCircle, 
   RefreshCw, 
-  Eye, 
   Package, 
-  User, 
   Filter,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
   FileDown,
   Settings2,
-  X
+  X,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown
 } from 'lucide-react';
-import { format, parseISO, startOfYear, endOfYear, startOfMonth, endOfMonth, subDays, startOfDay, endOfDay } from 'date-fns';
+import { format, startOfYear, endOfYear, startOfMonth, endOfMonth, subDays, startOfDay, endOfDay } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import Pagination from './Pagination';
-import { useVendasQuery } from '@/hooks/useVendasQuery';
+import { useSuspenseVendasQuery } from '@/hooks/useVendasQuery';
 import {
   useReactTable,
   getCoreRowModel,
   flexRender,
-  createColumnHelper,
 } from '@tanstack/react-table';
 import { exportToCSV } from '@/utils/export-utils';
 import { TableContainer } from './ui/TableContainer';
 import { TableSearch } from './ui/TableSearch';
 import { TableSummaryCard } from './ui/TableSummaryCard';
-
-const columnHelper = createColumnHelper<VendaPlana>();
+import { getVendasColumns } from './vendas-columns';
 
 export default function VendasTable() {
   const router = useRouter();
@@ -50,8 +46,9 @@ export default function VendasTable() {
 
   const [showFilters, setShowFilters] = useState(false);
   const [showVisibility, setShowVisibility] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
-  const { data, isLoading, error, refetch } = useVendasQuery(
+  const { data, error, refetch } = useSuspenseVendasQuery(
     currentPage, 
     pageSize,
     searchTerm, 
@@ -60,152 +57,16 @@ export default function VendasTable() {
     filters
   );
 
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
-  };
+  const columns = useMemo(() => getVendasColumns(
+    getClienteNome,
+    getVendedorNome,
+    getContaNome,
+    (id) => startTransition(() => router.push(`/vendas/${id}`))
+  ), [getClienteNome, getVendedorNome, getContaNome, router]);
 
-  const formatDate = (dateStr: string) => {
-    if (!dateStr || dateStr === '--') return '--';
-    try {
-      if (dateStr.includes('/')) return dateStr; 
-      return format(parseISO(dateStr), 'dd/MM/yyyy');
-    } catch {
-      return dateStr;
-    }
-  };
-
-  const etapaMap: Record<string, { label: string; color: string }> = {
-    '10': { label: 'Pedido', color: 'text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(59,130,246,0.1)]' },
-    '20': { label: 'Separar', color: 'text-yellow-600 dark:text-yellow-400 bg-yellow-500/10 border-yellow-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(234,179,8,0.1)]' },
-    '30': { label: 'Faturar', color: 'text-purple-600 dark:text-purple-400 bg-purple-500/10 border-purple-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(168,85,247,0.1)]' },
-    '50': { label: 'Faturado', color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(16,185,129,0.1)]' },
-    '60': { label: 'Entregue', color: 'text-teal-600 dark:text-teal-400 bg-teal-500/10 border-teal-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(20,184,166,0.1)]' },
-    '70': { label: 'Cancelado', color: 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(244,63,94,0.1)]' },
-    '80': { label: 'Devolvido', color: 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(239,68,68,0.1)]' },
-  };
-
-  const formatEtapa = (etapa: string) => {
-    const mapped = etapaMap[etapa];
-    if (mapped) return mapped;
-    return { label: etapa || 'Pendente', color: 'text-slate-600 dark:text-zinc-400 bg-slate-100 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700' };
-  };
-
-  const columns = useMemo(() => [
-    {
-      header: '📅 DATA',
-      accessorKey: 'data',
-      cell: (info: any) => <span className="text-xs font-mono text-zinc-400">{formatDate(info.getValue())}</span>,
-    },
-    {
-      header: '👥 CLIENTE',
-      accessorKey: 'cliente',
-      id: 'cliente',
-      cell: (info: any) => (
-        <div className="flex items-center gap-2 group-hover/row:translate-x-1 transition-transform">
-          <User size={12} className="text-slate-400 dark:text-zinc-600" />
-          <span className="text-xs font-bold text-slate-900 dark:text-white group-hover/row:text-orange-500 dark:group-hover/row:text-orange-400 transition-colors">
-            {getClienteNome(info.getValue())}
-          </span>
-        </div>
-      ),
-      minSize: 220,
-    },
-    {
-      header: '👤 VENDEDOR',
-      accessorKey: 'vendedor',
-      cell: (info: any) => <span className="text-[11px] text-zinc-400 font-medium">{getVendedorNome(info.getValue())}</span>,
-      minSize: 150,
-    },
-    {
-      header: '📦 PEDIDO',
-      accessorKey: 'pedido',
-      cell: (info: any) => <span className="text-[11px] font-black text-orange-500/80 bg-orange-500/5 px-2 py-0.5 rounded-lg border border-orange-500/10">#{info.getValue()}</span>,
-    },
-    {
-      header: '📄 NF',
-      accessorKey: 'nf',
-      cell: (info: any) => <span className="text-[11px] text-zinc-500 font-mono">{info.getValue() || '---'}</span>,
-    },
-    {
-      header: '🛒 PRODUTO',
-      accessorKey: 'produto',
-      cell: (info: any) => (
-        <div className="flex items-center gap-2">
-          <Package size={12} className="text-slate-400 dark:text-zinc-600" />
-          <span className="text-xs font-medium text-slate-700 dark:text-zinc-300 truncate max-w-[180px]">{info.getValue()}</span>
-        </div>
-      ),
-      minSize: 200,
-    },
-    {
-      header: '📦 UND',
-      accessorKey: 'und',
-      cell: (info: any) => <span className="text-[11px] font-bold text-zinc-500 uppercase">{info.getValue()}</span>,
-    },
-    {
-      header: '💰 VALOR VENDA',
-      accessorKey: 'valorVenda',
-      cell: (info: any) => <span className="text-xs font-bold text-emerald-400">{formatCurrency(info.getValue())}</span>,
-    },
-    {
-      header: '💳 COND. PAGTO.',
-      accessorKey: 'condPagto',
-      cell: (info: any) => <span className="text-[11px] text-zinc-400 font-medium italic">{info.getValue()}</span>,
-    },
-    {
-      header: '🚚 FRETE',
-      accessorKey: 'frete',
-      cell: (info: any) => <span className="text-[11px] text-zinc-500">{formatCurrency(info.getValue())}</span>,
-    },
-    {
-      header: '📈 COMS. %',
-      accessorKey: 'percComissao',
-      cell: (info: any) => <span className="text-[11px] font-bold text-indigo-400">{info.getValue()}%</span>,
-    },
-    {
-      header: '🎯 VALOR TOTAL',
-      accessorKey: 'valorTotal',
-      cell: (info: any) => <span className="text-xs font-black text-slate-900 dark:text-white">{formatCurrency(info.getValue())}</span>,
-    },
-    {
-      header: '🏦 FORMA PG',
-      accessorKey: 'formaPg',
-      cell: (info: any) => <span className="text-[11px] text-zinc-400 uppercase tracking-tighter">{info.getValue()}</span>,
-    },
-    {
-      header: '🏛️ BANCO',
-      accessorKey: 'banco',
-      cell: (info: any) => <span className="text-[10px] text-zinc-500 font-medium">{getContaNome(info.getValue())}</span>,
-    },
-    {
-      header: '🚦 Status Venc.',
-      accessorKey: 'vencimentoStatus',
-      cell: (info: any) => {
-        const status = formatEtapa(info.getValue());
-        return (
-          <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-tighter border ${status.color}`}>
-            {status.label}
-          </span>
-        );
-      },
-    },
-    {
-      id: 'actions',
-      header: '⚡ AÇÕES',
-      cell: (info: any) => (
-        <button 
-          onClick={() => router.push(`/vendas/${info.row.original.id_linha}`)}
-          className="p-2 rounded-lg bg-slate-100 dark:bg-zinc-800/50 hover:bg-orange-500/10 dark:hover:bg-orange-500/20 text-slate-500 dark:text-zinc-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors border border-slate-200 dark:border-zinc-700/50 hover:border-orange-500/30 group"
-          title="Ver Detalhes"
-        >
-          <Eye size={16} className="group-hover:scale-110 transition-transform" />
-        </button>
-      ),
-    },
-  ], [getClienteNome, getVendedorNome, getContaNome, router]);
-
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
-    data: data?.vendas || [],
+    data: data.vendas,
     columns,
     state: {
       sorting,
@@ -215,11 +76,15 @@ export default function VendasTable() {
     },
     onSortingChange: (updater) => {
       const newSorting = typeof updater === 'function' ? updater(sorting) : updater;
-      setSorting(newSorting);
+      startTransition(() => {
+        setSorting(newSorting);
+      });
     },
     onColumnFiltersChange: (updater) => {
       const newFilters = typeof updater === 'function' ? updater(columnFilters) : updater;
-      setColumnFilters(newFilters);
+      startTransition(() => {
+        setColumnFilters(newFilters);
+      });
     },
     onColumnVisibilityChange: (updater) => {
       const newVisibility = typeof updater === 'function' ? updater(columnVisibility) : updater;
@@ -276,10 +141,12 @@ export default function VendasTable() {
         return;
     }
 
-    setFilters({
-      ...filters,
-      startDate: format(start, 'yyyy-MM-dd'),
-      endDate: format(end, 'yyyy-MM-dd')
+    startTransition(() => {
+      setFilters({
+        ...filters,
+        startDate: format(start, 'yyyy-MM-dd'),
+        endDate: format(end, 'yyyy-MM-dd')
+      });
     });
   };
 
@@ -302,10 +169,10 @@ export default function VendasTable() {
         <div className="flex items-center gap-3 w-full lg:w-auto">
           <TableSearch 
             value={searchTerm}
-            onChange={setSearchTerm}
+            onChange={(val) => startTransition(() => setSearchTerm(val))}
             placeholder="Pesquisar pedido ou cliente..."
             className="flex-1 lg:flex-none lg:w-64"
-            isLoading={isLoading}
+            isLoading={isPending}
           />
 
           <div className="relative">
@@ -356,7 +223,7 @@ export default function VendasTable() {
             </button>
 
             {showFilters && (
-              <div className="absolute right-0 mt-2 w-[340px] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-6 z-50 animate-in fade-in zoom-in-95 duration-200">
+               <div className="absolute right-0 mt-2 w-[340px] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-6 z-50 animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex items-center justify-between mb-6 pb-2 border-b border-slate-100 dark:border-zinc-800">
                   <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest">Filtros Avançados</span>
                   <button onClick={() => setShowFilters(false)} className="text-slate-400 dark:text-zinc-500 hover:text-slate-900 dark:hover:text-white transition-colors"><X size={16} /></button>
@@ -392,20 +259,20 @@ export default function VendasTable() {
                         type="date" 
                         className="bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-[11px] text-slate-700 dark:text-zinc-300 w-full outline-none focus:border-orange-500/50"
                         value={filters.startDate || ''}
-                        onChange={(e) => setFilters({...filters, startDate: e.target.value})}
+                        onChange={(e) => startTransition(() => setFilters({...filters, startDate: e.target.value}))}
                       />
                       <input 
                         type="date" 
                         className="bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-[11px] text-slate-700 dark:text-zinc-300 w-full outline-none focus:border-orange-500/50"
                         value={filters.endDate || ''}
-                        onChange={(e) => setFilters({...filters, endDate: e.target.value})}
+                        onChange={(e) => startTransition(() => setFilters({...filters, endDate: e.target.value}))}
                       />
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between pt-6 mt-6 border-t border-slate-100 dark:border-zinc-800/50">
-                  <button onClick={() => { setFilters({}); setShowFilters(false); }} className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest hover:text-orange-500 transition-colors">Limpar</button>
+                  <button onClick={() => { startTransition(() => setFilters({})); setShowFilters(false); }} className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest hover:text-orange-500 transition-colors">Limpar</button>
                   <button onClick={() => setShowFilters(false)} className="bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-lg transition-all shadow-lg shadow-orange-500/20">Aplicar</button>
                 </div>
               </div>
@@ -421,11 +288,11 @@ export default function VendasTable() {
           </button>
 
           <button  
-            onClick={() => refetch()} 
-            disabled={isLoading}
+            onClick={() => startTransition(() => { refetch(); })} 
+            disabled={isPending}
             className="p-2.5 bg-white/50 dark:bg-zinc-900/40 border border-white/60 dark:border-zinc-800 hover:border-orange-500/50 rounded-xl text-slate-500 dark:text-zinc-400 hover:text-orange-500 transition-all active:scale-95 disabled:opacity-50 group backdrop-blur-sm"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-orange-500' : 'group-hover:rotate-180 transition-transform duration-700'}`} />
+            <RefreshCw className={`w-4 h-4 ${isPending ? 'animate-spin text-orange-500' : 'group-hover:rotate-180 transition-transform duration-700'}`} />
           </button>
         </div>
       </div>
@@ -438,7 +305,7 @@ export default function VendasTable() {
           sublabel="Fluxo Analítico"
           icon={Package}
           variant="orange"
-          isLoading={isLoading && !data}
+          isLoading={isPending}
         />
 
         <TableSummaryCard 
@@ -448,7 +315,7 @@ export default function VendasTable() {
           icon={TrendingUp}
           variant="emerald"
           isCurrency={true}
-          isLoading={isLoading && !data}
+          isLoading={isPending}
         />
 
         <TableSummaryCard 
@@ -460,7 +327,7 @@ export default function VendasTable() {
           icon={Package}
           variant="blue"
           isCurrency={true}
-          isLoading={isLoading && !data}
+          isLoading={isPending}
         />
       </div>
 
@@ -477,7 +344,7 @@ export default function VendasTable() {
 
       {/* Table Container */}
       <TableContainer
-        isLoading={isLoading && !data}
+        isLoading={isPending}
         isEmpty={table.getRowModel().rows.length === 0}
         emptyMessage="Nenhuma venda localizada"
         emptyIcon={Package}
@@ -492,7 +359,7 @@ export default function VendasTable() {
                   <span className="text-[10px] text-slate-500 dark:text-zinc-600 font-bold uppercase tracking-widest">Linhas:</span>
                   <select 
                     value={pageSize}
-                    onChange={e => setPageSize(Number(e.target.value))}
+                    onChange={e => startTransition(() => setPageSize(Number(e.target.value)))}
                     className="bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg px-2 py-0.5 text-[10px] font-bold text-slate-500 dark:text-zinc-400 outline-none focus:border-orange-500/50 transition-all focus:bg-white dark:focus:bg-zinc-900"
                   >
                     {[10, 20, 50, 100].map(size => (
@@ -504,8 +371,8 @@ export default function VendasTable() {
             <Pagination 
               currentPage={currentPage}
               totalPaginas={data?.totalPaginas || 1}
-              onPageChange={setCurrentPage}
-              loading={isLoading}
+              onPageChange={(page) => startTransition(() => setCurrentPage(page))}
+              loading={isPending}
             />
           </div>
         }
@@ -548,14 +415,13 @@ export default function VendasTable() {
                             onClick={header.column.getToggleSortingHandler()}
                           >
                             {flexRender(header.column.columnDef.header, header.getContext())}
-                            {header.column.getCanSort() && (
-                              <div className="text-orange-500/50 transition-colors">
-                                {{
-                                  asc: <ArrowUp className="w-3 h-3 text-orange-400" />,
-                                  desc: <ArrowDown className="w-3 h-3 text-orange-400" />,
-                                }[header.column.getIsSorted() as string] ?? <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100" />}
-                              </div>
-                            )}
+                            {header.column.getIsSorted() === 'asc' ? (
+                              <ChevronUp className="w-3 h-3 text-orange-500" />
+                            ) : header.column.getIsSorted() === 'desc' ? (
+                              <ChevronDown className="w-3 h-3 text-orange-500" />
+                            ) : header.column.getCanSort() ? (
+                              <ChevronsUpDown className="w-3 h-3 text-slate-400 group-hover/header:text-orange-500 opacity-30 group-hover/header:opacity-100 transition-all" />
+                            ) : null}
                           </div>
                           
                           {header.column.getCanFilter() && showColumnFilters && (
@@ -564,7 +430,7 @@ export default function VendasTable() {
                               <input
                                 type="text"
                                 value={(header.column.getFilterValue() ?? '') as string}
-                                onChange={e => header.column.setFilterValue(e.target.value)}
+                                onChange={e => startTransition(() => header.column.setFilterValue(e.target.value))}
                                 placeholder="Filtrar..."
                                 onClick={e => e.stopPropagation()}
                                 className="w-full bg-slate-200/50 dark:bg-zinc-950/50 border border-slate-300 dark:border-zinc-800 rounded-md py-1.5 pl-7 pr-2 text-[9px] font-medium text-slate-700 dark:text-zinc-400 placeholder:text-slate-400 dark:placeholder:text-zinc-700 outline-none focus:border-orange-500/30 transition-all focus:bg-white dark:focus:bg-zinc-900"

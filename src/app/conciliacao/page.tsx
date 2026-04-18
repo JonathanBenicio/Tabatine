@@ -4,7 +4,6 @@ import React, { useState, useMemo } from "react";
 import { useOfxStore } from "@/store/useOfxStore";
 import { Trash2 } from "lucide-react";
 import { OfxTransaction } from "@/lib/ofxParser";
-import { formatBRL } from "@/utils/format";
 
 // Sub-components
 import { UploadZone } from "./_components/UploadZone";

@@ -3,12 +3,8 @@
 import React, { useMemo, useState } from 'react';
 import { useProdutosStore, Produto } from '@/store/useProdutosStore';
 import { 
-  Search, 
   Package, 
   Filter, 
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
   FileDown,
   RefreshCcw,
   Tag,
@@ -17,6 +13,8 @@ import {
   CheckCircle2,
   Settings2,
   ChevronDown,
+  ChevronUp,
+  ChevronsUpDown,
   X
 } from 'lucide-react';
 import Pagination from './Pagination';
@@ -35,6 +33,17 @@ import { TableSummaryCard } from './ui/TableSummaryCard';
 
 const columnHelper = createColumnHelper<Produto>();
 
+const formatCurrency = (value: number | string | undefined | null) => {
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  if (numValue === null || numValue === undefined || isNaN(numValue)) {
+    return 'R$ 0,00';
+  }
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(numValue);
+};
+
 export default function ProdutosTable() {
   const router = useRouter();
   const { 
@@ -52,17 +61,6 @@ export default function ProdutosTable() {
     sorting, 
     filters
   );
-
-  const formatCurrency = (value: number | string | undefined | null) => {
-    const numValue = typeof value === 'string' ? parseFloat(value) : value;
-    if (numValue === null || numValue === undefined || isNaN(numValue)) {
-      return 'R$ 0,00';
-    }
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(numValue);
-  };
 
   const columns = useMemo(() => [
     columnHelper.accessor('descricao', {
@@ -148,7 +146,7 @@ export default function ProdutosTable() {
           <button 
             onClick={() => router.push(`/produtos/${info.row.original.codigo_produto}`)}
             className="p-2 text-slate-400 dark:text-zinc-500 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all"
-            title="Ver Detalhes"
+            title="Abrir Detalhes"
           >
             <Eye size={16} />
           </button>
@@ -158,6 +156,7 @@ export default function ProdutosTable() {
     }),
   ], [router]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: data?.produtos || [],
     columns,
@@ -376,14 +375,13 @@ export default function ProdutosTable() {
                   >
                     <div className={`flex items-center gap-2 ${header.column.columnDef.meta?.align === 'right' ? 'justify-end' : header.column.columnDef.meta?.align === 'center' ? 'justify-center' : ''}`}>
                       {flexRender(header.column.columnDef.header, header.getContext())}
-                      {header.column.getCanSort() && (
-                        <div className="text-slate-400 dark:text-zinc-600 transition-colors">
-                          {{
-                            asc: <ArrowUp className="w-3 h-3 text-blue-500" />,
-                            desc: <ArrowDown className="w-3 h-3 text-blue-500" />,
-                          }[header.column.getIsSorted() as string] ?? <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100" />}
-                        </div>
-                      )}
+                      {header.column.getIsSorted() === 'asc' ? (
+                        <ChevronUp className="w-3 h-3 text-blue-500" />
+                      ) : header.column.getIsSorted() === 'desc' ? (
+                        <ChevronDown className="w-3 h-3 text-blue-500" />
+                      ) : header.column.getCanSort() ? (
+                        <ChevronsUpDown className="w-3 h-3 text-slate-300 dark:text-zinc-700 opacity-20 group-hover:opacity-100 transition-opacity" />
+                      ) : null}
                     </div>
                   </th>
                 ))}

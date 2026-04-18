@@ -5,17 +5,21 @@ import { useContasCorrentesStore, ContaCorrente } from '@/store/useContasCorrent
 import { useParams, useRouter } from 'next/navigation';
 import { useVendasQuery } from '@/hooks/useVendasQuery';
 import {
-  ArrowLeft, Building2, CreditCard, Banknote, 
+  ArrowLeft, CreditCard,
   AlertCircle, RefreshCw, Database, 
   Info, ShieldCheck, Wallet,
   Ban, CheckCircle2, DollarSign,
-  Hash, Landmark, ShoppingCart, History
+  ShoppingCart,
+  LucideProps
 } from 'lucide-react';
+import { VendaPlana } from '@/store/useVendasStore';
+
+type LucideIcon = React.ComponentType<LucideProps>;
 
 // ── Reusable Components ────────────────────────────────────
 
 function SectionCard({ icon: Icon, iconColor, title, children }: {
-  icon: any; iconColor: string; title: string; children: React.ReactNode;
+  icon: LucideIcon; iconColor: string; title: string; children: React.ReactNode;
 }) {
   return (
     <div className="p-6 rounded-2xl bg-zinc-900/30 border border-zinc-800/50 backdrop-blur-xl">
@@ -24,15 +28,6 @@ function SectionCard({ icon: Icon, iconColor, title, children }: {
         {title}
       </h2>
       {children}
-    </div>
-  );
-}
-
-function InfoRow({ label, value, className = 'text-zinc-300' }: { label: string; value: React.ReactNode; className?: string }) {
-  return (
-    <div className="flex justify-between items-center py-3 border-b border-zinc-800/30 last:border-0">
-      <span className="text-xs text-zinc-500 shrink-0">{label}</span>
-      <span className={`text-sm font-medium text-right ml-4 ${className}`}>{value || '--'}</span>
     </div>
   );
 }
@@ -49,7 +44,7 @@ function DataField({ label, value, className = 'text-zinc-300', large = false }:
 }
 
 function StatCard({ icon: Icon, iconBg, label, value, subValue }: {
-  icon: any; iconBg: string; label: string; value: string; subValue?: string;
+  icon: LucideIcon; iconBg: string; label: string; value: string; subValue?: string;
 }) {
   return (
     <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/50 flex items-center gap-4">
@@ -82,7 +77,7 @@ function RecentOrdersSection({ contaCorrenteId }: { contaCorrenteId: number }) {
         </div>
       ) : orders.length > 0 ? (
         <div className="space-y-2">
-          {orders.map((order: any) => (
+          {orders.map((order: VendaPlana) => (
             <div 
               key={order.id_linha}
               onClick={() => router.push(`/vendas?search=${order.numeroPedido}`)}
@@ -188,7 +183,7 @@ export default function ContaCorrenteDetailsPage() {
   if (!conta) return null;
 
   const totalVendasCount = vendasData?.totalRegistros || 0;
-  const totalVolume = (vendasData?.vendas || []).reduce((acc: number, curr: any) => acc + curr.valorTotal, 0);
+  const totalVolume = (vendasData?.vendas || []).reduce((acc: number, curr: VendaPlana) => acc + curr.valorTotal, 0);
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-8 animate-in fade-in zoom-in duration-500 pb-20">
@@ -198,6 +193,8 @@ export default function ContaCorrenteDetailsPage() {
         <button 
           onClick={() => router.push('/contas-correntes')}
           className="p-3 bg-zinc-900/50 hover:bg-zinc-800 border border-zinc-800 rounded-xl text-zinc-400 hover:text-white transition-all active:scale-95 group"
+          title="Voltar"
+          aria-label="Voltar"
         >
           <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
         </button>

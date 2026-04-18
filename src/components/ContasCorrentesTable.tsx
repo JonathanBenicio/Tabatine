@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { useContasCorrentesStore, ContaCorrente } from '@/store/useContasCorrentesStore';
-import { Search, Banknote, AlertCircle, RefreshCw, Eye, Building2, CreditCard, Ban, CheckCircle2 } from 'lucide-react';
+import { Banknote, AlertCircle, RefreshCw, Eye, Building2, CreditCard, Ban, CheckCircle2, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import Pagination from './Pagination';
 import { useContasCorrentesQuery } from '@/hooks/useContasCorrentesQuery';
 import { useRouter } from 'next/navigation';
@@ -21,10 +21,10 @@ const columnHelper = createColumnHelper<ContaCorrente>();
 export default function ContasCorrentesTable() {
   const router = useRouter();
   const { 
-    currentPage, searchTerm, setSearchTerm, setCurrentPage 
+    currentPage, searchTerm, sorting, setSearchTerm, setCurrentPage, setSorting 
   } = useContasCorrentesStore();
 
-  const { data, isLoading, error, refetch } = useContasCorrentesQuery(currentPage, searchTerm);
+  const { data, isLoading, error, refetch } = useContasCorrentesQuery(currentPage, searchTerm, sorting);
 
   const columns = useMemo(() => [
     columnHelper.accessor('descricao', {
@@ -94,7 +94,7 @@ export default function ContasCorrentesTable() {
           <button 
             onClick={() => router.push(`/contas-correntes/${info.row.original.nCodCC}`)}
             className="p-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors shadow-lg shadow-emerald-500/20" 
-            title="Ver Detalhes"
+            title="Abrir Detalhes"
           >
             <Eye size={14} />
           </button>
@@ -102,11 +102,20 @@ export default function ContasCorrentesTable() {
       ),
       meta: { align: 'center' }
     }),
-  ], []);
+  ], [router]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: data?.contas || [],
     columns,
+    state: {
+      sorting,
+    },
+    onSortingChange: (updater) => {
+      const newSorting = typeof updater === 'function' ? updater(sorting) : updater;
+      setSorting(newSorting);
+    },
+    manualSorting: true,
     getCoreRowModel: getCoreRowModel(),
   });
 
@@ -201,9 +210,20 @@ export default function ContasCorrentesTable() {
                 {headerGroup.headers.map(header => (
                   <th 
                     key={header.id} 
-                    className={`py-5 px-6 text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] font-sans ${header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''}`}
+                    className={`py-5 px-6 text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] font-sans ${header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''} ${header.column.getCanSort() ? 'cursor-pointer select-none hover:text-emerald-500 transition-colors' : ''}`}
+                    onClick={header.column.getToggleSortingHandler()}
                   >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    <div className={`flex items-center gap-2 ${header.column.columnDef.meta?.align === 'center' ? 'justify-center' : ''}`}>
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.column.getCanSort() && (
+                        <div className="text-slate-300 dark:text-zinc-700">
+                          {{
+                            asc: <ChevronUp size={12} className="text-emerald-500" />,
+                            desc: <ChevronDown size={12} className="text-emerald-500" />,
+                          }[header.column.getIsSorted() as string] ?? <ChevronsUpDown size={12} className="opacity-0 group-hover:opacity-100" />}
+                        </div>
+                      )}
+                    </div>
                   </th>
                 ))}
               </tr>

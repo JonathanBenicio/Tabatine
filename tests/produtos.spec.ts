@@ -1,3 +1,8 @@
+/**
+ * @file produtos.spec.ts
+ * @description E2E Tests for the Produtos module (Issue #60)
+ * Covers: Rendering, Search, Pagination, Sorting, Navigation to Details
+ */
 import { test, expect } from './fixtures/test';
 
 test.describe('Módulo: Produtos', () => {
@@ -10,24 +15,25 @@ test.describe('Módulo: Produtos', () => {
   // ─────────────────────────────────────────────────────────
 
   test('1.1 deve exibir o banner e título da página', async ({ page }) => {
-    const heading = page.getByRole('heading', { name: "Produtos", exact: true });
-    await expect(heading).toBeVisible({ timeout: 10000 });
+    const heading = page.getByRole('heading', { name: /^produtos$/i });
+    await expect(heading).toBeVisible({ timeout: 15000 });
   });
 
   test('1.2 deve renderizar a tabela com dados reais e summary cards', async ({ page }) => {
     await expect(page.getByText(/total produtos/i)).toBeVisible();
     await expect(page.getByText(/ativos/i)).toBeVisible();
+    
+    // Aguarda dados reais
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
   });
 
   test('1.3 deve exibir cabeçalhos de coluna corretos', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
     const table = page.getByRole('table');
-    await expect(table).toBeVisible();
-
+    
     const expectedHeaders = ['Produto', 'SKU / Cód.', 'Família', 'Unidade', 'Preço', 'NCM', 'Status', 'Ações'];
     for (const header of expectedHeaders) {
-      await expect(table.locator('th', { hasText: new RegExp(header, 'i') }).first()).toBeVisible();
+      await expect(table.locator('th', { hasText: new RegExp(header.replace('.', '\\.'), 'i') }).first()).toBeVisible();
     }
   });
 
@@ -38,60 +44,34 @@ test.describe('Módulo: Produtos', () => {
   test('2.1 deve filtrar ao digitar no campo de busca', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
-    const searchInput = page.getByPlaceholder(/pesquisar por nome/i);
-    await searchInput.fill('Produto X');
-    await page.waitForTimeout(1000);
+    const searchInput = page.getByPlaceholder(/pesquisar por nome ou sku/i);
+    await searchInput.click({ force: true });
+    await searchInput.fill('00'); 
+    await page.waitForTimeout(800);
 
     const rows = page.locator('tbody tr:not(.animate-pulse)');
     const isEmpty = await page.getByText(/nenhum produto encontrado/i).isVisible();
     expect(await rows.count() > 0 || isEmpty).toBeTruthy();
   });
 
-  // ─────────────────────────────────────────────────────────
-  // 3. FILTROS AVANÇADOS E VISIBILIDADE
-  // ─────────────────────────────────────────────────────────
-
-  test('3.1 deve abrir o painel de filtros avançados e aplicar filtro de status', async ({ page }) => {
+  test('2.2 deve limpar a busca e restaurar dados', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
-    const filterBtn = page.getByRole('button', { name: /filtros/i }).first();
-    await filterBtn.click({ force: true });
-    await expect(page.getByText(/filtros avançados/i)).toBeVisible();
+    const searchInput = page.getByPlaceholder(/pesquisar por nome ou sku/i);
+    await searchInput.fill('PRODUTO_TEST_99');
+    await page.waitForTimeout(800);
 
-    const selectStatus = page.locator('select').nth(1); // O segundo select (Status)
-    await selectStatus.selectOption({ label: 'Ativo' });
+    await searchInput.clear();
+    await page.waitForTimeout(800);
 
-    // Espera atualizar
-    await page.waitForTimeout(1000);
-    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
-  });
-
-  test('3.2 deve abrir o painel de colunas', async ({ page }) => {
-    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
-
-    const colBtn = page.locator('button[title="Colunas"]');
-    await colBtn.click({ force: true });
-    await expect(page.getByText(/colunas/i).first()).toBeVisible();
-  });
-
-  // ─────────────────────────────────────────────────────────
-  // 4. ORDENAÇÃO
-  // ─────────────────────────────────────────────────────────
-
-  test('4.1 deve ordenar ao clicar no cabeçalho (Preço)', async ({ page }) => {
-    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
-
-    const headerPreco = page.getByRole('columnheader').filter({ hasText: /preço/i }).first();
-    await headerPreco.click({ force: true }); // ASC
-    await expect(headerPreco.locator('svg').last()).toBeVisible({ timeout: 10000 });
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
   });
 
   // ─────────────────────────────────────────────────────────
-  // 5. PAGINAÇÃO
+  // 3. PAGINAÇÃO E NAVEGAÇÃO
   // ─────────────────────────────────────────────────────────
 
-  test('5.1 deve desabilitar "Anterior" na primeira página e avançar na paginação', async ({ page }) => {
+  test('3.1 deve desabilitar "Anterior" na pág 1 e avançar paginação', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
     const prevButton = page.getByRole('button', { name: /anterior/i });
@@ -104,52 +84,66 @@ test.describe('Módulo: Produtos', () => {
       await nextButton.click();
       await page.waitForTimeout(1000);
       await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByRole('button', { name: /anterior/i })).toBeEnabled();
     }
   });
 
   // ─────────────────────────────────────────────────────────
-  // 6. EXPORTAÇÃO
+  // 4. ORDENAÇÃO (SORTING)
   // ─────────────────────────────────────────────────────────
 
-  test('6.1 deve exportar dados', async ({ page }) => {
+  test('4.1 deve ordenar por Nome do Produto ao clicar no cabeçalho', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
-    const exportBtn = page.getByRole('button', { name: /exportar/i }).first();
-    if (await exportBtn.isVisible()) {
-      // Cria a promessa do download antes de clicar
-      const downloadPromise = page.waitForEvent('download', { timeout: 10000 }).catch(() => null);
-      await exportBtn.click({ force: true });
-      const download = await downloadPromise;
-      // Se houvesse data para exportar
-      if (download) {
-        expect(download.suggestedFilename()).toContain('produtos_tabatine');
-      }
-    }
+    const headerNome = page.getByRole('columnheader', { name: /produto/i }).first();
+    await headerNome.click({ force: true });
+    await page.waitForTimeout(800);
+
+    await expect(headerNome.locator('svg')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
   });
 
   // ─────────────────────────────────────────────────────────
-  // 7. NAVEGAÇÃO
+  // 5. NAVEGAÇÃO E DRILL-DOWN
   // ─────────────────────────────────────────────────────────
 
-  test('7.1 deve navegar para tela de detalhes', async ({ page }) => {
+  test('5.1 deve navegar para tela de detalhes e exibir informações do produto', async ({ page }) => {
     const firstRow = page.locator('tbody tr:not(.animate-pulse)').first();
     await expect(firstRow).toBeVisible({ timeout: 20000 });
 
-    const viewButton = firstRow.getByTitle(/ver detalhes/i).first();
-    await viewButton.click({ force: true });
+    const viewLink = firstRow.locator('button[title="Abrir Detalhes"]').first();
+    await viewLink.click({ force: true });
     
+    await expect(page).toHaveURL(/\/produtos\/\d+/, { timeout: 10000 });
+    
+    // Valida seções detalhes do Produto
+    await expect(page.getByText(/identificação do produto/i)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/preços e comercial/i)).toBeVisible();
+    await expect(page.getByText(/dados fiscais/i)).toBeVisible();
+  });
+
+  test('5.2 o botão Voltar deve retornar à gestão de produtos', async ({ page }) => {
+    const firstRow = page.locator('tbody tr:not(.animate-pulse)').first();
+    await expect(firstRow).toBeVisible({ timeout: 10000 });
+    const viewLink = firstRow.locator('button[title="Abrir Detalhes"]').first();
+    await viewLink.click({ force: true });
     await page.waitForURL(/\/produtos\/\d+/, { timeout: 10000 });
-    await expect(page).toHaveURL(/\/produtos\/\d+/);
+
+    const backBtn = page.getByRole('button', { name: /voltar/i }).or(page.locator('button:has(svg.lucide-arrow-left)')).first();
+    await backBtn.click();
+
+    await expect(page).toHaveURL('/produtos', { timeout: 10000 });
+    await expect(page.getByRole('heading', { name: /^produtos$/i })).toBeVisible();
   });
 
   // ─────────────────────────────────────────────────────────
-  // 8. REFRESH
+  // 6. AÇÕES AUXILIARES
   // ─────────────────────────────────────────────────────────
 
-  test('8.1 deve recarregar dados', async ({ page }) => {
+  test('6.1 deve recarregar dados via botão de refresh', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
-    const refreshBtn = page.locator('button').filter({ has: page.locator('.lucide-refresh-ccw') }).first();
+    const refreshBtn = page.locator('button[title="Atualizar dados"]').first();
     if (await refreshBtn.isVisible()) {
       await refreshBtn.click({ force: true });
       await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });

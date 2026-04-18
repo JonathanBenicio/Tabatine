@@ -1,9 +1,22 @@
 import { Vendedor } from '@/store/useVendedoresStore';
 
+interface RawVendedor {
+  omie_id?: number;
+  id?: string;
+  nome?: string;
+  email?: string;
+  comissao?: number;
+  inativo?: boolean;
+  fatura_pedido?: string;
+  visualiza_pedido?: string;
+}
+
 /**
  * Maps a raw Supabase/Omie vendor record to the Vendedor interface.
+ * Note: The structure here reflects the Supabase view/table columns.
  */
-export function mapSupabaseToVendedor(v: any): Vendedor {
+export function mapSupabaseToVendedor(v: Record<string, unknown>): Vendedor {
+  const raw = v as RawVendedor;
   if (!v) {
     return {
       codigo: 0,
@@ -18,21 +31,21 @@ export function mapSupabaseToVendedor(v: any): Vendedor {
   }
 
   return {
-    codigo: v.omie_id || 0,
-    codInt: v.id || '', // id uuid agora é a chave principal e pode ser mapeada para codInt se necessário, ou omitida
-    nome: v.nome || '---',
-    email: v.email || '',
-    comissao: v.comissao || 0,
-    inativo: v.inativo ? 'S' : 'N',
-    fatura_pedido: v.fatura_pedido || 'N',
-    visualiza_pedido: v.visualiza_pedido || 'N'
+    codigo: raw.omie_id || 0,
+    codInt: raw.id || '', // id uuid agora é a chave principal e pode ser mapeada para codInt se necessário, ou omitida
+    nome: raw.nome || '---',
+    email: raw.email || '',
+    comissao: raw.comissao || 0,
+    inativo: raw.inativo ? 'S' : 'N',
+    fatura_pedido: raw.fatura_pedido || 'N',
+    visualiza_pedido: raw.visualiza_pedido || 'N'
   };
 }
 
 /**
  * Maps an array of vendors.
  */
-export function mapSupabaseToVendedores(vendedores: any[]): Vendedor[] {
+export function mapSupabaseToVendedores(vendedores: Record<string, unknown>[]): Vendedor[] {
   if (!Array.isArray(vendedores)) return [];
   return vendedores.map(mapSupabaseToVendedor);
 }

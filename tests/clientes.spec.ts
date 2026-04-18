@@ -100,7 +100,7 @@ test.describe('Módulo: Clientes', () => {
   });
 
   // ─────────────────────────────────────────────────────────
-  // 3. PAGINAÇÃO
+  // 3. PAGINAÇÃO E NAVEGAÇÃO
   // ─────────────────────────────────────────────────────────
 
   test('3.1 deve desabilitar o botão "Anterior" na primeira página', async ({ page }) => {
@@ -154,38 +154,62 @@ test.describe('Módulo: Clientes', () => {
   });
 
   // ─────────────────────────────────────────────────────────
-  // 4. NAVEGAÇÃO PARA DETALHES (DRILL-DOWN)
+  // 4. ORDENAÇÃO (SORTING)
   // ─────────────────────────────────────────────────────────
 
-  test('4.1 deve navegar para página de detalhes ao clicar em "Ver Perfil"', async ({ page }) => {
+  test('4.1 deve ordenar ao clicar no cabeçalho (Empresa)', async ({ page }) => {
+    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
+
+    const headerEmpresa = page.getByRole('columnheader', { name: /empresa/i }).first();
+    await expect(headerEmpresa).toBeVisible();
+
+    // Primeiro clique: ordena ASC
+    await headerEmpresa.click({ force: true });
+    await page.waitForTimeout(800);
+
+    // Ícone de ordenação deve estar visível
+    const sortIcon = headerEmpresa.locator('svg');
+    await expect(sortIcon).toBeVisible({ timeout: 10000 });
+
+    // A tabela deve continuar exibindo dados
+    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test('4.2 deve inverter a ordenação ao clicar novamente', async ({ page }) => {
+    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
+
+    const headerEmpresa = page.getByRole('columnheader', { name: /empresa/i }).first();
+    
+    await headerEmpresa.click({ force: true }); // ASC
+    await page.waitForTimeout(500);
+    await headerEmpresa.click({ force: true }); // DESC
+    await page.waitForTimeout(800);
+
+    await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
+  });
+
+  // ─────────────────────────────────────────────────────────
+  // 5. DRILL-DOWN E DETALHES
+  // ─────────────────────────────────────────────────────────
+
+  test('5.1 deve navegar para página de detalhes via seletor "Abrir Detalhes"', async ({ page }) => {
     const firstRow = page.locator('tbody tr:not(.animate-pulse)').first();
     await expect(firstRow).toBeVisible({ timeout: 20000 });
 
-    // Hover na linha para revelar o botão de ação (opacity transition)
-    await firstRow.hover();
-    await page.waitForTimeout(300);
-
-    const viewButton = firstRow.locator('button[title="Perfil do Cliente"]')
-      .or(firstRow.locator('button').filter({ has: page.locator('svg') }).first());
+    const viewButton = firstRow.locator('[title="Abrir Detalhes"]').first();
     await expect(viewButton).toBeVisible({ timeout: 5000 });
     await viewButton.click({ force: true });
 
-    // Aguarda navegação para /clientes/[id]
     await expect(page).toHaveURL(/\/clientes\/\d+/, { timeout: 10000 });
   });
 
-  test('4.2 a página de detalhes deve exibir informações do cliente', async ({ page }) => {
+  test('5.2 a página de detalhes deve exibir informações do cliente', async ({ page }) => {
     const firstRow = page.locator('tbody tr:not(.animate-pulse)').first();
     await expect(firstRow).toBeVisible({ timeout: 20000 });
-    await firstRow.hover();
-    await page.waitForTimeout(300);
-
-    const viewButton = firstRow.locator('button[title="Perfil do Cliente"]')
-      .or(firstRow.locator('button').filter({ has: page.locator('svg') }).first());
+    const viewButton = firstRow.locator('[title="Abrir Detalhes"]').first();
     await viewButton.click({ force: true });
     await page.waitForURL(/\/clientes\/\d+/, { timeout: 10000 });
 
-    // Valida seções da página de detalhes
     await expect(page.getByText(/informações gerais/i)).toBeVisible({ timeout: 15000 });
     await expect(page.getByText(/localização/i)).toBeVisible();
     await expect(page.getByText(/contato/i)).toBeVisible();
@@ -193,20 +217,13 @@ test.describe('Módulo: Clientes', () => {
     await expect(page.getByText(/últimos pedidos/i)).toBeVisible();
   });
 
-  test('4.3 o botão Voltar na página de detalhes deve retornar à listagem', async ({ page }) => {
+  test('5.3 o botão Voltar na página de detalhes deve retornar à listagem', async ({ page }) => {
     const firstRow = page.locator('tbody tr:not(.animate-pulse)').first();
-    await expect(firstRow).toBeVisible({ timeout: 20000 });
-    await firstRow.hover();
-    await page.waitForTimeout(300);
-
-    const viewButton = firstRow.locator('button[title="Perfil do Cliente"]')
-      .or(firstRow.locator('button').filter({ has: page.locator('svg') }).first());
+    const viewButton = firstRow.locator('[title="Abrir Detalhes"]').first();
     await viewButton.click({ force: true });
     await page.waitForURL(/\/clientes\/\d+/, { timeout: 10000 });
 
-    // Clica no botão de voltar
-    const backButton = page.getByRole('link', { name: /voltar/i })
-      .or(page.locator('a[href="/clientes"]').first());
+    const backButton = page.getByRole('link', { name: /voltar/i }).or(page.locator('a[href="/clientes"]').first()).first();
     await expect(backButton).toBeVisible({ timeout: 10000 });
     await backButton.click();
 
@@ -215,10 +232,10 @@ test.describe('Módulo: Clientes', () => {
   });
 
   // ─────────────────────────────────────────────────────────
-  // 5. AÇÕES AUXILIARES
+  // 6. AÇÕES AUXILIARES
   // ─────────────────────────────────────────────────────────
 
-  test('5.1 deve atualizar dados ao clicar no botão de refresh', async ({ page }) => {
+  test('6.1 deve atualizar dados ao clicar no botão de refresh', async ({ page }) => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
     // Botão de refresh - tem título "Atualizar dados"

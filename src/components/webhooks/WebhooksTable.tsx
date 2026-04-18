@@ -105,7 +105,11 @@ export function WebhooksTable() {
   const toggleRowSelection = (id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };
@@ -239,6 +243,7 @@ export function WebhooksTable() {
     }),
   ];
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: data?.items ?? [],
     columns,

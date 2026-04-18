@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 const globalWithWebhooks = global as typeof globalThis & {
-  webhookEvents?: any[];
+  webhookEvents?: Record<string, unknown>[];
 };
 
 export async function GET() {

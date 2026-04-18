@@ -79,3 +79,10 @@ function DataField({ label, value, className = 'text-zinc-300', large = false }:
 - **Lucide React**: Para todos os ícones.
 - **TanStack Table**: Para todas as listas de dados.
 - **Tailwind CSS v4**: Para estilização rápida e responsiva.
+
+## ⚛️ Next.js & React 19.2 (UI Patterns)
+- **Otimização**: Use `next/image` e `next/font/google` para todas as mídias e tipografia de forma rigorosa. Isso previne Cumulative Layout Shift (CLS) e otimiza o Time to Interactive.
+- **Transições Suaves**: Abrace a API de View Transitions (React 19.2) encapsulada no React UI.
+- **Preservação de Estado**: Utilize o novo componente `<Activity>` do React 19.2 para lidar com visibilidade tab-like, pausando render sem custo de re-mount/un-mount.
+- **Acessibilidade Absoluta**: Use HTML semântico, atributos ARIA nativos e defina focos em inputs, mantendo compatibilidade com WCAG 2.1 AA.
+- **Desempenho no Compilador**: Codifique com clareza; o React Compiler automatiza boa parte da memoização (`useMemo`, `useCallback`). Apenas otimize loops densos.

@@ -1,7 +1,9 @@
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import FinanceiroTable from '@/components/FinanceiroTable';
-import { ArrowUpRight, TrendingDown } from 'lucide-react';
+import { TrendingDown } from 'lucide-react';
+
+export const dynamic = 'force-dynamic';
 
 export default async function PagarPage() {
   const supabase = await createClient();

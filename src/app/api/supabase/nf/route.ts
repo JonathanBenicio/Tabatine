@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from '@/utils/supabase/server';
 import { escapeFilterValue } from '@/utils/supabase/filter-utils';
 import { NextResponse } from 'next/server';
@@ -19,6 +20,8 @@ export async function GET(req: Request) {
     const year = searchParams.get('year') || 'all';
     const search = searchParams.get('search') || '';
     const clienteOmieId = searchParams.get('clienteOmieId');
+    const sortField = searchParams.get('sortField') || 'data_emissao';
+    const sortOrder = searchParams.get('sortOrder') || 'desc';
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -36,7 +39,7 @@ export async function GET(req: Request) {
         nota_fiscal_titulos (*)
       `, { count: 'exact' });
 
-    let dataToMap: any[] = [];
+    let dataToMap: Record<string, unknown>[] = [];
     let finalCount = 0;
 
     // Handle single item fetch if id is provided
@@ -77,8 +80,13 @@ export async function GET(req: Request) {
         query = query.gte('data_emissao', startOfYear).lte('data_emissao', endOfYear);
       }
 
+      // Map frontend field to DB column
+      let dbSortField = sortField;
+      if (sortField === 'valor_total_nf') dbSortField = 'valor_total';
+      if (sortField === 'razao_social') dbSortField = 'cliente_id'; // Placeholder for complex join sort
+
       const { data: listData, error: listError, count } = await query
-        .order('data_emissao', { ascending: false })
+        .order(dbSortField, { ascending: sortOrder === 'asc' })
         .range(from, to);
 
       if (listError) throw listError;
@@ -87,8 +95,8 @@ export async function GET(req: Request) {
     }
 
     // Map Supabase structure to something compatible with the store's logic
-    const mappedData = dataToMap.map((nf: any) => {
-      const dataEmiFormatada = nf.data_emissao?.split('T')[0]?.split('-').reverse().join('/');
+    const mappedData = dataToMap.map((nf: Record<string, unknown>) => {
+      const dataEmiFormatada = (nf.data_emissao as any)?.split('T')[0]?.split('-').reverse().join('/');
       
       // Status derivado do campo texto sincronizado do Omie (Status: AUTORIZADA/CANCELADA/DENEGADA)
       const statusTexto = nf.status || '';
@@ -96,7 +104,7 @@ export async function GET(req: Request) {
       if (statusTexto === 'CANCELADA') statusLabel = 'Cancelado';
       else if (statusTexto === 'DENEGADA' || nf.denegada) statusLabel = 'Denegado';
       else if (statusTexto === 'AUTORIZADA') statusLabel = 'Autorizado';
-      else statusLabel = statusTexto || 'Pendente';
+      else statusLabel = (statusTexto as any) || 'Pendente';
 
       return {
         compl: {
@@ -108,17 +116,17 @@ export async function GET(req: Request) {
           xNatureza: nf.natureza_operacao || 'Venda de Mercadoria',
           cInfCpl: nf.informacoes_complementares,
           cInfAdFisco: nf.informacoes_fisco,
-          nIdPedido: nf.pedidos_venda?.omie_id,
+          nIdPedido: (nf as any).pedidos_venda?.omie_id,
         },
         pedido: {
-          nCodPedido: nf.pedidos_venda?.omie_id,
-          cNumeroPedido: nf.pedidos_venda?.numero_pedido_cliente || '', 
+          nCodPedido: (nf as any).pedidos_venda?.omie_id,
+          cNumeroPedido: (nf as any).pedidos_venda?.numero_pedido_cliente || '', 
         },
         ide: {
           dEmi: dataEmiFormatada, // Crucial for useNfStore
           hEmi: nf.hora_emissao,
-          dReg: nf.created_at?.split('T')[0]?.split('-').reverse().join('/'),
-          hReg: nf.created_at?.split('T')[1]?.substring(0, 5),
+          dReg: (nf.created_at as any)?.split('T')[0]?.split('-').reverse().join('/'),
+          hReg: (nf.created_at as any)?.split('T')[1]?.substring(0, 5),
           cStatus: statusLabel,
           nNF: nf.numero_nf,
           serie: nf.serie || '1',
@@ -129,9 +137,9 @@ export async function GET(req: Request) {
           cDeneg: nf.denegada ? 'S' : 'N',
         },
         nfDestInt: {
-          xNome: nf.clientes?.razao_social || nf.clientes?.nome_fantasia,
-          nCodCli: nf.clientes?.omie_id,
-          cnpj_cpf: nf.clientes?.cnpj_cpf,
+          xNome: (nf as any).clientes?.razao_social || (nf as any).clientes?.nome_fantasia,
+          nCodCli: (nf as any).clientes?.omie_id,
+          cnpj_cpf: (nf as any).clientes?.cnpj_cpf,
         },
         nfEmitInt: {},
         info: {
@@ -162,7 +170,7 @@ export async function GET(req: Request) {
             vCOFINS: nf.valor_cofins_retido || 0,
           }
         },
-        det: (nf.itens_nota_fiscal || []).map((item: any) => ({
+        det: (nf.itens_nota_fiscal as any[] || []).map((item: any) => ({
           prod: {
             cProd: item.produtos?.codigo_produto,
             xProd: item.produtos?.descricao,
@@ -190,7 +198,7 @@ export async function GET(req: Request) {
             COFINS: { vCOFINS: item.valor_cofins }
           }
         })),
-        titulos: (nf.nota_fiscal_titulos || []).map((t: any) => ({
+        titulos: (nf.nota_fiscal_titulos as any[] || []).map((t: any) => ({
           nParcela: t.numero_parcela,
           nValorTitulo: t.valor,
           dDtVenc: t.data_vencimento?.split('T')[0]?.split('-').reverse().join('/'),
@@ -207,8 +215,8 @@ export async function GET(req: Request) {
       pagina: id ? 1 : page
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API Error (Supabase NF):', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Internal Server Error' }, { status: 500 });
   }
 }

@@ -19,6 +19,8 @@ export async function GET(req: Request) {
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
+    const sortField = searchParams.get('sortField') || 'descricao';
+    const sortOrder = searchParams.get('sortOrder') || 'asc';
     
     let query = supabase
       .from('contas_corrente')
@@ -42,7 +44,7 @@ export async function GET(req: Request) {
     }
 
     const { data, error, count } = await query
-      .order('descricao', { ascending: true })
+      .order(sortField, { ascending: sortOrder === 'asc' })
       .range(from, to);
 
     if (error) throw error;
@@ -53,8 +55,8 @@ export async function GET(req: Request) {
       total_de_registros: count,
       pagina: page
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API Error (Supabase Contas):', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: (error instanceof Error ? (error instanceof Error ? error.message : 'Internal Server Error') : 'Internal Server Error') }, { status: 500 });
   }
 }

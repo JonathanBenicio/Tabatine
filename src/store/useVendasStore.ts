@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { useLookupStore } from '@/store/useLookupStore';
 import { mapOrderToFlatVendas } from '@/lib/vendas-mapper';
+import { OmiePedidoVendaProduto } from '@/types/omie-raw';
 import { SortingState, ColumnFiltersState, VisibilityState, ColumnPinningState } from '@tanstack/react-table';
 
 export interface ParcelaInfo {
@@ -46,7 +47,7 @@ export interface VendaPlana {
   vencimentoStatus: string;
   statusComissao: string;
   codigo_pedido: number;
-  omieData: any;
+  omieData: OmiePedidoVendaProduto;
 
   dataPedido: string;
   dataPrevisao: string;
@@ -237,7 +238,7 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
       const vendedoresMap: Record<number, string> = {};
       const contasMap: Record<number, string> = {};
 
-      rawPedidos.forEach((ped: any) => {
+      rawPedidos.forEach((ped: OmiePedidoVendaProduto) => {
         if (ped.cabecalho?.codigo_cliente && ped.infoCadastro?.cliente_nome) {
           clientesMap[ped.cabecalho.codigo_cliente] = ped.infoCadastro.cliente_nome;
         }
@@ -253,7 +254,7 @@ export const useVendasStore = create<VendasStoreState>((set, get) => ({
       lookupStore.setContas(contasMap);
 
       const flatVendas: VendaPlana[] = [];
-      rawPedidos.forEach((ped: any) => flatVendas.push(...mapOrderToFlatVendas(ped)));
+      rawPedidos.forEach((ped: OmiePedidoVendaProduto) => flatVendas.push(...mapOrderToFlatVendas(ped)));
 
       set({
         vendas: flatVendas,

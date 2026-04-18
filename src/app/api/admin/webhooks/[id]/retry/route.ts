@@ -15,7 +15,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
   }
 
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('webhook_events')
       .update({ 
         status: 'Pending',
@@ -23,9 +23,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
         next_retry_at: null,
         last_error_detail: null
       })
-      .eq('id', id)
-      .select()
-      .single();
+      .eq('id', id);
 
     if (error) {
       throw error;

@@ -9,7 +9,7 @@ export interface FormaPlana {
   quantidadeParcelas: number;
   diasParcelas: number;
   listaParcelas: string;
-  omieData?: any;
+  omieData?: Record<string, unknown>;
 }
 
 interface FormasStoreState {
@@ -61,8 +61,8 @@ export const useFormasStore = create<FormasStoreState>((set, get) => ({
         currentPage: data.pagina || page,
         loading: false,
       });
-    } catch (error: any) {
-      set({ error: error.message, loading: false });
+    } catch (error: unknown) {
+      set({ error: (error as Error).message, loading: false });
     }
   },
 }));

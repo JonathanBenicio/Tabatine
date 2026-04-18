@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo } from 'react';
 import { useBancosStore, BancoPlano } from '@/store/useBancosStore';
-import { Landmark, Eye, RefreshCw, AlertCircle, ChevronRight } from 'lucide-react';
+import { Landmark, Eye, RefreshCw, AlertCircle, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
   useReactTable,
@@ -29,12 +29,14 @@ export default function BancosTable() {
     currentPage,
     setCurrentPage,
     totalPaginas,
-    totalRegistros
+    totalRegistros,
+    sorting,
+    setSorting
   } = useBancosStore();
 
   useEffect(() => {
     fetchBancos(currentPage, searchTerm);
-  }, [fetchBancos, currentPage, searchTerm]);
+  }, [fetchBancos, currentPage, searchTerm, sorting]);
 
   const columns = useMemo(() => [
     columnHelper.accessor('codigo', {
@@ -80,7 +82,7 @@ export default function BancosTable() {
           <button 
             onClick={() => router.push(`/bancos/${info.row.original.id}`)}
             className="p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors shadow-lg shadow-blue-500/20" 
-            title="Ver Detalhes"
+            title="Abrir Detalhes"
           >
             <Eye size={14} />
           </button>
@@ -90,9 +92,18 @@ export default function BancosTable() {
     }),
   ], [router]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: bancos,
     columns,
+    state: {
+      sorting,
+    },
+    onSortingChange: (updater) => {
+      const nextSorting = typeof updater === 'function' ? updater(sorting) : updater;
+      setSorting(nextSorting);
+    },
+    manualSorting: true,
     getCoreRowModel: getCoreRowModel(),
   });
 
@@ -175,9 +186,20 @@ export default function BancosTable() {
                 {headerGroup.headers.map(header => (
                   <th 
                     key={header.id} 
-                    className={`py-5 px-6 text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] font-sans ${header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''} ${header.column.columnDef.meta?.hiddenOnMobile ? 'hidden md:table-cell' : ''}`}
+                    className={`py-5 px-6 text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] font-sans transition-colors group cursor-pointer hover:bg-slate-200/50 dark:hover:bg-zinc-800/50 ${header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''} ${header.column.columnDef.meta?.hiddenOnMobile ? 'hidden md:table-cell' : ''}`}
+                    onClick={header.column.getToggleSortingHandler()}
                   >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    <div className={`flex items-center gap-2 ${header.column.columnDef.meta?.align === 'right' ? 'justify-end' : header.column.columnDef.meta?.align === 'center' ? 'justify-center' : ''}`}>
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.column.getCanSort() && (
+                        <div className="text-slate-300 dark:text-zinc-700">
+                          {{
+                            asc: <ChevronUp size={12} className="text-blue-500" />,
+                            desc: <ChevronDown size={12} className="text-blue-500" />,
+                          }[header.column.getIsSorted() as string] ?? <ChevronsUpDown size={12} className="opacity-0 group-hover:opacity-100" />}
+                        </div>
+                      )}
+                    </div>
                   </th>
                 ))}
               </tr>

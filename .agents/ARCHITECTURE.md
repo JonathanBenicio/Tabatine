@@ -36,7 +36,7 @@ Specialist AI personas for different domains.
 | ------------------------ | -------------------------- | -------------------------------------------------------- |
 | `orchestrator`           | Multi-agent coordination   | parallel-agents, behavioral-modes                        |
 | `project-planner`        | Discovery, task planning   | brainstorming, plan-writing, architecture                |
-| `frontend-specialist`    | Web UI/UX                  | frontend-design, react-best-practices, tailwind-patterns |
+| `react-nextjs-expert`    | Web UI/UX & React/Next.js  | modern-react-nextjs, frontend-design, tailwind-patterns |
 | `backend-specialist`     | API, business logic        | api-patterns, nodejs-best-practices, database-design     |
 | `database-architect`     | Schema, SQL                | database-design, prisma-expert                           |
 | `mobile-developer`       | iOS, Android, RN           | mobile-design                                            |
@@ -278,7 +278,7 @@ For details, see [scripts/README.md](scripts/README.md)
 
 | Need     | Agent                 | Skills                                |
 | -------- | --------------------- | ------------------------------------- |
-| Web App  | `frontend-specialist` | react-best-practices, frontend-design |
+| Web App  | `react-nextjs-expert` | modern-react-nextjs, frontend-design |
 | API      | `backend-specialist`  | api-patterns, nodejs-best-practices   |
 | Mobile   | `mobile-developer`    | mobile-design                         |
 | Database | `database-architect`  | database-design, prisma-expert        |

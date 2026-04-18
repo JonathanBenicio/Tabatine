@@ -147,8 +147,8 @@ File to edit: UserService.ts
 
 | Agent | Script | Command |
 |-------|--------|---------|
-| **frontend-specialist** | UX Audit | `python .agent/skills/frontend-design/scripts/ux_audit.py .` |
-| **frontend-specialist** | A11y Check | `python .agent/skills/frontend-design/scripts/accessibility_checker.py .` |
+| **react-nextjs-expert** | UX Audit | `python .agent/skills/frontend-design/scripts/ux_audit.py .` |
+| **react-nextjs-expert** | A11y Check | `python .agent/skills/frontend-design/scripts/accessibility_checker.py .` |
 | **backend-specialist** | API Validator | `python .agent/skills/api-patterns/scripts/api_validator.py .` |
 | **mobile-developer** | Mobile Audit | `python .agent/skills/mobile-design/scripts/mobile_audit.py .` |
 | **database-architect** | Schema Validate | `python .agent/skills/database-design/scripts/schema_validator.py .` |
@@ -163,7 +163,7 @@ File to edit: UserService.ts
 | **Any agent** | i18n Check | `python .agent/skills/i18n-localization/scripts/i18n_checker.py .` |
 
 > ❌ **WRONG:** `test-engineer` running `ux_audit.py`
-> ✅ **CORRECT:** `frontend-specialist` running `ux_audit.py`
+> ✅ **CORRECT:** `react-nextjs-expert` running `ux_audit.py`
 
 ---
 

@@ -32,8 +32,8 @@ export async function GET(
       .order('descricao', { ascending: true });
 
     return NextResponse.json({ banco, contas: contas || [] });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API /bancos/[id] Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: (error instanceof Error ? (error instanceof Error ? error.message : 'Internal Server Error') : 'Internal Server Error') }, { status: 500 });
   }
 }

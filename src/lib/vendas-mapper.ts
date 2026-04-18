@@ -1,4 +1,5 @@
-import { VendaPlana, ParcelaInfo, ImpostoDetalhe } from '@/store/useVendasStore';
+import { VendaPlana, ParcelaInfo } from '@/store/useVendasStore';
+import { OmiePedidoVendaProduto, OmieParcela, OmieDet } from '@/types/omie-raw';
 
 /**
  * Maps a date string to a PT-BR formatted date and time.
@@ -21,15 +22,15 @@ export const formatISOToBR = (iso: string) => {
  * Maps a raw Omie/Supabase order record to the VendaPlana interface.
  * This function centralizes the flattening logic used across the application.
  */
-export function mapOrderToFlatVendas(ped: Record<string, unknown>): VendaPlana[] {
-  const cabecalho = (ped.cabecalho || {}) as Record<string, any>;
-  const det = (ped.det || []) as any[];
-  const frete = (ped.frete || {}) as Record<string, any>;
-  const info = (ped.infoCadastro || {}) as Record<string, any>;
-  const parcelasInfo = (ped.lista_parcelas as any)?.parcela || [];
-  const infoAdicional = (ped.informacoes_adicionais || {}) as Record<string, any>;
-  const totalPedido = (ped.total_pedido || {}) as Record<string, any>;
-  const observacoes = (ped.observacoes || {}) as Record<string, any>;
+export function mapOrderToFlatVendas(ped: OmiePedidoVendaProduto): VendaPlana[] {
+  const cabecalho = ped.cabecalho || {};
+  const det = ped.det || [];
+  const frete = ped.frete || {};
+  const info = ped.infoCadastro || {};
+  const parcelasInfo = ped.lista_parcelas?.parcela || [];
+  const infoAdicional = ped.informacoes_adicionais || {};
+  const totalPedido = ped.total_pedido || {};
+  const observacoes = ped.observacoes || {};
 
   // Try getting up to 3 installments for the summary
   const p1 = parcelasInfo[0] ? { valor: parcelasInfo[0].valor || 0, vencimento: parcelasInfo[0].data_vencimento || '' } : undefined;
@@ -37,14 +38,14 @@ export function mapOrderToFlatVendas(ped: Record<string, unknown>): VendaPlana[]
   const p3 = parcelasInfo[2] ? { valor: parcelasInfo[2].valor || 0, vencimento: parcelasInfo[2].data_vencimento || '' } : undefined;
 
   // Map all installments
-  const todasParcelas: ParcelaInfo[] = parcelasInfo.map((parc: any, pIdx: number) => ({
-    numero: (parc.numero_parcela as number) || pIdx + 1,
-    valor: (parc.valor as number) || 0,
-    vencimento: (parc.data_vencimento as string) || '',
-    percentual: (parc.percentual as number) || 0,
-    meioPagamento: (parc.meio_pagamento as string) || '',
-    categoria: (parc.categoria as string) || '',
-    nsu: (parc.nsu as string) || '',
+  const todasParcelas: ParcelaInfo[] = parcelasInfo.map((parc: OmieParcela, pIdx: number) => ({
+    numero: parc.numero_parcela || pIdx + 1,
+    valor: parc.valor || 0,
+    vencimento: parc.data_vencimento || '',
+    percentual: parc.percentual || 0,
+    meioPagamento: parc.meio_pagamento || '',
+    categoria: parc.categoria || '',
+    nsu: parc.nsu || '',
   }));
 
   const flatRows: VendaPlana[] = [];
@@ -63,7 +64,7 @@ export function mapOrderToFlatVendas(ped: Record<string, unknown>): VendaPlana[]
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  det.forEach((item: Record<string, any>, idx: number) => {
+  det.forEach((item: OmieDet, idx: number) => {
     const prod = item.produto || {};
     const itemIde = item.ide || {};
     const imp = item.imposto || {};
@@ -73,12 +74,12 @@ export function mapOrderToFlatVendas(ped: Record<string, unknown>): VendaPlana[]
     const ibs = imp.ibs || {};
     const cbs = imp.cbs || {};
 
-    const incInfo = formatISOToBR(info.dInc);
-    const altInfo = formatISOToBR(info.dAlt);
+    const incInfo = formatISOToBR(info.dInc || '');
+    const altInfo = formatISOToBR(info.dAlt || '');
 
     // Smart Status Logic
     const isFaturado = cabecalho.etapa === '90';
-    const firstDue = parcelasInfo[0] ? parseAnyDate(parcelasInfo[0].data_vencimento) : null;
+    const firstDue = parcelasInfo[0] ? parseAnyDate(parcelasInfo[0].data_vencimento || '') : null;
     const isOverdue = !isFaturado && firstDue && firstDue < today;
 
     const vencimentoStatus = isFaturado ? 'Faturado' : (isOverdue ? 'Atrasado' : (cabecalho.etapa || 'Pendente'));
@@ -88,31 +89,31 @@ export function mapOrderToFlatVendas(ped: Record<string, unknown>): VendaPlana[]
     const statusComissao = info.autorizado === 'S' ? 'DISPONIVEL' : 'PENDENTE';
 
     flatRows.push({
-      id_linha: `${cabecalho.codigo_pedido}-${idx}`,
+      id_linha: `${cabecalho.codigo_pedido || 0}-${idx}`,
       data: info.dFat || cabecalho.data_pedido || cabecalho.data_previsao || '--',
       cliente: cabecalho.codigo_cliente?.toString() || '--',
       vendedor: infoAdicional.codVend?.toString() || '--',
-      codVendedor: infoAdicional.codVend || 0,
-      codProjeto: infoAdicional.codProj || 0,
+      codVendedor: Number(infoAdicional.codVend || 0),
+      codProjeto: Number(infoAdicional.codProj || 0),
       pedido: cabecalho.numero_pedido || '',
       numeroPedido: cabecalho.numero_pedido || '',
       nf: info.numero_nfe || '', 
       produto: prod.descricao || 'Produto sem nome',
       und: prod.unidade || 'UN',
-      valorVenda: prod.valor_unitario || 0,
+      valorVenda: Number(prod.valor_unitario || 0),
       condPagto: cabecalho.codigo_parcela || '',
-      frete: frete.valor_frete || 0,
-      percComissao: infoAdicional.perc_comissao || 0,
-      valorTotal: prod.valor_total || 0,
+      frete: Number(frete.valor_frete || 0),
+      percComissao: Number(infoAdicional.perc_comissao || 0),
+      valorTotal: Number(prod.valor_total || 0),
       formaPg: cabecalho.meio_pagamento || '',
       banco: infoAdicional.conta_corrente_nome || infoAdicional.codigo_conta_corrente?.toString() || '',
-      codContaCorrente: infoAdicional.codigo_conta_corrente || 0,
+      codContaCorrente: Number(infoAdicional.codigo_conta_corrente || 0),
       parcela1: p1,
       parcela2: p2,
       parcela3: p3,
       vencimentoStatus,
       statusComissao,
-      codigo_pedido: cabecalho.codigo_pedido || 0,
+      codigo_pedido: Number(cabecalho.codigo_pedido || 0),
       omieData: ped,
 
       // Cabecalho extra
@@ -142,28 +143,28 @@ export function mapOrderToFlatVendas(ped: Record<string, unknown>): VendaPlana[]
       // Impostos
       impostos: {
         icms: {
-          aliquota: icms.aliquota ?? icms.pICMS ?? icms.aliq_icms ?? 0,
-          base: icms.base_calculo ?? icms.vBC ?? icms.base_icms ?? 0,
-          valor: icms.valor_icms ?? icms.vICMS ?? 0,
-          cst: icms.cst ?? icms.CST ?? icms.cst_icms ?? '--',
+          aliquota: icms.aliquota ?? 0,
+          base: icms.base_calculo ?? 0,
+          valor: icms.valor_icms ?? 0,
+          cst: icms.cst ?? '--',
         },
         pis: {
-          aliquota: pis.aliquota ?? pis.pPIS ?? pis.aliq_pis ?? 0,
-          base: pis.base_calculo ?? pis.vBC ?? pis.base_pis ?? 0,
-          valor: pis.valor_pis ?? pis.vPIS ?? 0,
-          cst: pis.cst ?? pis.CST ?? pis.cod_sit_trib_pis ?? '--',
+          aliquota: pis.aliquota ?? 0,
+          base: pis.base_calculo ?? 0,
+          valor: pis.valor_pis ?? 0,
+          cst: pis.cst ?? '--',
         },
         cofins: {
-          aliquota: cofins.aliquota ?? cofins.pCOFINS ?? cofins.aliq_cofins ?? 0,
-          base: cofins.base_calculo ?? cofins.vBC ?? cofins.base_cofins ?? 0,
-          valor: cofins.valor_cofins ?? cofins.vCOFINS ?? 0,
-          cst: cofins.cst ?? cofins.CST ?? cofins.cod_sit_trib_cofins ?? '--',
+          aliquota: cofins.aliquota ?? 0,
+          base: cofins.base_calculo ?? 0,
+          valor: cofins.valor_cofins ?? 0,
+          cst: cofins.cst ?? '--',
         },
         ipi: {
-          aliquota: imp.ipi?.aliquota ?? imp.ipi?.pIPI ?? imp.ipi?.aliq_ipi ?? 0,
-          base: imp.ipi?.base_calculo ?? imp.ipi?.vBC ?? imp.ipi?.base_ipi ?? 0,
-          valor: imp.ipi?.valor_ipi ?? imp.ipi?.vIPI ?? 0,
-          cst: imp.ipi?.cst ?? imp.ipi?.CST ?? imp.ipi?.cst_ipi ?? '--',
+          aliquota: imp.ipi?.aliquota ?? 0,
+          base: imp.ipi?.base_calculo ?? 0,
+          valor: imp.ipi?.valor_ipi ?? 0,
+          cst: imp.ipi?.cst ?? '--',
         },
         ibs: {
           valor: ibs.valor_ibs ?? 0,

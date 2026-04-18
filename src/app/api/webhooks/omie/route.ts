@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 // Using a global variable that persists across hot-reloads and request cycles as much as possible in dev.
 // Note: In production Vercel, this will reset frequently. 
 const globalWithWebhooks = global as typeof globalThis & {
-  webhookEvents?: any[];
+  webhookEvents?: Record<string, unknown>[];
 };
 
 if (!globalWithWebhooks.webhookEvents) {
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     console.log("Webhook received:", event);
 
     return NextResponse.json({ status: "success", received: true });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Webhook error:", error);
     return NextResponse.json({ status: "error", message: "Invalid payload" }, { status: 400 });
   }
