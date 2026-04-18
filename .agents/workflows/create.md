@@ -29,7 +29,7 @@ This command starts a new application creation process.
    - Coordinate expert agents:
      - `database-architect` → Schema
      - `backend-specialist` → API
-     - `frontend-specialist` → UI
+     - `react-nextjs-expert` → UI
 
 4. **Preview**
    - Start with `auto_preview.py` when complete

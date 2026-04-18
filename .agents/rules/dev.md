@@ -43,6 +43,14 @@ Todas as chamadas para a API Omie **DEVEM** passar por um Proxy Server-side em `
 - `src/lib/`: Utilitários e configurações.
 - `.agents/`: Regras e Workflows para automação.
 
+## ⚛️ Next.js 16 & React 19.2 (Arquitetura)
+- **App Router First**: Use sempre `app/` directory. Rotas dinâmicas usam `params` e `searchParams` de forma **assíncrona** (`await params`).
+- **Server Components (RSC) Default**: Componentes são de servidor por padrão. Use `"use client"` apenas em folhas da árvore que precisem de hooks (`useState`) ou APIs de navegador. Nunca use `next/dynamic` com `{ ssr: false }` dentro do servidor; extraia para um Client Component.
+- **Cache Components**: Em Next 16+, prefira a diretiva `"use cache"` e o novo workflow de tags (`cacheLife`, `cacheTag`, `updateTag()`) em vez de padrões antigos ou manual ISR.
+- **Data Fetching Assíncrono**: Propriedades ligadas ao request (`cookies()`, `headers()`) agora são assíncronas no App Router.
+- **Modern Forms & Actions**: Empregue Actions para formulários com Next.js Server Actions. Use `useActionState` e `useFormStatus` para carregamentos, e `useOptimistic` para feedback UI assíncrono.
+- **Limpeza de Refs (React 19)**: Callbacks de Ref retornam funções de limpeza, e refs podem ser passadas normalmente como props (dispensando `forwardRef`).
+
 ## 🔍 Regras de Resposta
 - Sempre verifique `.agents/rules/geral.md` para detalhes técnicos da API Omie.
 - Sempre verifique `.agents/rules/front.md` para padrões visuais.

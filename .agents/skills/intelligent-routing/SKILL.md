@@ -38,7 +38,7 @@ graph TD
 | User Intent         | Keywords                                   | Selected Agent(s)                           | Auto-invoke? |
 | ------------------- | ------------------------------------------ | ------------------------------------------- | ------------ |
 | **Authentication**  | "login", "auth", "signup", "password"      | `security-auditor` + `backend-specialist`   | ✅ YES       |
-| **UI Component**    | "button", "card", "layout", "style"        | `frontend-specialist`                       | ✅ YES       |
+| **UI Component**    | "button", "card", "layout", "style"        | `react-nextjs-expert`                       | ✅ YES       |
 | **Mobile UI**       | "screen", "navigation", "touch", "gesture" | `mobile-developer`                          | ✅ YES       |
 | **API Endpoint**    | "endpoint", "route", "API", "POST", "GET"  | `backend-specialist`                        | ✅ YES       |
 | **Database**        | "schema", "migration", "query", "table"    | `database-architect` + `backend-specialist` | ✅ YES       |
@@ -103,7 +103,7 @@ function analyzeRequest(userMessage) {
 | Domain          | Patterns                                   | Agent                   |
 | --------------- | ------------------------------------------ | ----------------------- |
 | **Security**    | auth, login, jwt, password, hash, token    | `security-auditor`      |
-| **Frontend**    | component, react, vue, css, html, tailwind | `frontend-specialist`   |
+| **Frontend**    | component, react, vue, css, html, tailwind | `react-nextjs-expert`   |
 | **Backend**     | api, server, express, fastapi, node        | `backend-specialist`    |
 | **Mobile**      | react native, flutter, ios, android, expo  | `mobile-developer`      |
 | **Database**    | prisma, sql, mongodb, schema, migration    | `database-architect`    |
@@ -122,7 +122,7 @@ If request matches **2+ domains from different categories**, automatically use `
 Example: "Create a secure login system with dark mode UI"
 → Detected: Security + Frontend
 → Auto-invoke: orchestrator
-→ Orchestrator will handle: security-auditor, frontend-specialist, test-engineer
+→ Orchestrator will handle: security-auditor, react-nextjs-expert, test-engineer
 ```
 
 ## Complexity Assessment
@@ -169,7 +169,7 @@ Example: "Create a secure login system with dark mode UI"
 **DO inform which expertise is being applied:**
 
 ```markdown
-🤖 **Applying knowledge of `@frontend-specialist`...**
+🤖 **Applying knowledge of `@react-nextjs-expert`...**
 
 I will create the component with the following characteristics:
 [Continue with specialized response]
@@ -247,8 +247,8 @@ User: "Add mobile support to the web app"
 
 ```text
 User: "Create a dark mode toggle button"
-Expected: Auto-invoke frontend-specialist
-Verify: Response shows "Using @frontend-specialist"
+Expected: Auto-invoke react-nextjs-expert
+Verify: Response shows "Using @react-nextjs-expert"
 ```
 
 #### Test 2: Security Task

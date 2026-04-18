@@ -43,7 +43,7 @@ Finally, use the test-engineer to identify test gaps.
 
 ### With Context Passing
 ```
-Use the frontend-specialist to analyze React components.
+Use the react-nextjs-expert to analyze React components.
 Based on those findings, have the test-engineer generate component tests.
 ```
 
@@ -63,7 +63,7 @@ Agents: explorer-agent → [domain-agents] → synthesis
 1. explorer-agent: Map codebase structure
 2. security-auditor: Security posture
 3. backend-specialist: API quality
-4. frontend-specialist: UI/UX patterns
+4. react-nextjs-expert: UI/UX patterns
 5. test-engineer: Test coverage
 6. Synthesize all findings
 ```
@@ -97,7 +97,7 @@ Agents: security-auditor → penetration-tester → synthesis
 | `security-auditor` | Security | "security", "auth", "vulnerabilities" |
 | `penetration-tester` | Security Testing | "pentest", "red team", "exploit" |
 | `backend-specialist` | Backend | "API", "server", "Node.js", "Express" |
-| `frontend-specialist` | Frontend | "React", "UI", "components", "Next.js" |
+| `react-nextjs-expert` | Frontend/React/Next | "React", "UI", "components", "Next.js" |
 | `test-engineer` | Testing | "tests", "coverage", "TDD" |
 | `devops-engineer` | DevOps | "deploy", "CI/CD", "infrastructure" |
 | `database-architect` | Database | "schema", "Prisma", "migrations" |

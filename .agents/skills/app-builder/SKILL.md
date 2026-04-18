@@ -49,7 +49,7 @@ Quick-start scaffolding for new projects. **Read the matching template only!**
 | Agent | Role |
 |-------|------|
 | `project-planner` | Task breakdown, dependency graph |
-| `frontend-specialist` | UI components, pages |
+| `react-nextjs-expert` | UI components, pages, Next.js features |
 | `backend-specialist` | API, business logic |
 | `database-architect` | Schema, migrations |
 | `devops-engineer` | Deployment, preview |
