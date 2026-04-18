@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { ShoppingBag, FileText } from 'lucide-react';
 import VendasTable from './VendasTable';
 import NfTable from './NfTable';
+import { TableContainer } from './ui/TableContainer';
 
 type Tab = 'pedidos' | 'notas';
 
@@ -45,7 +46,9 @@ export default function VendasTabs() {
       {/* Content Area */}
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
         {activeTab === 'pedidos' ? (
-          <VendasTable />
+          <Suspense fallback={<TableContainer isLoading={true}><div/></TableContainer>}>
+            <VendasTable />
+          </Suspense>
         ) : (
           <NfTable />
         )}
