@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { apiError } from '@/utils/api-error';
 
 export async function GET(
   request: NextRequest,
@@ -17,7 +18,7 @@ export async function GET(
 
     if (error) {
       if (error.code === 'PGRST116') {
-        return NextResponse.json({ error: 'Título não encontrado' }, { status: 404 });
+        return apiError(error, 'GET /api/supabase/financeiro/receber/[id]', 404);
       }
       throw error;
     }
@@ -25,7 +26,6 @@ export async function GET(
     return NextResponse.json({ titulo: data });
 
   } catch (error: unknown) {
-    console.error('API Error (Financeiro Receber Detail):', error);
-    return NextResponse.json({ error: (error instanceof Error ? (error instanceof Error ? error.message : 'Internal Server Error') : 'Internal Server Error') }, { status: 500 });
+    return apiError(error, 'GET /api/supabase/financeiro/receber/[id]');
   }
 }

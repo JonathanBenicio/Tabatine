@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import { apiError } from '@/utils/api-error';
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,7 +9,7 @@ export async function GET(request: NextRequest) {
     // Auth check
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return apiError(authError, 'GET /api/supabase/etapas-faturamento', 401);
     }
 
     const searchParams = request.nextUrl.searchParams;
@@ -40,7 +41,6 @@ export async function GET(request: NextRequest) {
       total_de_registros: count || 0
     });
   } catch (error: unknown) {
-    console.error('API /etapas-faturamento Error:', error);
-    return NextResponse.json({ error: (error instanceof Error ? (error instanceof Error ? error.message : 'Internal Server Error') : 'Internal Server Error') }, { status: 500 });
+    return apiError(error, 'GET /api/supabase/etapas-faturamento');
   }
 }

@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
+import { apiError } from '@/utils/api-error';
 
 export async function GET(req: Request) {
   try {
@@ -81,7 +82,6 @@ export async function GET(req: Request) {
       pagina: page
     });
   } catch (error: unknown) {
-    console.error('API Error (Supabase Produtos):', error);
-    return NextResponse.json({ error: (error instanceof Error ? (error instanceof Error ? error.message : 'Internal Server Error') : 'Internal Server Error') }, { status: 500 });
+    return apiError(error, 'GET /api/supabase/produtos');
   }
 }
