@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import VendasTabs from '@/components/VendasTabs';
 import { ShoppingBag } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default async function VendasPage() {
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();

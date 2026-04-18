@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import FinanceiroTable from '@/components/FinanceiroTable';
 import { TrendingDown } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default async function PagarPage() {
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
