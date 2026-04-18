@@ -193,6 +193,8 @@ export default function ContaCorrenteDetailsPage() {
         <button 
           onClick={() => router.push('/contas-correntes')}
           className="p-3 bg-zinc-900/50 hover:bg-zinc-800 border border-zinc-800 rounded-xl text-zinc-400 hover:text-white transition-all active:scale-95 group"
+          title="Voltar"
+          aria-label="Voltar"
         >
           <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
         </button>

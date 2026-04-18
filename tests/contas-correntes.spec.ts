@@ -8,6 +8,7 @@ import { test, expect } from './fixtures/test';
 test.describe('Módulo: Contas Correntes', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/contas-correntes');
+    await page.waitForLoadState('networkidle');
   });
 
   // ─────────────────────────────────────────────────────────
@@ -32,11 +33,12 @@ test.describe('Módulo: Contas Correntes', () => {
 
   test('2.1 deve filtrar ao digitar no campo de busca', async ({ page }) => {
     const searchInput = page.getByPlaceholder(/Pesquisar contas.../i);
-    if (!(await searchInput.isVisible())) return;
+    await expect(searchInput).toBeVisible({ timeout: 15000 });
 
+    await searchInput.click();
     await searchInput.fill('XYZ_NON_EXISTENT');
-    await page.waitForTimeout(1500); 
-    await expect(page.getByText(/Nenhuma conta/i).first()).toBeVisible();
+    await page.waitForTimeout(2000); 
+    await expect(page.getByText(/Nenhuma conta/i).first()).toBeVisible({ timeout: 15000 });
 
     await searchInput.clear();
     await page.waitForTimeout(1500);
@@ -98,7 +100,7 @@ test.describe('Módulo: Contas Correntes', () => {
       await viewButton.click({ force: true });
       await page.waitForURL(/\/contas-correntes\/\d+/, { timeout: 10000 });
 
-      const backButton = page.getByRole('link', { name: /voltar/i }).or(page.locator('button:has-text("Voltar")')).first();
+      const backButton = page.getByRole('link', { name: /voltar/i }).or(page.getByRole('button', { name: /voltar/i })).first();
       await expect(backButton).toBeVisible({ timeout: 10000 });
       await backButton.click();
 

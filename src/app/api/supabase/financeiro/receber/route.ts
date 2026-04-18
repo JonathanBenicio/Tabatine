@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { escapeFilterValue } from '@/utils/supabase/filter-utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,12 +21,34 @@ export async function GET(request: NextRequest) {
       .select('*, clientes(razao_social, cnpj_cpf)', { count: 'exact' });
 
     if (search) {
-      // Busca simplificada por número do documento ou razão social do cliente
-      query = query.or(`numero_documento.ilike.%${search}%, clientes.razao_social.ilike.%${search}%`);
+      const escapedSearch = escapeFilterValue(`%${search}%`);
+
+      // 1. Busca IDs de clientes que combinam com o termo (razão social)
+      const { data: matchedClientes } = await supabase
+        .from('clientes')
+        .select('id')
+        .ilike('razao_social', `%${search}%`);
+      
+      const clienteIds = (matchedClientes || []).map(c => c.id);
+
+      // 2. Constrói o filtro OR (Número do documento OU IDs de clientes encontrados)
+      const orConditions = [`numero_documento.ilike.${escapedSearch}`];
+      
+      if (clienteIds.length > 0) {
+        orConditions.push(`cliente_id.in.(${clienteIds.join(',')})`);
+      }
+      
+      query = query.or(orConditions.join(','));
     }
 
-    const { data, count, error } = await query
-      .order(sortField, { ascending: sortOrder === 'asc' })
+    let finalQuery = query;
+    if (sortField === 'cliente_razao_social') {
+      finalQuery = finalQuery.order('razao_social', { referencedTable: 'clientes', ascending: sortOrder === 'asc' });
+    } else {
+      finalQuery = finalQuery.order(sortField, { ascending: sortOrder === 'asc' });
+    }
+
+    const { data, count, error } = await finalQuery
       .range(from, to);
 
     if (error) throw error;
@@ -39,6 +62,8 @@ export async function GET(request: NextRequest) {
 
   } catch (error: unknown) {
     console.error('API Error (Financeiro Receber):', error);
-    return NextResponse.json({ error: (error instanceof Error ? (error instanceof Error ? error.message : 'Internal Server Error') : 'Internal Server Error') }, { status: 500 });
+    return NextResponse.json({ 
+      error: error instanceof Error ? error.message : 'Internal Server Error' 
+    }, { status: 500 });
   }
 }

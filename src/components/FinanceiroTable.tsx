@@ -203,6 +203,26 @@ export default function FinanceiroTable({ type }: FinanceiroTableProps) {
           isLoading={isLoading}
           variant={type === 'pagar' ? 'rose' : 'emerald'}
         />
+        <TableSummaryCard 
+          icon={AlertCircle}
+          label={type === 'pagar' ? "Títulos Vencidos" : "Títulos em Aberto"}
+          value={data?.titulos?.filter(t => {
+            const s = t.status?.toLowerCase();
+            return type === 'pagar' ? s === 'vencido' : s === 'em aberto' || s === 'pendente';
+          }).length || 0}
+          isLoading={isLoading}
+          variant="amber"
+        />
+        <TableSummaryCard 
+          icon={CheckCircle2}
+          label={type === 'pagar' ? "Títulos Pagos" : "Títulos Recebidos"}
+          value={data?.titulos?.filter(t => {
+            const s = t.status?.toLowerCase();
+            return s === 'baixado' || s === 'pago' || s === 'recebido' || s === 'liquidado';
+          }).length || 0}
+          isLoading={isLoading}
+          variant="emerald"
+        />
       </div>
 
       {/* Header Area */}

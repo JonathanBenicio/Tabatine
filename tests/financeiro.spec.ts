@@ -13,6 +13,7 @@ test.describe('Módulo: Financeiro (Pagar e Receber)', () => {
   test.describe('Contas a Pagar', () => {
     test.beforeEach(async ({ page }) => {
       await page.goto('/financeiro/pagar');
+      await page.waitForLoadState('networkidle');
     });
 
     // 1. RENDERIZAÇÃO
@@ -25,14 +26,15 @@ test.describe('Módulo: Financeiro (Pagar e Receber)', () => {
     // 2. BUSCA
     test('2.1 deve filtrar por fornecedor e limpar busca', async ({ page }) => {
       const searchInput = page.getByPlaceholder(/localizar fornecedor/i);
-      if (!(await searchInput.isVisible())) return;
+      await expect(searchInput).toBeVisible({ timeout: 15000 });
 
+      await searchInput.click();
       await searchInput.fill('EMPRESA_TESTE_999');
-      await page.waitForTimeout(800);
-      await expect(page.getByText(/nenhum título financeiro encontrado/i).first()).toBeVisible({ timeout: 10000 });
+      await page.waitForTimeout(1500);
+      await expect(page.getByText(/nenhum título financeiro encontrado/i).first()).toBeVisible({ timeout: 15000 });
 
       await searchInput.clear();
-      await page.waitForTimeout(800);
+      await page.waitForTimeout(1000);
     });
 
     // 3. PAGINAÇÃO
@@ -87,6 +89,7 @@ test.describe('Módulo: Financeiro (Pagar e Receber)', () => {
   test.describe('Contas a Receber', () => {
     test.beforeEach(async ({ page }) => {
       await page.goto('/financeiro/receber');
+      await page.waitForLoadState('networkidle');
     });
 
     // 1. RENDERIZAÇÃO
@@ -99,14 +102,15 @@ test.describe('Módulo: Financeiro (Pagar e Receber)', () => {
     // 2. BUSCA
     test('2.1 deve filtrar por cliente e limpar busca', async ({ page }) => {
       const searchInput = page.getByPlaceholder(/localizar cliente/i);
-      if (!(await searchInput.isVisible())) return;
+      await expect(searchInput).toBeVisible({ timeout: 15000 });
 
+      await searchInput.click();
       await searchInput.fill('CLIENTE_INEXISTENTE_XYZ');
-      await page.waitForTimeout(800);
-      await expect(page.getByText(/nenhum título financeiro encontrado/i).first()).toBeVisible({ timeout: 10000 });
+      await page.waitForTimeout(1500);
+      await expect(page.getByText(/nenhum título financeiro encontrado/i).first()).toBeVisible({ timeout: 15000 });
 
       await searchInput.clear();
-      await page.waitForTimeout(800);
+      await page.waitForTimeout(1000);
     });
 
     // 3. PAGINAÇÃO

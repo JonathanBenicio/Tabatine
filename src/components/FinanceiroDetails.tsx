@@ -86,34 +86,36 @@ export default function FinanceiroDetails({ type }: FinanceiroDetailsProps) {
         }
       />
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-sm">
-          <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 tracking-wider mb-1">Valor do Título</p>
-          <p className="text-2xl font-black text-slate-900 dark:text-white">
-            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(titulo.valor_documento)}
-          </p>
+      {/* Stats Grid - Valores e Pagamento */}
+      <SectionCard icon={Receipt} iconColor="text-emerald-500" title="Valores e Pagamento">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-950/50 border border-slate-200 dark:border-zinc-800/50">
+            <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 tracking-wider mb-1">Valor do Título</p>
+            <p className="text-xl font-black text-slate-900 dark:text-white">
+              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(titulo.valor_documento)}
+            </p>
+          </div>
+          <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-950/50 border border-slate-200 dark:border-zinc-800/50">
+            <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 tracking-wider mb-1">
+              {type === 'pagar' ? 'Total Pago' : 'Total Recebido'}
+            </p>
+            <p className={`text-xl font-black ${colorClass}`}>
+              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(titulo.valor_pago_recebido)}
+            </p>
+          </div>
+          <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-950/50 border border-slate-200 dark:border-zinc-800/50">
+            <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 tracking-wider mb-1">Saldo em Aberto</p>
+            <p className="text-xl font-black text-slate-900 dark:text-white">
+              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(titulo.valor_saldo)}
+            </p>
+          </div>
         </div>
-        <div className="p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-sm">
-          <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 tracking-wider mb-1">
-            {type === 'pagar' ? 'Total Pago' : 'Total Recebido'}
-          </p>
-          <p className={`text-2xl font-black ${colorClass}`}>
-            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(titulo.valor_pago_recebido)}
-          </p>
-        </div>
-        <div className="p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-sm">
-          <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 tracking-wider mb-1">Saldo em Aberto</p>
-          <p className="text-2xl font-black text-slate-900 dark:text-white">
-            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(titulo.valor_saldo)}
-          </p>
-        </div>
-      </div>
+      </SectionCard>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {/* Identificação */}
-          <SectionCard icon={Receipt} iconColor="text-blue-500" title="Identificação do Título">
+          <SectionCard icon={Receipt} iconColor="text-blue-500" title="Dados do Título">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-0 text-sm">
               <InfoRow label="Número Documento" value={titulo.numero_documento} />
               <InfoRow label="Parcela" value={titulo.numero_parcela} />
@@ -133,7 +135,7 @@ export default function FinanceiroDetails({ type }: FinanceiroDetailsProps) {
           </SectionCard>
 
           {/* Datas */}
-          <SectionCard icon={Calendar} iconColor="text-amber-500" title="Cronograma Financeiro">
+          <SectionCard icon={Calendar} iconColor="text-amber-500" title="Cronograma">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                <div className="space-y-1">
                   <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500">Emissão</span>
