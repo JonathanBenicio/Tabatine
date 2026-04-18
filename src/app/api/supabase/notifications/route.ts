@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
+import { apiError } from '@/utils/api-error';
 
 export async function GET() {
   try {
@@ -18,14 +19,12 @@ export async function GET() {
       .limit(50);
 
     if (error) {
-      console.error('Supabase error (GET Notifications):', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return apiError(error, 'GET /api/supabase/notifications');
     }
 
     return NextResponse.json(data || []);
   } catch (error: unknown) {
-    console.error('API Error (GET Notifications):', error);
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Internal Server Error' }, { status: 500 });
+    return apiError(error, 'GET /api/supabase/notifications');
   }
 }
 
@@ -54,14 +53,12 @@ export async function PATCH(req: Request) {
     const { error } = await query;
 
     if (error) {
-      console.error('Supabase error (PATCH Notifications):', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return apiError(error, 'PATCH /api/supabase/notifications');
     }
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
-    console.error('API Error (PATCH Notifications):', error);
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Internal Server Error' }, { status: 500 });
+    return apiError(error, 'PATCH /api/supabase/notifications');
   }
 }
 
@@ -87,13 +84,11 @@ export async function DELETE(req: Request) {
       .eq('id', id);
 
     if (error) {
-      console.error('Supabase error (DELETE Notifications):', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return apiError(error, 'DELETE /api/supabase/notifications');
     }
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
-    console.error('API Error (DELETE Notifications):', error);
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Internal Server Error' }, { status: 500 });
+    return apiError(error, 'DELETE /api/supabase/notifications');
   }
 }

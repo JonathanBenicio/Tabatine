@@ -1,37 +1,48 @@
 import { NextResponse } from "next/server";
-
-// Using a global variable that persists across hot-reloads and request cycles as much as possible in dev.
-// Note: In production Vercel, this will reset frequently. 
-const globalWithWebhooks = global as typeof globalThis & {
-  webhookEvents?: Record<string, unknown>[];
-};
-
-if (!globalWithWebhooks.webhookEvents) {
-  globalWithWebhooks.webhookEvents = [];
-}
+import { validateOmieWebhookSignature } from "@/lib/webhook-validator";
+import { createClient } from "@/utils/supabase/server";
+import { apiError } from "@/utils/api-error";
 
 export async function POST(request: Request) {
   try {
-    const payload = await request.json();
-    
-    // Add timestamp and ID
-    const event = {
-      id: crypto.randomUUID(),
-      timestamp: new Date().toISOString(),
-      payload,
-    };
+    // Extract raw body for signature validation
+    const rawBody = await request.text();
+    const signature = request.headers.get('X-Omie-Signature');
+    const secret = process.env.OMIE_WEBHOOK_SECRET;
 
-    // Store the event (keep last 50)
-    globalWithWebhooks.webhookEvents!.unshift(event);
-    if (globalWithWebhooks.webhookEvents!.length > 50) {
-      globalWithWebhooks.webhookEvents!.pop();
+    if (!secret) {
+      console.error("OMIE_WEBHOOK_SECRET is not defined in environment variables");
+      return NextResponse.json({ error: "Configuration error" }, { status: 500 });
     }
 
-    console.log("Webhook received:", event);
+    // Validate Omie signature
+    if (!validateOmieWebhookSignature(rawBody, signature, secret)) {
+      console.warn("Invalid Omie webhook signature received");
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
+
+    const payload = JSON.parse(rawBody);
+    const eventName = payload.event || "unknown";
+    
+    // Store in Supabase
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from('webhook_events')
+      .insert({
+        event: eventName,
+        payload: payload,
+        status: 'Pending',
+        message_id: payload.message_id || null
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    console.log(`Webhook received and stored: ${eventName}`);
 
     return NextResponse.json({ status: "success", received: true });
   } catch (error: unknown) {
-    console.error("Webhook error:", error);
-    return NextResponse.json({ status: "error", message: "Invalid payload" }, { status: 400 });
+    return apiError(error, 'POST /api/webhooks/omie');
   }
 }

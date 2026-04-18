@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import { apiError } from '@/utils/api-error';
 
 export async function GET(
   _request: NextRequest,
@@ -21,12 +22,11 @@ export async function GET(
       .single();
 
     if (error || !meio) {
-      return NextResponse.json({ error: 'Meio não encontrado' }, { status: 404 });
+      return apiError(error, 'GET /api/supabase/meios-pagamento/[id]', 404);
     }
 
     return NextResponse.json({ meio });
-  } catch (error: unknown) {
-    console.error('API /meios-pagamento/[id] Error:', error);
-    return NextResponse.json({ error: (error instanceof Error ? (error instanceof Error ? error.message : 'Internal Server Error') : 'Internal Server Error') }, { status: 500 });
+  } catch (error) {
+    return apiError(error, 'GET /api/supabase/meios-pagamento/[id]');
   }
 }

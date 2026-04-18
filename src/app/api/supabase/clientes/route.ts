@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { escapeFilterValue } from '@/utils/supabase/filter-utils';
 import { NextResponse } from 'next/server';
+import { apiError } from '@/utils/api-error';
 
 export async function GET(req: Request) {
   try {
@@ -9,7 +10,7 @@ export async function GET(req: Request) {
     // Verify user session
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return apiError(authError, 'GET /api/supabase/clientes', 401);
     }
 
     const { searchParams } = new URL(req.url);
@@ -58,7 +59,6 @@ export async function GET(req: Request) {
       pagina: page
     });
   } catch (error: unknown) {
-    console.error('API Error (Supabase Clientes):', error);
-    return NextResponse.json({ error: (error instanceof Error ? (error instanceof Error ? error.message : 'Internal Server Error') : 'Internal Server Error') }, { status: 500 });
+    return apiError(error, 'GET /api/supabase/clientes');
   }
 }
