@@ -63,6 +63,9 @@ export default function FinanceiroDetails({ type }: FinanceiroDetailsProps) {
   if (!titulo) return null;
 
   const isPago = titulo.status === 'Pago' || titulo.status === 'Recebido';
+  const formatCurrency = (value: number | null) => value === null
+    ? 'Não informado'
+    : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   const colorClass = type === 'pagar' ? 'text-rose-500' : 'text-emerald-500';
   const bgBadge = isPago 
     ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' 
@@ -100,13 +103,13 @@ export default function FinanceiroDetails({ type }: FinanceiroDetailsProps) {
               {type === 'pagar' ? 'Total Pago' : 'Total Recebido'}
             </p>
             <p className={`text-xl font-black ${colorClass}`}>
-              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(titulo.valor_pago_recebido)}
+              {formatCurrency(titulo.valor_pago_recebido)}
             </p>
           </div>
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-950/50 border border-slate-200 dark:border-zinc-800/50">
             <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 tracking-wider mb-1">Saldo em Aberto</p>
             <p className="text-xl font-black text-slate-900 dark:text-white">
-              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(titulo.valor_saldo)}
+              {formatCurrency(titulo.valor_saldo)}
             </p>
           </div>
         </div>

@@ -1,8 +1,8 @@
-import { Produto } from '@/store/useProdutosStore';
+import type { Produto } from '@/store/useProdutosStore';
 
 interface RawProduto {
   omie_id?: number;
-  id?: string;
+  codigo_produto_integracao?: string | null;
   codigo_produto?: string;
   descricao?: string;
   unidade_medida?: string;
@@ -36,7 +36,7 @@ export function mapSupabaseToProduto(p: Record<string, unknown>): Produto {
 
   return {
     codigo_produto: raw.omie_id || 0,
-    codigo_produto_integracao: raw.id || '', // id uuid agora é a chave principal
+    codigo_produto_integracao: raw.codigo_produto_integracao || '',
     codigo: raw.codigo_produto || '',
     descricao: raw.descricao || 'Sem Descrição',
     unidade: raw.unidade_medida || 'UN',
