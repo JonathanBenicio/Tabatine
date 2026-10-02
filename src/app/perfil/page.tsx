@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import { LogoutButton, TelegramIntegration, ReceiveLogsToggle } from './components/client-components';
+import ProfileClient from './ProfileClient';
 
 export default async function PerfilPage() {
   const supabase = await createClient();
@@ -20,9 +21,12 @@ export default async function PerfilPage() {
 
   const { data: profile } = await supabase
     .from('perfis')
-    .select('*')
+    .select('id,nome,telegram_chat_id,receive_logs')
     .eq('id', user.id)
     .single();
+
+  const fullName = typeof profile?.nome === 'string' ? profile.nome : '';
+  const avatarUrl = typeof user.user_metadata.avatar_url === 'string' ? user.user_metadata.avatar_url : '';
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
@@ -38,7 +42,7 @@ export default async function PerfilPage() {
             <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 p-1 mb-4 shadow-lg shadow-blue-500/20">
               <div className="w-full h-full rounded-full bg-zinc-900 flex items-center justify-center overflow-hidden">
                 <Image 
-                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}&backgroundColor=transparent`} 
+                  src={avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.email ?? '')}&backgroundColor=transparent`}
                   alt="Avatar" 
                   width={96}
                   height={96}
@@ -77,6 +81,7 @@ export default async function PerfilPage() {
 
         {/* Lado Direito: Notificações e Integrações */}
         <div className="md:col-span-2 space-y-6">
+          <ProfileClient fullName={fullName} avatarUrl={avatarUrl} />
           
           {/* Sessão Telegram */}
           <div className="p-8 rounded-3xl bg-zinc-900/40 border border-zinc-800/50 backdrop-blur-xl relative overflow-hidden group">

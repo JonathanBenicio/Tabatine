@@ -2,15 +2,15 @@
 
 import React, { useMemo, useTransition } from 'react';
 import { useNfStore } from '@/store/useNfStore';
-import { FileText, AlertCircle, RefreshCw, ShieldCheck, DollarSign, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { FileText, AlertCircle, RefreshCw, ShieldCheck, DollarSign } from 'lucide-react';
 import Pagination from './Pagination';
 import { useSuspenseNfQuery } from '@/hooks/useNfQuery';
 import {
   useReactTable,
   getCoreRowModel,
-  flexRender,
 } from '@tanstack/react-table';
 import { TableContainer } from '@/components/ui/TableContainer';
+import { DataTable } from '@/components/ui/DataTable';
 import { TableSearch } from '@/components/ui/TableSearch';
 import { TableSummaryCard } from '@/components/ui/TableSummaryCard';
 import { getNfColumns } from './nf-columns';
@@ -46,9 +46,11 @@ export default function NfTable() {
     return { faturados: faturados.length, cancelados: cancelados.length, totalFaturado, totalCancelado };
   }, [data.nfs]);
 
+  const tableData = React.useMemo(() => data.nfs ?? [], [data.nfs]);
+
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
-    data: data.nfs || [],
+    data: tableData,
     columns: getNfColumns(),
     state: {
       sorting,
@@ -150,47 +152,7 @@ export default function NfTable() {
           />
         }
       >
-        <table className="w-full text-left border-collapse">
-          <thead>
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id} className="border-b border-slate-200/50 dark:border-zinc-800/50 bg-slate-100/50 dark:bg-zinc-900/20">
-                {headerGroup.headers.map(header => (
-                  <th 
-                    key={header.id} 
-                    className={`py-5 px-6 text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] font-sans ${header.column.columnDef.meta?.align === 'right' ? 'text-right' : header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''} ${header.column.getCanSort() ? 'cursor-pointer select-none' : ''}`}
-                    onClick={header.column.getToggleSortingHandler()}
-                  >
-                    <div className={`flex items-center gap-2 ${header.column.columnDef.meta?.align === 'right' ? 'justify-end' : header.column.columnDef.meta?.align === 'center' ? 'justify-center' : ''}`}>
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                      {header.column.getCanSort() && (
-                        <div className="text-slate-300 dark:text-zinc-700">
-                          {{
-                            asc: <ChevronUp size={12} className="text-blue-500" />,
-                            desc: <ChevronDown size={12} className="text-blue-500" />,
-                          }[header.column.getIsSorted() as string] ?? <ChevronsUpDown size={12} className="opacity-0 group-hover:opacity-100" />}
-                        </div>
-                      )}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="divide-y divide-slate-200/50 dark:divide-zinc-800/30">
-            {table.getRowModel().rows.map(row => (
-              <tr 
-                key={row.id} 
-                className="group/row hover:bg-slate-100/50 dark:hover:bg-blue-500/[0.02] transition-all duration-300"
-              >
-                {row.getVisibleCells().map(cell => (
-                  <td key={cell.id} className="py-5 px-6 text-xs font-medium text-slate-500 dark:text-zinc-500 font-mono">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <DataTable table={table} cellClassName="text-xs font-medium text-slate-500 dark:text-zinc-500 font-mono" />
 
         {/* Sync Status Overlay for active view */}
         {isPending && data && (

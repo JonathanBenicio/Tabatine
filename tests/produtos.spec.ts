@@ -45,7 +45,7 @@ test.describe('Módulo: Produtos', () => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
     const searchInput = page.getByPlaceholder(/pesquisar por nome ou sku/i);
-    await searchInput.click({ force: true });
+    await searchInput.click();
     await searchInput.fill('00'); 
     await page.waitForTimeout(800);
 
@@ -96,7 +96,7 @@ test.describe('Módulo: Produtos', () => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
     const headerNome = page.getByRole('columnheader', { name: /produto/i }).first();
-    await headerNome.click({ force: true });
+    await headerNome.click();
     await page.waitForTimeout(800);
 
     await expect(headerNome.locator('svg')).toBeVisible({ timeout: 10000 });
@@ -112,7 +112,7 @@ test.describe('Módulo: Produtos', () => {
     await expect(firstRow).toBeVisible({ timeout: 20000 });
 
     const viewLink = firstRow.locator('button[title="Abrir Detalhes"]').first();
-    await viewLink.click({ force: true });
+    await viewLink.click();
     
     await expect(page).toHaveURL(/\/produtos\/\d+/, { timeout: 10000 });
     
@@ -126,7 +126,7 @@ test.describe('Módulo: Produtos', () => {
     const firstRow = page.locator('tbody tr:not(.animate-pulse)').first();
     await expect(firstRow).toBeVisible({ timeout: 10000 });
     const viewLink = firstRow.locator('button[title="Abrir Detalhes"]').first();
-    await viewLink.click({ force: true });
+    await viewLink.click();
     await page.waitForURL(/\/produtos\/\d+/, { timeout: 10000 });
 
     const backBtn = page.getByRole('button', { name: /voltar/i }).or(page.locator('button:has(svg.lucide-arrow-left)')).first();
@@ -145,7 +145,7 @@ test.describe('Módulo: Produtos', () => {
 
     const refreshBtn = page.locator('button[title="Atualizar dados"]').first();
     if (await refreshBtn.isVisible()) {
-      await refreshBtn.click({ force: true });
+      await refreshBtn.click();
       await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
     }
   });

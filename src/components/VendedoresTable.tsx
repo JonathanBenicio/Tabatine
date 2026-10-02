@@ -2,17 +2,17 @@
 
 import React, { useMemo } from 'react';
 import { useVendedoresStore, Vendedor } from '@/store/useVendedoresStore';
-import { UserCheck, AlertCircle, RefreshCw, Eye, Mail, Percent, Ban, CheckCircle2, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { UserCheck, AlertCircle, RefreshCw, Eye, Mail, Percent, Ban, CheckCircle2 } from 'lucide-react';
 import Pagination from './Pagination';
 import { useVendedoresQuery } from '@/hooks/useVendedoresQuery';
 import { useRouter } from 'next/navigation';
 import {
   useReactTable,
   getCoreRowModel,
-  flexRender,
   createColumnHelper,
 } from '@tanstack/react-table';
 import { TableContainer } from './ui/TableContainer';
+import { DataTable } from '@/components/ui/DataTable';
 import { TableSearch } from './ui/TableSearch';
 import { TableSummaryCard } from './ui/TableSummaryCard';
 
@@ -101,9 +101,11 @@ export default function VendedoresTable() {
     }),
   ], [router]);
 
+  const tableData = React.useMemo(() => data?.vendedores ?? [], [data?.vendedores]);
+
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
-    data: data?.vendedores || [],
+    data: tableData,
     columns,
     state: { sorting },
     onSortingChange: setSorting,
@@ -192,52 +194,7 @@ export default function VendedoresTable() {
           />
         }
       >
-        <table className="w-full text-left border-collapse">
-          <thead>
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id} className="border-b border-slate-200/50 dark:border-zinc-800/50 bg-slate-100/50 dark:bg-zinc-900/20">
-                {headerGroup.headers.map(header => (
-                  <th 
-                    key={header.id} 
-                    className={`py-5 px-6 text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] font-sans ${header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''}`}
-                  >
-                    <div 
-                      className={header.column.getCanSort() ? 'cursor-pointer select-none flex items-center gap-2 group/header' : ''}
-                      onClick={header.column.getToggleSortingHandler()}
-                    >
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                      {header.column.getCanSort() && (
-                        <div className="flex flex-col opacity-20 group-hover/header:opacity-100 transition-opacity">
-                          {header.column.getIsSorted() === 'asc' ? (
-                            <ChevronUp className="w-3 h-3 text-blue-500" />
-                          ) : header.column.getIsSorted() === 'desc' ? (
-                            <ChevronDown className="w-3 h-3 text-blue-500" />
-                          ) : (
-                            <ChevronsUpDown className="w-3 h-3 text-slate-400 grayscale group-hover/header:grayscale-0" />
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="divide-y divide-slate-200/50 dark:divide-zinc-800/30">
-            {table.getRowModel().rows.map(row => (
-              <tr 
-                key={row.id} 
-                className="group/row hover:bg-slate-100/50 dark:hover:bg-blue-500/[0.02] transition-all duration-300"
-              >
-                {row.getVisibleCells().map(cell => (
-                  <td key={cell.id} className="py-5 px-6">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <DataTable table={table} isLoading={isLoading && !data} />
 
         {/* Sync Status Overlay */}
         {isLoading && data && (

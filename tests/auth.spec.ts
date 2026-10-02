@@ -51,7 +51,7 @@ test.describe('Authentication Suite', () => {
     await expect(page.getByRole('heading', { name: /dashboard|resumo/i })).toBeVisible();
   });
 
-  test('Deve realizar o logout corretamente', async ({ page }) => {
+  test('Deve realizar o logout sem invalidar outra sessão', async ({ page, browser }) => {
     test.skip(!process.env.PLAYWRIGHT_TEST_EMAIL, 'Credenciais de teste ausentes no ambiente');
 
     // Fluxo longo: Fazer login e depois deslogar
@@ -68,14 +68,15 @@ test.describe('Authentication Suite', () => {
     // Deve ser redirecionado para o auth
     await expect(page).toHaveURL(/.*\/auth/, { timeout: 10000 });
 
-    // RE-LOGIN: Como o logout do Supabase invalida o token no servidor,
-    // precisamos gerar um novo token e salvar no user.json para não quebrar os próximos testes da suite.
-    await page.goto('/auth/login');
-    await page.getByLabel(/e-mail|email/i).fill(TEST_EMAIL);
-    await page.getByLabel(/senha|password/i).fill(TEST_PASSWORD);
-    await page.getByRole('button', { name: /entrar|login/i }).click();
-
-    await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
-    await page.context().storageState({ path: 'playwright/.auth/user.json' });
+    // The setup session belongs to another browser and must remain valid.
+    const otherContext = await browser.newContext({ storageState: 'playwright/.auth/user.json' });
+    try {
+      const otherPage = await otherContext.newPage();
+      await otherPage.goto('/dashboard');
+      await expect(otherPage).toHaveURL(/\/dashboard/);
+      await expect(otherPage.getByRole('heading', { name: /dashboard|resumo/i })).toBeVisible();
+    } finally {
+      await otherContext.close();
+    }
   });
 });

@@ -1,7 +1,7 @@
 # AGENTS.md - Tabatine Development Guide
 
 ## Project Overview
-Tabatine is a Next.js 16.1.6 application integrating with Omie ERP for financial management, sales reporting, and invoice tracking. Uses App Router, React 19, TypeScript strict mode, Tailwind CSS 4, Zustand, and TanStack Query.
+Tabatine is a Next.js 16.3.8 application integrating with Omie ERP for financial management, sales reporting, and invoice tracking. Uses App Router, React 19, TypeScript strict mode, Tailwind CSS 4, Zustand, and TanStack Query.
 
 ## Build/Lint/Test Commands
 
@@ -183,6 +183,11 @@ Required for: `/api/omie/*` and `/api/supabase/*` routes to work.
 
 ## Working with the Codebase
 
+### Branches and Documentation Validation
+- Target new pull requests to `develop`. Promotion to `master` requires an explicit user request.
+- When a branch changes data contracts or screens, compare the implementation with project documentation and official provider documentation. Report changes, discrepancies, test results and any unverified prerequisites in the PR.
+- Consolidated branch work must preserve existing business behavior and satisfy the five data-table testing pillars.
+
 ### Adding a New Page
 1. Create route in `src/app/[page-name]/page.tsx`
 2. Add navigation link in `src/components/LayoutWrapper.tsx`
@@ -211,7 +216,7 @@ describe('myFunction', () => {
 node --experimental-strip-types --test src/lib/ofxParser.test.ts
 
 # Multiple files with glob
-node --experimental-strip-types --test src/**/*.test.ts
+node --experimental-strip-types --test "src/**/*.test.ts"
 ```
 
 ## ESLint Compliance & Code Quality

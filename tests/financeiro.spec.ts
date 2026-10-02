@@ -113,7 +113,7 @@ test.describe('Módulo: Financeiro (Pagar e Receber)', () => {
     test('4.1 deve ordenar por Vencimento ao clicar no cabeçalho', async ({ page }) => {
       const headerVenc = page.getByRole('columnheader', { name: /vencimento/i }).first();
       if (await headerVenc.isVisible()) {
-        await headerVenc.click({ force: true });
+        await headerVenc.click();
         await page.waitForTimeout(800);
         await expect(headerVenc.locator('svg')).toBeVisible({ timeout: 10000 });
       }
@@ -126,7 +126,7 @@ test.describe('Módulo: Financeiro (Pagar e Receber)', () => {
 
       const viewButton = rows.first().locator('[title="Abrir Detalhes"]').first();
       await expect(viewButton).toBeVisible();
-      await viewButton.click({ force: true });
+      await viewButton.click();
 
       // Valida Navegação e URL
       await expect(page).toHaveURL(/\/financeiro\/pagar\/\d+/, { timeout: 10000 });
@@ -189,7 +189,7 @@ test.describe('Módulo: Financeiro (Pagar e Receber)', () => {
     test('4.1 deve ordenar por Cliente ao clicar no cabeçalho', async ({ page }) => {
       const headerCliente = page.getByRole('columnheader', { name: /cliente/i }).first();
       if (await headerCliente.isVisible()) {
-        await headerCliente.click({ force: true });
+        await headerCliente.click();
         await page.waitForTimeout(800);
         await expect(headerCliente.locator('svg')).toBeVisible({ timeout: 10000 });
       }
@@ -202,7 +202,7 @@ test.describe('Módulo: Financeiro (Pagar e Receber)', () => {
 
       const viewButton = rows.first().locator('[title="Abrir Detalhes"]').first();
       await expect(viewButton).toBeVisible();
-      await viewButton.click({ force: true });
+      await viewButton.click();
 
       // Valida Navegação e URL
       await expect(page).toHaveURL(/\/financeiro\/receber\/\d+/, { timeout: 10000 });

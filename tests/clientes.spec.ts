@@ -58,7 +58,7 @@ test.describe('Módulo: Clientes', () => {
 
     const searchInput = page.getByPlaceholder(/pesquisar clientes/i);
     await expect(searchInput).toBeVisible();
-    await searchInput.click({ force: true });
+    await searchInput.click();
 
     await searchInput.fill('a'); // 'a' garante algum resultado na maioria dos casos
     await page.waitForTimeout(600); // Aguarda debounce
@@ -73,7 +73,7 @@ test.describe('Módulo: Clientes', () => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
     const searchInput = page.getByPlaceholder(/pesquisar clientes/i);
-    await searchInput.click({ force: true });
+    await searchInput.click();
     // String improvável de ter match nos dados
     await searchInput.fill('XYZXYZXYZ___CLIENTE_NAO_EXISTE___123');
     await page.waitForTimeout(600);
@@ -87,7 +87,7 @@ test.describe('Módulo: Clientes', () => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
     const searchInput = page.getByPlaceholder(/pesquisar clientes/i);
-    await searchInput.click({ force: true });
+    await searchInput.click();
     await searchInput.fill('abc');
     await page.waitForTimeout(600);
 
@@ -138,7 +138,7 @@ test.describe('Módulo: Clientes', () => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
     const searchInput = page.getByPlaceholder(/pesquisar clientes/i);
-    await searchInput.click({ force: true });
+    await searchInput.click();
     await searchInput.fill('a');
     await page.waitForTimeout(600);
 
@@ -164,7 +164,7 @@ test.describe('Módulo: Clientes', () => {
     await expect(headerEmpresa).toBeVisible();
 
     // Primeiro clique: ordena ASC
-    await headerEmpresa.click({ force: true });
+    await headerEmpresa.click();
     await page.waitForTimeout(800);
 
     // Ícone de ordenação deve estar visível
@@ -180,9 +180,9 @@ test.describe('Módulo: Clientes', () => {
 
     const headerEmpresa = page.getByRole('columnheader', { name: /empresa/i }).first();
     
-    await headerEmpresa.click({ force: true }); // ASC
+    await headerEmpresa.click(); // ASC
     await page.waitForTimeout(500);
-    await headerEmpresa.click({ force: true }); // DESC
+    await headerEmpresa.click(); // DESC
     await page.waitForTimeout(800);
 
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
@@ -198,7 +198,7 @@ test.describe('Módulo: Clientes', () => {
 
     const viewButton = firstRow.locator('[title="Abrir Detalhes"]').first();
     await expect(viewButton).toBeVisible({ timeout: 5000 });
-    await viewButton.click({ force: true });
+    await viewButton.click();
 
     await expect(page).toHaveURL(/\/clientes\/\d+/, { timeout: 10000 });
   });
@@ -207,7 +207,7 @@ test.describe('Módulo: Clientes', () => {
     const firstRow = page.locator('tbody tr:not(.animate-pulse)').first();
     await expect(firstRow).toBeVisible({ timeout: 20000 });
     const viewButton = firstRow.locator('[title="Abrir Detalhes"]').first();
-    await viewButton.click({ force: true });
+    await viewButton.click();
     await page.waitForURL(/\/clientes\/\d+/, { timeout: 10000 });
 
     await expect(page.getByText(/informações gerais/i)).toBeVisible({ timeout: 15000 });
@@ -220,7 +220,7 @@ test.describe('Módulo: Clientes', () => {
   test('5.3 o botão Voltar na página de detalhes deve retornar à listagem', async ({ page }) => {
     const firstRow = page.locator('tbody tr:not(.animate-pulse)').first();
     const viewButton = firstRow.locator('[title="Abrir Detalhes"]').first();
-    await viewButton.click({ force: true });
+    await viewButton.click();
     await page.waitForURL(/\/clientes\/\d+/, { timeout: 10000 });
 
     const backButton = page.getByRole('link', { name: /voltar/i }).or(page.locator('a[href="/clientes"]').first()).first();

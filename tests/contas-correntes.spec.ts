@@ -68,7 +68,7 @@ test.describe('Módulo: Contas Correntes', () => {
   test('4.1 deve permitir ordenação ao clicar no cabeçalho', async ({ page }) => {
     const firstHeader = page.locator('th').filter({ has: page.locator('button') }).first();
     if (await firstHeader.isVisible()) {
-      await firstHeader.click({ force: true });
+      await firstHeader.click();
       await page.waitForTimeout(800);
       await expect(firstHeader.locator('svg')).toBeVisible({ timeout: 10000 });
     }
@@ -86,7 +86,7 @@ test.describe('Módulo: Contas Correntes', () => {
     const viewButton = firstRow.locator('[title="Abrir Detalhes"]').first();
     
     if (await viewButton.isVisible()) {
-      await viewButton.click({ force: true });
+      await viewButton.click();
       await expect(page).toHaveURL(/\/contas-correntes\/\d+/, { timeout: 10000 });
     }
   });
@@ -97,7 +97,7 @@ test.describe('Módulo: Contas Correntes', () => {
 
     const viewButton = rows.first().locator('[title="Abrir Detalhes"]').first();
     if (await viewButton.isVisible()) {
-      await viewButton.click({ force: true });
+      await viewButton.click();
       await page.waitForURL(/\/contas-correntes\/\d+/, { timeout: 10000 });
 
       const backButton = page.getByRole('link', { name: /voltar/i }).or(page.getByRole('button', { name: /voltar/i })).first();
@@ -115,7 +115,7 @@ test.describe('Módulo: Contas Correntes', () => {
   test('6.1 deve recarregar dados via botão de refresh', async ({ page }) => {
     const refreshBtn = page.locator('button[title="Atualizar dados"]').first();
     if (await refreshBtn.isVisible()) {
-      await refreshBtn.click({ force: true });
+      await refreshBtn.click();
       await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
     }
   });

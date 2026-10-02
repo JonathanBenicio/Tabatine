@@ -2,32 +2,18 @@
 
 import React, { useMemo, useState } from 'react';
 import { useProdutosStore, Produto } from '@/store/useProdutosStore';
-import { 
-  Package, 
-  Filter, 
-  FileDown,
-  RefreshCcw,
-  Tag,
-  Hash,
-  Eye,
-  CheckCircle2,
-  Settings2,
-  ChevronDown,
-  ChevronUp,
-  ChevronsUpDown,
-  X
-} from 'lucide-react';
+import { Package, Filter, FileDown, RefreshCcw, Tag, Hash, Eye, CheckCircle2, Settings2, X } from 'lucide-react';
 import Pagination from './Pagination';
 import { useRouter } from 'next/navigation';
 import { useProdutosQuery } from '@/hooks/useProdutosQuery';
 import {
   useReactTable,
   getCoreRowModel,
-  flexRender,
   createColumnHelper,
 } from '@tanstack/react-table';
 import { exportToCSV } from '@/utils/export-utils';
 import { TableContainer } from './ui/TableContainer';
+import { DataTable } from '@/components/ui/DataTable';
 import { TableSearch } from './ui/TableSearch';
 import { TableSummaryCard } from './ui/TableSummaryCard';
 
@@ -156,9 +142,11 @@ export default function ProdutosTable() {
     }),
   ], [router]);
 
+  const tableData = React.useMemo(() => data?.produtos ?? [], [data?.produtos]);
+
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
-    data: data?.produtos || [],
+    data: tableData,
     columns,
     state: {
       sorting,
@@ -363,65 +351,13 @@ export default function ProdutosTable() {
           </div>
         }
       >
-        <table className="w-full text-left border-collapse">
-          <thead>
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id} className="border-b border-slate-200/60 dark:border-zinc-800/50 bg-slate-50/50 dark:bg-zinc-900/50">
-                {headerGroup.headers.map(header => (
-                  <th 
-                    key={header.id} 
-                    className={`px-6 py-4 text-xs font-bold text-slate-500 dark:text-zinc-500 uppercase tracking-wider select-none ${header.column.getCanSort() ? 'cursor-pointer hover:bg-slate-100/50 dark:hover:bg-zinc-800/50 transition-colors' : ''} ${header.column.columnDef.meta?.align === 'right' ? 'text-right' : header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''}`}
-                    onClick={header.column.getToggleSortingHandler()}
-                  >
-                    <div className={`flex items-center gap-2 ${header.column.columnDef.meta?.align === 'right' ? 'justify-end' : header.column.columnDef.meta?.align === 'center' ? 'justify-center' : ''}`}>
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                      {header.column.getIsSorted() === 'asc' ? (
-                        <ChevronUp className="w-3 h-3 text-blue-500" />
-                      ) : header.column.getIsSorted() === 'desc' ? (
-                        <ChevronDown className="w-3 h-3 text-blue-500" />
-                      ) : header.column.getCanSort() ? (
-                        <ChevronsUpDown className="w-3 h-3 text-slate-300 dark:text-zinc-700 opacity-20 group-hover:opacity-100 transition-opacity" />
-                      ) : null}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="divide-y divide-slate-200/60 dark:divide-zinc-800/50">
-            {isLoading && !data ? (
-              Array.from({ length: 10 }).map((_, i) => (
-                <tr key={i} className="animate-pulse">
-                  {columns.map((_, colIdx) => (
-                    <td key={colIdx} className="px-6 py-5">
-                      <div className="h-4 bg-slate-100 dark:bg-zinc-800/50 rounded-md w-full"></div>
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : table.getRowModel().rows.length > 0 ? (
-              table.getRowModel().rows.map(row => (
-                <tr key={row.id} className="group hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
-                  {row.getVisibleCells().map(cell => (
-                    <td key={cell.id} className="px-6 py-5">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={columns.length} className="px-6 py-24 text-center">
-                  <div className="flex flex-col items-center justify-center gap-3">
-                     <Package size={40} className="text-slate-200 dark:text-zinc-700" />
-                     <p className="text-sm font-medium text-slate-500 dark:text-zinc-500">Nenhum produto encontrado na base.</p>
-                     <button onClick={() => {setSearchTerm(''); setFilters({});}} className="text-xs text-blue-500 font-bold hover:underline">Limpar filtros e pesquisa</button>
-                  </div>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        <DataTable table={table} isLoading={isLoading && !data} emptyContent={
+          <div className="flex flex-col items-center justify-center gap-3">
+            <Package size={40} className="text-slate-200 dark:text-zinc-700" />
+            <p className="text-sm font-medium text-slate-500 dark:text-zinc-500">Nenhum produto encontrado na base.</p>
+            <button onClick={() => { setSearchTerm(''); setFilters({}); }} className="text-xs text-blue-500 font-bold hover:underline">Limpar filtros e pesquisa</button>
+          </div>
+        } />
       </TableContainer>
 
       {error && (

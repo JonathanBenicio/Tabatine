@@ -2,17 +2,17 @@
 
 import React, { useMemo } from 'react';
 import { useContasCorrentesStore, ContaCorrente } from '@/store/useContasCorrentesStore';
-import { Banknote, AlertCircle, RefreshCw, Eye, Building2, CreditCard, Ban, CheckCircle2, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { Banknote, AlertCircle, RefreshCw, Eye, Building2, CreditCard, Ban, CheckCircle2 } from 'lucide-react';
 import Pagination from './Pagination';
 import { useContasCorrentesQuery } from '@/hooks/useContasCorrentesQuery';
 import { useRouter } from 'next/navigation';
 import {
   useReactTable,
   getCoreRowModel,
-  flexRender,
   createColumnHelper,
 } from '@tanstack/react-table';
 import { TableContainer } from './ui/TableContainer';
+import { DataTable } from '@/components/ui/DataTable';
 import { TableSearch } from './ui/TableSearch';
 import { TableSummaryCard } from './ui/TableSummaryCard';
 
@@ -104,9 +104,11 @@ export default function ContasCorrentesTable() {
     }),
   ], [router]);
 
+  const tableData = React.useMemo(() => data?.contas ?? [], [data?.contas]);
+
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
-    data: data?.contas || [],
+    data: tableData,
     columns,
     state: {
       sorting,
@@ -203,47 +205,7 @@ export default function ContasCorrentesTable() {
           />
         }
       >
-        <table className="w-full text-left border-collapse">
-          <thead>
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id} className="border-b border-slate-200/60 dark:border-zinc-800/50 bg-slate-50/50 dark:bg-zinc-900/20">
-                {headerGroup.headers.map(header => (
-                  <th 
-                    key={header.id} 
-                    className={`py-5 px-6 text-[10px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-[0.2em] font-sans ${header.column.columnDef.meta?.align === 'center' ? 'text-center' : ''} ${header.column.getCanSort() ? 'cursor-pointer select-none hover:text-emerald-500 transition-colors' : ''}`}
-                    onClick={header.column.getToggleSortingHandler()}
-                  >
-                    <div className={`flex items-center gap-2 ${header.column.columnDef.meta?.align === 'center' ? 'justify-center' : ''}`}>
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                      {header.column.getCanSort() && (
-                        <div className="text-slate-300 dark:text-zinc-700">
-                          {{
-                            asc: <ChevronUp size={12} className="text-emerald-500" />,
-                            desc: <ChevronDown size={12} className="text-emerald-500" />,
-                          }[header.column.getIsSorted() as string] ?? <ChevronsUpDown size={12} className="opacity-0 group-hover:opacity-100" />}
-                        </div>
-                      )}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/30">
-            {table.getRowModel().rows.map(row => (
-              <tr 
-                key={row.id} 
-                className="group/row hover:bg-slate-50/50 dark:hover:bg-zinc-800/30 transition-all duration-300"
-              >
-                {row.getVisibleCells().map(cell => (
-                  <td key={cell.id} className="py-5 px-6">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <DataTable table={table} isLoading={isLoading && !data} accent="emerald" />
       </TableContainer>
 
 
