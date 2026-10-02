@@ -130,8 +130,7 @@ test.describe('Módulo: Vendas', () => {
     const headerValorTotal = page.getByRole('columnheader').filter({ hasText: /valor total/i }).first();
     await headerValorTotal.evaluate((element): void => element.scrollIntoView({ block: 'nearest', inline: 'center' }));
     await headerValorTotal.getByRole('button').click();
-    await page.waitForTimeout(800);
-    await expect(headerValorTotal.locator('svg')).toBeVisible({ timeout: 10000 });
+    await expect(headerValorTotal).toHaveAttribute('aria-sort', 'descending');
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
   });
 
