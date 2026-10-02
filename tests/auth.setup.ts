@@ -29,7 +29,7 @@ setup('authenticate', async ({ page }) => {
   await page.keyboard.press('Enter');
 
   // Aguarda chegar no dashboard e espera a rede ficar ociosa
-  await expect(page).toHaveURL(/\/(dashboard)?/, { timeout: 30000 });
+  await expect(page).toHaveURL(/\/dashboard(?:[/?#]|$)/, { timeout: 30000 });
   await page.waitForLoadState('networkidle');
 
   // Verifica um elemento visual que só aparece logado
