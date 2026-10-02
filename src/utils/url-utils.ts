@@ -6,13 +6,17 @@
  * @param defaultUrl The fallback URL if the provided URL is unsafe
  * @returns A safe relative path
  */
-export function getSafeRedirect(url: string | null | undefined, defaultUrl: string = '/dashboard'): string {
+export function getSafeRedirect(url: unknown, defaultUrl: string = '/dashboard'): string {
   if (!url || typeof url !== 'string') {
     return defaultUrl;
   }
 
-  // Ensure it starts with / but not // or /\ (which could be used for protocol-relative redirects)
-  if (url.startsWith('/') && !url.startsWith('//') && !url.startsWith('/\\')) {
+  // URL parsers normalize backslashes and strip tabs/newlines before resolving the origin.
+  const hasUnsafeCharacter = Array.from(url).some((character: string): boolean => {
+    const code = character.charCodeAt(0);
+    return character === '\\' || code <= 0x20 || code === 0x7f;
+  });
+  if (url.startsWith('/') && !url.startsWith('//') && !hasUnsafeCharacter) {
     return url;
   }
 

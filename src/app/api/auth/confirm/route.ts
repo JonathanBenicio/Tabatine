@@ -20,7 +20,9 @@ export async function GET(request: NextRequest) {
 
     if (!error) {
       if (type === 'invite' || type === 'recovery') {
-         return NextResponse.redirect(new URL(`/reset-password?next=${next}`, request.url))
+         const resetUrl = new URL('/reset-password', request.url)
+         resetUrl.searchParams.set('next', next)
+         return NextResponse.redirect(resetUrl)
       }
 
       return NextResponse.redirect(new URL(next, request.url))

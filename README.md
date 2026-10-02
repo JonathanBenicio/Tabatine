@@ -6,7 +6,7 @@ Plataforma de gestão integrada com o **Omie ERP**, desenvolvida para visualiza�
 
 A aplicação utiliza as tecnologias mais modernas do ecossistema React/Next.js:
 
-- **Framework**: [Next.js 16.1.6](https://nextjs.org/) (App Router) com [React 19.2](https://react.dev/)
+- **Framework**: [Next.js 16.3.8](https://nextjs.org/) (App Router) com [React 19.2](https://react.dev/)
 - **Linguagem**: [TypeScript](https://www.typescriptlang.org/)
 - **Banco de Dados & Auth**: [Supabase](https://supabase.com/) (PostgreSQL, `@supabase/ssr`)
 - **Estilização**: [Tailwind CSS 4](https://tailwindcss.com/)
@@ -90,3 +90,11 @@ A suíte de testes E2E gera relatórios automáticos de cobertura de código (V8
 
 Uma coleção do Postman para testar os endpoints da API Omie diretamente está disponível na raiz:
 `Tabatine_Omie_API.postman_collection.json`
+
+## Fluxo de branches e validação
+
+O fluxo de integração é **branches de trabalho → `develop` → `master`**. Novos PRs de funcionalidades e correções devem apontar para `develop`; a promoção para produção usa um PR de `develop` para `master`.
+
+Ao integrar uma branch que muda dados ou telas, compare o contrato e a interface com a documentação em `doc/`, `docs/` e a referência oficial do provedor. Informe as divergências, as correções e os limites da validação no PR. Para tabelas, valide os cinco pilares de [docs/test-roadmap.md](docs/test-roadmap.md): renderização, busca, paginação, ordenação e detalhes.
+
+Antes da integração, execute testes unitários, lint sem avisos, TypeScript e build. Alterações de dependências exigem auditoria e lockfiles sincronizados. Registre explicitamente quando testes E2E não puderem ser concluídos.

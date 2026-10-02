@@ -9,7 +9,7 @@ export async function updatePassword(formData: FormData) {
 
   const password = formData.get('password') as string
   const confirmPassword = formData.get('confirmPassword') as string
-  const nextParam = getSafeRedirect(formData.get('next') as string)
+  const nextParam = getSafeRedirect(formData.get('next'))
 
   if (password !== confirmPassword) {
     redirect(`/reset-password?error=${encodeURIComponent('As senhas não coincidem.')}&next=${encodeURIComponent(nextParam)}`)
