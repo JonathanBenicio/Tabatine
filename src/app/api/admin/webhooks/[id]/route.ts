@@ -1,21 +1,19 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { mapSupabaseToWebhookDetail } from '@/lib/webhook-mapper';
+import { requireAdmin } from '@/utils/supabase/auth-guard';
+import { apiError } from '@/utils/api-error';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
 export async function GET(_request: NextRequest, { params }: RouteParams) {
-  const { id } = await params;
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-  }
-
   try {
+    await requireAdmin();
+    const { id } = await params;
+    const supabase = await createClient();
+
     const { data, error } = await supabase
       .from('webhook_events')
       .select('*')
@@ -27,23 +25,17 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     }
 
     return NextResponse.json(mapSupabaseToWebhookDetail(data));
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Erro desconhecido';
-    console.error(`[API /admin/webhooks/${id}] GET error:`, message);
-    return NextResponse.json({ error: 'Erro ao buscar dados no Supabase' }, { status: 500 });
+  } catch (error) {
+    return apiError(error, 'GET /api/admin/webhooks/[id]');
   }
 }
 
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
-  const { id } = await params;
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-  }
-
   try {
+    await requireAdmin();
+    const { id } = await params;
+    const supabase = await createClient();
+
     const { error } = await supabase
       .from('webhook_events')
       .update({ status: 'Dismissed' })
@@ -54,9 +46,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     }
 
     return new NextResponse(null, { status: 204 });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Erro desconhecido';
-    console.error(`[API /admin/webhooks/${id}] DELETE error:`, message);
-    return NextResponse.json({ error: 'Erro ao descartar evento no Supabase' }, { status: 500 });
+  } catch (error) {
+    return apiError(error, 'DELETE /api/admin/webhooks/[id]');
   }
 }

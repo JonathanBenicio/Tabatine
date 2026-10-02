@@ -1,15 +1,13 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/utils/supabase/auth-guard';
+import { apiError } from '@/utils/api-error';
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-  }
-
   try {
+    await requireAdmin();
+    const supabase = await createClient();
+
     const { ids } = await request.json();
 
     if (!Array.isArray(ids) || ids.length === 0) {
@@ -35,9 +33,7 @@ export async function POST(request: NextRequest) {
       skipped: 0,
       message: `${ids.length} eventos colocados na fila para re-processamento`
     }, { status: 200 });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Erro desconhecido';
-    console.error('[API /admin/webhooks/bulk-retry] POST error:', message);
-    return NextResponse.json({ error: 'Erro ao re-processar eventos no Supabase' }, { status: 500 });
+  } catch (error) {
+    return apiError(error, 'POST /api/admin/webhooks/bulk-retry');
   }
 }

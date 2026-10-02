@@ -8,7 +8,6 @@ export interface OmieCabecalho {
   codigo_pedido?: number;
   codigo_cliente?: number;
   numero_pedido?: string;
-  data_pedido?: string;
   data_previsao?: string;
   etapa?: string;
   codigo_parcela?: string;
@@ -118,6 +117,7 @@ export interface OmieInfoCadastro {
   chave_nfe?: string;
   cancelado?: 'S' | 'N';
   denegado?: 'S' | 'N';
+  faturado?: 'S' | 'N';
   autorizado?: 'S' | 'N';
   serie_nfe?: string;
   valor_total_nfe?: number;

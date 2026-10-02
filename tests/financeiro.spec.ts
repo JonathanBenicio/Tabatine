@@ -7,6 +7,68 @@ import { test, expect } from './fixtures/test';
 
 test.describe('Módulo: Financeiro (Pagar e Receber)', () => {
 
+  for (const type of ['pagar', 'receber'] as const) {
+    test(`detalhes devem distinguir valores ausentes de zero em ${type}`, async ({ page }) => {
+      let amount: number | null = null;
+      await page.route(`**/api/supabase/financeiro/${type}/101`, async (route) => {
+        await route.fulfill({ json: { titulo: {
+          id: '101',
+          numero_documento: 'DOC-101',
+          data_emissao: '2026-01-01',
+          data_vencimento: '2099-01-01',
+          valor_documento: 100,
+          valor_pago: amount,
+          valor_recebido: amount,
+          valor_saldo: amount,
+          status_titulo: 'Pendente',
+          clientes: { razao_social: 'Cliente de validação' },
+        } } });
+      });
+
+      await page.goto(`/financeiro/${type}/101`);
+      await expect(page.getByText('Não informado', { exact: true })).toHaveCount(2);
+
+      amount = 0;
+      await page.reload();
+      await expect(page.getByText(/R\$\s*0,00/, { exact: true })).toHaveCount(2);
+      await expect(page.getByText('Não informado', { exact: true })).toHaveCount(0);
+    });
+
+    test(`deve distinguir saldo ausente de saldo zero em ${type}`, async ({ page }) => {
+      let amount: number | null = null;
+      await page.route(`**/api/supabase/financeiro/${type}?*`, async (route) => {
+        await route.fulfill({ json: {
+          titulos: [{
+            id: '101',
+            numero_documento: 'DOC-101',
+            data_emissao: '2026-01-01',
+            data_vencimento: '2099-01-01',
+            valor_documento: 100,
+            valor_pago: amount,
+            valor_recebido: amount,
+            valor_saldo: amount,
+            status_titulo: 'Pendente',
+            clientes: { razao_social: 'Cliente de validação' },
+          }],
+          total_de_registros: 1,
+          total_de_paginas: 1,
+          pagina: 1,
+        } });
+      });
+
+      await page.goto(`/financeiro/${type}`);
+      const summary = page.getByRole('heading', { name: 'Saldo Informado', exact: true }).locator('../..');
+      const row = page.getByRole('row').filter({ hasText: 'DOC-101' });
+      await expect(summary).toContainText('Não informado');
+      await expect(row.getByRole('cell', { name: '---', exact: true })).toHaveCount(2);
+
+      amount = 0;
+      await page.reload();
+      await expect(summary).toContainText(/R\$\s*0,00/);
+      await expect(row.getByRole('cell', { name: /R\$\s*0,00/ })).toHaveCount(2);
+    });
+  }
+
   // ─────────────────────────────────────────────────────────
   // SEÇÃO: CONTAS A PAGAR
   // ─────────────────────────────────────────────────────────
@@ -19,7 +81,7 @@ test.describe('Módulo: Financeiro (Pagar e Receber)', () => {
     // 1. RENDERIZAÇÃO
     test('1.1 deve renderizar título e summary cards de Pagar', async ({ page }) => {
       await expect(page.getByRole('heading', { name: /contas a pagar/i }).first()).toBeVisible({ timeout: 15000 });
-      await expect(page.getByText(/total a pagar/i)).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Saldo Informado', exact: true })).toBeVisible();
       await expect(page.getByText(/títulos vencidos/i)).toBeVisible();
     });
 
@@ -95,7 +157,7 @@ test.describe('Módulo: Financeiro (Pagar e Receber)', () => {
     // 1. RENDERIZAÇÃO
     test('1.1 deve renderizar título e summary cards de Receber', async ({ page }) => {
       await expect(page.getByRole('heading', { name: /contas a receber/i }).first()).toBeVisible({ timeout: 15000 });
-      await expect(page.getByText(/total a receber/i)).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Saldo Informado', exact: true })).toBeVisible();
       await expect(page.getByText(/títulos em aberto/i)).toBeVisible();
     });
 

@@ -24,7 +24,7 @@ const etapaMap: Record<string, { label: string; color: string }> = {
   '10': { label: 'Pedido', color: 'text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(59,130,246,0.1)]' },
   '20': { label: 'Separar', color: 'text-yellow-600 dark:text-yellow-400 bg-yellow-500/10 border-yellow-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(234,179,8,0.1)]' },
   '30': { label: 'Faturar', color: 'text-purple-600 dark:text-purple-400 bg-purple-500/10 border-purple-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(168,85,247,0.1)]' },
-  '50': { label: 'Faturado', color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(16,185,129,0.1)]' },
+  '50': { label: 'Faturar', color: 'text-purple-600 dark:text-purple-400 bg-purple-500/10 border-purple-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(168,85,247,0.1)]' },
   '60': { label: 'Entregue', color: 'text-teal-600 dark:text-teal-400 bg-teal-500/10 border-teal-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(20,184,166,0.1)]' },
   '70': { label: 'Cancelado', color: 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(244,63,94,0.1)]' },
   '80': { label: 'Devolvido', color: 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20 shadow-sm dark:shadow-[0_0_10px_rgba(239,68,68,0.1)]' },

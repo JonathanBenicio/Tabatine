@@ -47,9 +47,15 @@ export default function FinanceiroTable({ type }: FinanceiroTableProps) {
 
   const { data, isLoading, error, refetch } = useFinanceiroQuery(type, currentPage, searchTerm, sorting);
 
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
+  const formatCurrency = (val: number | null) => {
+    if (val === null) return '---';
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
   };
+
+  const saldoInformado = data?.titulos.filter((titulo) => titulo.valor_saldo !== null) ?? [];
+  const saldoResumo = data && data.titulos.length > 0 && saldoInformado.length === 0
+    ? 'Não informado'
+    : saldoInformado.reduce((total, titulo) => total + (titulo.valor_saldo ?? 0), 0);
 
   const formatDate = (dateStr: string) => {
     try {
@@ -134,7 +140,7 @@ export default function FinanceiroTable({ type }: FinanceiroTableProps) {
     columnHelper.accessor('valor_pago_recebido', {
       header: type === 'pagar' ? 'Pago' : 'Recebido',
       cell: info => (
-        <span className={`text-sm font-bold ${info.getValue() > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-500 dark:text-zinc-500'}`}>
+          <span className={`text-sm font-bold ${(info.getValue() ?? 0) > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-500 dark:text-zinc-500'}`}>
           {formatCurrency(info.getValue())}
         </span>
       ),
@@ -143,7 +149,7 @@ export default function FinanceiroTable({ type }: FinanceiroTableProps) {
     columnHelper.accessor('valor_saldo', {
       header: 'Saldo',
       cell: info => (
-        <span className={`text-base font-black ${info.getValue() > 0 ? 'text-blue-500 dark:text-blue-400' : 'text-slate-500 dark:text-zinc-600'}`}>
+        <span className={`text-base font-black ${(info.getValue() ?? 0) > 0 ? 'text-blue-500 dark:text-blue-400' : 'text-slate-500 dark:text-zinc-600'}`}>
           {formatCurrency(info.getValue())}
         </span>
       ),
@@ -197,8 +203,8 @@ export default function FinanceiroTable({ type }: FinanceiroTableProps) {
         />
         <TableSummaryCard 
           icon={type === 'pagar' ? ArrowUpRight : ArrowDownLeft}
-          label={type === 'pagar' ? 'Total a Pagar' : 'Total a Receber'}
-          value={data?.titulos?.reduce((acc, curr) => acc + (curr.valor_saldo || 0), 0) || 0}
+          label="Saldo Informado"
+          value={saldoResumo}
           isCurrency
           isLoading={isLoading}
           variant={type === 'pagar' ? 'rose' : 'emerald'}

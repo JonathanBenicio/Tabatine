@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { escapeFilterValue } from '@/utils/supabase/filter-utils';
+import { apiError } from '@/utils/api-error';
 
 export async function GET(request: NextRequest) {
   try {
@@ -61,9 +62,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error: unknown) {
-    console.error('API Error (Financeiro Pagar):', error);
-    return NextResponse.json({ 
-      error: error instanceof Error ? error.message : 'Internal Server Error' 
-    }, { status: 500 });
+    return apiError(error, 'GET /api/supabase/financeiro/pagar');
   }
 }

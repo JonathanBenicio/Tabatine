@@ -1,5 +1,4 @@
-import { createClient } from '@/utils/supabase/server';
-import { redirect } from 'next/navigation';
+import { requireAdmin } from '@/utils/supabase/auth-guard';
 import { Webhook, ShieldAlert } from 'lucide-react';
 import WebhooksDashboard from '@/components/webhooks/WebhooksDashboard';
 import { WebhooksTable } from '@/components/webhooks/WebhooksTable';
@@ -10,12 +9,7 @@ export const metadata = {
 };
 
 export default async function WebhooksAdminPage() {
-  const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
-
-  if (error || !user) {
-    redirect('/auth/login');
-  }
+  await requireAdmin();
 
   return (
     <div className="max-w-[100vw] mx-auto space-y-6 animate-in fade-in zoom-in duration-500 overflow-x-hidden">

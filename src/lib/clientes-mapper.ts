@@ -1,8 +1,8 @@
-import { ClienteCadastro } from '@/store/useClienteStore';
+import type { ClienteCadastro } from '@/store/useClienteStore';
 
 interface RawCliente {
   omie_id?: number;
-  id?: string;
+  codigo_cliente_integracao?: string | null;
   razao_social?: string;
   nome_fantasia?: string;
   cnpj_cpf?: string;
@@ -17,6 +17,14 @@ interface RawCliente {
   inscricao_estadual?: string;
   inscricao_municipal?: string;
   optante_simples_nacional?: boolean;
+}
+
+function mapTelefone(telefone?: string): { ddd: string; numero: string } {
+  const value = telefone?.trim();
+  if (!value) return { ddd: '', numero: '' };
+
+  const match = value.match(/^\(([^)]+)\)\s*(.+)$/);
+  return match ? { ddd: match[1], numero: match[2] } : { ddd: '', numero: value };
 }
 
 /**
@@ -40,14 +48,16 @@ export function mapSupabaseToCliente(c: Record<string, unknown>): ClienteCadastr
     };
   }
 
+  const telefone = mapTelefone(raw.telefone);
+
   return {
     codigo_cliente_omie: raw.omie_id || 0,
-    codigo_cliente_integracao: raw.id || '', // id uuid agora é a chave principal
+    codigo_cliente_integracao: raw.codigo_cliente_integracao || '',
     razao_social: raw.razao_social || 'Sem Razão Social',
     nome_fantasia: raw.nome_fantasia || '',
     cnpj_cpf: raw.cnpj_cpf || '',
-    telefone1_ddd: '', 
-    telefone1_numero: raw.telefone || '',
+    telefone1_ddd: telefone.ddd,
+    telefone1_numero: telefone.numero,
     email: raw.email || '',
     cidade: raw.cidade || '',
     estado: raw.estado || '',

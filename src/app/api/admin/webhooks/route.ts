@@ -1,30 +1,28 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { mapSupabaseToWebhooks } from '@/lib/webhook-mapper';
+import { requireAdmin } from '@/utils/supabase/auth-guard';
+import { apiError } from '@/utils/api-error';
 
 export async function GET(request: NextRequest) {
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-  }
-
-  const { searchParams } = new URL(request.url);
-  
-  const page = parseInt(searchParams.get('page') ?? '1', 10);
-  const pageSize = parseInt(searchParams.get('pageSize') ?? '20', 10);
-  const status = searchParams.get('status');
-  const event = searchParams.get('event');
-  const from = searchParams.get('from');
-  const to = searchParams.get('to');
-  const search = searchParams.get('search');
-
-  // Calculate range for pagination
-  const fromRange = (page - 1) * pageSize;
-  const toRange = fromRange + pageSize - 1;
-
   try {
+    await requireAdmin();
+    const supabase = await createClient();
+    
+    const { searchParams } = new URL(request.url);
+    
+    const page = parseInt(searchParams.get('page') ?? '1', 10);
+    const pageSize = parseInt(searchParams.get('pageSize') ?? '20', 10);
+    const status = searchParams.get('status');
+    const event = searchParams.get('event');
+    const from = searchParams.get('from');
+    const to = searchParams.get('to');
+    const search = searchParams.get('search');
+
+    // Calculate range for pagination
+    const fromRange = (page - 1) * pageSize;
+    const toRange = fromRange + pageSize - 1;
+
     let query = supabase
       .from('webhook_events')
       .select('*', { count: 'exact' });
@@ -78,9 +76,7 @@ export async function GET(request: NextRequest) {
       pageSize,
       totalPages,
     });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Erro desconhecido';
-    console.error('[API /admin/webhooks] GET error:', message);
-    return NextResponse.json({ error: 'Falha ao buscar dados no Supabase' }, { status: 500 });
+  } catch (error) {
+    return apiError(error, 'GET /api/admin/webhooks');
   }
 }
