@@ -3,13 +3,14 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
+import { getSafeRedirect } from '@/utils/url-utils'
 
 export async function login(formData: FormData) {
   const supabase = await createClient()
 
   const email = formData.get('email') as string
   const password = formData.get('password') as string
-  const nextUrl = formData.get('next') as string || '/dashboard'
+  const nextUrl = getSafeRedirect(formData.get('next') as string)
 
   const { error } = await supabase.auth.signInWithPassword({
     email,
@@ -30,7 +31,7 @@ export async function login(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  redirect(nextUrl.startsWith('/') ? nextUrl : `/${nextUrl}`)
+  redirect(nextUrl)
 }
 
 export async function requestPasswordReset(formData: FormData) {

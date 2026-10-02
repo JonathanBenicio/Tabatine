@@ -2,13 +2,14 @@
 
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
+import { getSafeRedirect } from '@/utils/url-utils'
 
 export async function updatePassword(formData: FormData) {
   const supabase = await createClient()
 
   const password = formData.get('password') as string
   const confirmPassword = formData.get('confirmPassword') as string
-  const nextParam = formData.get('next') as string || '/dashboard'
+  const nextParam = getSafeRedirect(formData.get('next') as string)
 
   if (password !== confirmPassword) {
     redirect(`/reset-password?error=${encodeURIComponent('As senhas não coincidem.')}&next=${encodeURIComponent(nextParam)}`)
@@ -29,5 +30,5 @@ export async function updatePassword(formData: FormData) {
   }
 
   // Se tudo correr bem, redireciona para o login com sucesso
-  redirect(nextParam.startsWith('/') ? nextParam : `/${nextParam}`)
+  redirect(nextParam)
 }
