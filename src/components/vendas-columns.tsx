@@ -52,7 +52,7 @@ export const getVendasColumns = (
     cell: (info) => (
       <div className="flex items-center gap-2 group-hover/row:translate-x-1 transition-transform">
         <User size={12} className="text-slate-400 dark:text-zinc-600" />
-        <span className="text-xs font-bold text-slate-900 dark:text-white group-hover/row:text-orange-500 dark:group-hover/row:text-orange-400 transition-colors">
+        <span title={getClienteNome(info.getValue() || '')} className="truncate text-xs font-bold text-slate-900 dark:text-white group-hover/row:text-orange-500 dark:group-hover/row:text-orange-400 transition-colors">
           {getClienteNome(info.getValue() || '')}
         </span>
       </div>

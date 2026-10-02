@@ -21,7 +21,7 @@ export default async function PerfilPage() {
 
   const { data: profile } = await supabase
     .from('perfis')
-    .select('*')
+    .select('id,nome,telegram_chat_id,receive_logs')
     .eq('id', user.id)
     .single();
 

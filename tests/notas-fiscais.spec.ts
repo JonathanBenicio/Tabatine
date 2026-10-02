@@ -49,7 +49,7 @@ test.describe('Módulo: Notas Fiscais', () => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
     const searchInput = page.getByPlaceholder(/localizar nf-e ou cliente/i);
-    await searchInput.click({ force: true });
+    await searchInput.click();
     await searchInput.fill('000'); 
     await page.waitForTimeout(800);
 
@@ -126,7 +126,7 @@ test.describe('Módulo: Notas Fiscais', () => {
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 20000 });
 
     const headerEmissao = page.getByRole('columnheader', { name: /emissão/i }).first();
-    await headerEmissao.click({ force: true });
+    await headerEmissao.click();
     await page.waitForTimeout(800);
 
     // Ícone de ordenação deve aparecer
@@ -143,7 +143,7 @@ test.describe('Módulo: Notas Fiscais', () => {
     await expect(firstRow).toBeVisible({ timeout: 20000 });
 
     const viewLink = firstRow.locator('a[title="Abrir Detalhes"]').first();
-    await viewLink.click({ force: true });
+    await viewLink.click();
     
     await expect(page).toHaveURL(/\/nf\/\d+/, { timeout: 10000 });
     
@@ -159,7 +159,7 @@ test.describe('Módulo: Notas Fiscais', () => {
     const firstRow = page.locator('tbody tr:not(.animate-pulse)').first();
     await expect(firstRow).toBeVisible({ timeout: 20000 });
     const viewLink = firstRow.locator('a[title="Abrir Detalhes"]').first();
-    await viewLink.click({ force: true });
+    await viewLink.click();
     await page.waitForURL(/\/nf\/\d+/, { timeout: 10000 });
 
     // Clica em Voltar
@@ -179,7 +179,7 @@ test.describe('Módulo: Notas Fiscais', () => {
 
     const refreshBtn = page.locator('button[title="Atualizar dados"]').first();
     if (await refreshBtn.isVisible()) {
-      await refreshBtn.click({ force: true });
+      await refreshBtn.click();
       await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
     }
   });

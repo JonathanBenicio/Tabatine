@@ -2,13 +2,13 @@
 
 ## Contrato adotado
 
-A página continua autenticando no servidor e lendo `perfis` com RLS. O nome editável é `perfis.nome`, preservando o modelo atual, em vez de criar uma segunda fonte em `user_metadata.full_name`. Telegram, preferência `receive_logs` e logout continuam disponíveis. Nenhuma coluna nova foi criada.
+A página continua autenticando no servidor e lendo com RLS apenas `id`, `nome`, `telegram_chat_id` e `receive_logs` de `perfis`; tokens internos de vinculação não são enviados aos componentes cliente. O nome editável é `perfis.nome`, preservando o modelo atual, em vez de criar uma segunda fonte em `user_metadata.full_name`. Telegram, preferência `receive_logs` e logout continuam disponíveis. Nenhuma coluna nova foi criada.
 
 O componente cliente recebe apenas nome e URL da imagem; consultas e mutações Supabase permanecem no backend. Formulários e rotas usam Zod. Senhas exigem pelo menos oito caracteres e confirmação, conforme o fluxo de recuperação já existente no projeto. A alteração usa a [API updateUser do Supabase](https://supabase.com/docs/reference/javascript/auth-updateuser).
 
 ## Avatar
 
-O contrato aceita PNG, JPEG e WebP, até 2 MB. SVG, arquivo vazio, tamanho excessivo e assinatura incompatível são rejeitados. O servidor gera o caminho `USER_ID/UUID.ext`, com extensão derivada do MIME validado, e faz upload com o cliente autenticado para respeitar o RLS. O arquivo é removido se a atualização de `avatar_url` falhar.
+O contrato aceita PNG, JPEG e WebP, até 2 MB. SVG, arquivo vazio, tamanho excessivo e assinatura incompatível são rejeitados. O servidor gera o caminho `USER_ID/UUID.ext`, com extensão derivada do MIME validado, e faz upload com o cliente autenticado para respeitar o RLS. O servidor tenta remover o arquivo se a atualização de `avatar_url` falhar e registra falhas de compensação; essa remoção depende da política DELETE do Storage.
 
 É necessário que o bucket `avatars` exista, seja público para exibição e permita upload no diretório do próprio usuário. A verificação dessa configuração deve ocorrer antes de integrar o PR. Fonte: [Supabase Storage](https://supabase.com/docs/guides/storage/uploads/standard-uploads).
 

@@ -73,7 +73,7 @@ test.describe('Módulo: Vendas', () => {
 
   test('2.4 deve aplicar filtros avançados por período', async ({ page }) => {
     const filterBtn = page.locator('button').filter({ hasText: /filtros/i }).first();
-    await filterBtn.click({ force: true });
+    await filterBtn.click();
     await page.getByRole('button', { name: /últimos 7 dias/i }).click();
     await page.getByRole('button', { name: /aplicar/i }).click();
     await page.waitForTimeout(800);
@@ -83,7 +83,7 @@ test.describe('Módulo: Vendas', () => {
 
   test('2.5 deve limpar filtros avançados', async ({ page }) => {
     const filterBtn = page.locator('button').filter({ hasText: /filtros/i }).first();
-    await filterBtn.click({ force: true });
+    await filterBtn.click();
     await page.getByRole('button', { name: /limpar/i }).click();
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
   });
@@ -128,7 +128,8 @@ test.describe('Módulo: Vendas', () => {
 
   test('4.1 deve ordenar por Valor Total ao clicar no cabeçalho', async ({ page }) => {
     const headerValorTotal = page.getByRole('columnheader').filter({ hasText: /valor total/i }).first();
-    await headerValorTotal.click({ force: true });
+    await headerValorTotal.evaluate((element): void => element.scrollIntoView({ block: 'nearest', inline: 'center' }));
+    await headerValorTotal.getByRole('button').click();
     await page.waitForTimeout(800);
     await expect(headerValorTotal.locator('svg')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
@@ -136,7 +137,7 @@ test.describe('Módulo: Vendas', () => {
 
   test('4.2 deve ordenar por Data', async ({ page }) => {
     const headerData = page.getByRole('columnheader').filter({ hasText: /data/i }).first();
-    await headerData.click({ force: true });
+    await headerData.click();
     await page.waitForTimeout(800);
     await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
   });
@@ -150,7 +151,7 @@ test.describe('Módulo: Vendas', () => {
     await expect(firstRow).toBeVisible({ timeout: 20000 });
 
     const viewBtn = firstRow.locator('[title="Abrir Detalhes"]').first();
-    await viewBtn.click({ force: true });
+    await viewBtn.click();
     await expect(page).toHaveURL(/\/vendas\/[^/]+/, { timeout: 10000 });
     await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 15000 });
   });
@@ -158,7 +159,7 @@ test.describe('Módulo: Vendas', () => {
   test('5.2 deve retornar à listagem ao voltar da tela de detalhes', async ({ page }) => {
     const firstRow = page.locator('tbody tr:not(.animate-pulse)').first();
     const viewBtn = firstRow.locator('[title="Abrir Detalhes"]').first();
-    await viewBtn.click({ force: true });
+    await viewBtn.click();
     await page.waitForURL(/\/vendas\/[^/]+/, { timeout: 10000 });
 
     const backLink = page.getByRole('link', { name: /voltar/i }).or(page.locator('a[href="/vendas"]').first()).first();
@@ -180,7 +181,7 @@ test.describe('Módulo: Vendas', () => {
     const exportButton = page.getByRole('button', { name: /exportar/i });
     if (await exportButton.isVisible()) {
       const downloadPromise = page.waitForEvent('download', { timeout: 20000 });
-      await exportButton.click({ force: true });
+      await exportButton.click();
       const download = await downloadPromise;
       expect(download.suggestedFilename()).toContain('.csv');
     }
@@ -189,7 +190,7 @@ test.describe('Módulo: Vendas', () => {
   test('6.2 deve recarregar dados via refresh', async ({ page }) => {
     const refreshBtn = page.locator('button[title="Atualizar dados"]').first();
     if (await refreshBtn.isVisible()) {
-      await refreshBtn.click({ force: true });
+      await refreshBtn.click();
       await expect(page.locator('tbody tr:not(.animate-pulse)').first()).toBeVisible({ timeout: 10000 });
     }
   });
@@ -197,7 +198,7 @@ test.describe('Módulo: Vendas', () => {
   test('6.3 deve abrir painel de visibilidade de colunas', async ({ page }) => {
     const colBtn = page.locator('button[title="Colunas"]');
     if (await colBtn.isVisible()) {
-      await colBtn.click({ force: true });
+      await colBtn.click();
       await expect(page.getByText(/visibilidade/i)).toBeVisible();
     }
   });

@@ -3,20 +3,7 @@
 import React, { useMemo, useState, useTransition } from 'react';
 import { useVendasStore } from '@/store/useVendasStore';
 import { useLookupStore } from '@/store/useLookupStore';
-import { 
-  Search,
-  TrendingUp, 
-  AlertCircle, 
-  RefreshCw, 
-  Package, 
-  Filter,
-  FileDown,
-  Settings2,
-  X,
-  ChevronUp,
-  ChevronDown,
-  ChevronsUpDown
-} from 'lucide-react';
+import { TrendingUp, AlertCircle, RefreshCw, Package, Filter, FileDown, Settings2, X } from 'lucide-react';
 import { format, startOfYear, endOfYear, startOfMonth, endOfMonth, subDays, startOfDay, endOfDay } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import Pagination from './Pagination';
@@ -24,10 +11,10 @@ import { useSuspenseVendasQuery } from '@/hooks/useVendasQuery';
 import {
   useReactTable,
   getCoreRowModel,
-  flexRender,
 } from '@tanstack/react-table';
 import { exportToCSV } from '@/utils/export-utils';
 import { TableContainer } from './ui/TableContainer';
+import { DataTable } from '@/components/ui/DataTable';
 import { TableSearch } from './ui/TableSearch';
 import { TableSummaryCard } from './ui/TableSummaryCard';
 import { getVendasColumns } from './vendas-columns';
@@ -378,103 +365,7 @@ export default function VendasTable() {
         }
       >
         <div className="overflow-x-auto custom-scrollbar">
-          <table className="w-max min-w-full text-left border-collapse">
-            <thead>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id} className="border-b border-slate-200 dark:border-zinc-800/50 bg-slate-50/50 dark:bg-zinc-900/20">
-                  {headerGroup.headers.map(header => {
-                    const isPinned = header.column.getIsPinned();
-                    
-                    const pinningStyles: React.CSSProperties = isPinned ? {
-                      position: 'sticky',
-                      left: isPinned === 'left' ? `${header.column.getStart('left')}px` : undefined,
-                      right: isPinned === 'right' ? `${header.column.getAfter('right')}px` : undefined, 
-                      zIndex: 30,
-                      backgroundColor: 'rgb(var(--card))', 
-                    } : {
-                      position: 'sticky',
-                      top: 0,
-                      zIndex: 10,
-                    };
-
-                    return (
-                      <th 
-                        key={header.id} 
-                        colSpan={header.colSpan}
-                        className={`py-4 px-5 text-[9px] font-black text-slate-500 dark:text-zinc-500 uppercase tracking-widest font-sans whitespace-nowrap select-none transition-colors 
-                          ${header.column.getCanSort() ? 'cursor-pointer hover:bg-orange-500/5 hover:text-orange-500 dark:hover:text-orange-400' : ''} 
-                          ${isPinned ? 'shadow-[2px_0_10px_rgba(0,0,0,0.1)] dark:shadow-[2px_0_10px_rgba(0,0,0,0.5)] z-40' : ''}`}
-                        style={{ 
-                          width: header.getSize() !== 150 ? header.getSize() : undefined,
-                          ...pinningStyles
-                        }}
-                      >
-                        <div className="flex flex-col gap-2">
-                          <div 
-                            className="flex items-center gap-2" 
-                            onClick={header.column.getToggleSortingHandler()}
-                          >
-                            {flexRender(header.column.columnDef.header, header.getContext())}
-                            {header.column.getIsSorted() === 'asc' ? (
-                              <ChevronUp className="w-3 h-3 text-orange-500" />
-                            ) : header.column.getIsSorted() === 'desc' ? (
-                              <ChevronDown className="w-3 h-3 text-orange-500" />
-                            ) : header.column.getCanSort() ? (
-                              <ChevronsUpDown className="w-3 h-3 text-slate-400 group-hover/header:text-orange-500 opacity-30 group-hover/header:opacity-100 transition-all" />
-                            ) : null}
-                          </div>
-                          
-                          {header.column.getCanFilter() && showColumnFilters && (
-                            <div className="relative group/filter mt-1 animate-in fade-in slide-in-from-top-1 duration-200">
-                              <Search size={10} className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within/filter:text-orange-500 transition-colors" />
-                              <input
-                                type="text"
-                                value={(header.column.getFilterValue() ?? '') as string}
-                                onChange={e => startTransition(() => header.column.setFilterValue(e.target.value))}
-                                placeholder="Filtrar..."
-                                onClick={e => e.stopPropagation()}
-                                className="w-full bg-slate-200/50 dark:bg-zinc-950/50 border border-slate-300 dark:border-zinc-800 rounded-md py-1.5 pl-7 pr-2 text-[9px] font-medium text-slate-700 dark:text-zinc-400 placeholder:text-slate-400 dark:placeholder:text-zinc-700 outline-none focus:border-orange-500/30 transition-all focus:bg-white dark:focus:bg-zinc-900"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </th>
-                    );
-                  })}
-                </tr>
-              ))}
-            </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-zinc-800/30">
-              {table.getRowModel().rows.map(row => (
-                <tr 
-                  key={row.id} 
-                  className="group/row hover:bg-orange-500/[0.03] transition-all duration-300"
-                >
-                  {row.getVisibleCells().map(cell => {
-                    const isPinned = cell.column.getIsPinned();
-                    const pinningStyles: React.CSSProperties = isPinned ? {
-                      position: 'sticky',
-                      left: isPinned === 'left' ? `${cell.column.getStart('left')}px` : undefined,
-                      right: isPinned === 'right' ? `${cell.column.getAfter('right')}px` : undefined,
-                      zIndex: 10,
-                      backgroundColor: 'rgb(var(--card))', 
-                      backdropFilter: 'blur(8px)',
-                    } : {};
-
-                    return (
-                      <td 
-                        key={cell.id} 
-                        className={`py-4 px-5 whitespace-nowrap border-b border-slate-200 dark:border-zinc-800/10 ${isPinned ? 'shadow-[2px_0_5px_rgba(0,0,0,0.05)] dark:shadow-[2px_0_5px_rgba(0,0,0,0.3)]' : ''}`}
-                        style={pinningStyles}
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <DataTable table={table} accent="orange" compact showColumnFilters={showColumnFilters} onColumnFilterChange={(column, value) => startTransition(() => column.setFilterValue(value))} />
         </div>
       </TableContainer>
     </div>
