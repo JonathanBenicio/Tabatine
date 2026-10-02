@@ -1,5 +1,6 @@
 ---
-trigger: always_on
+trigger: model_decision
+description: Regras gerais de desenvolvimento do workspace Tabatine (Next.js, Supabase, Omie, Zustand, Query e UI)
 ---
 
 # Tabatine — Regras do Workspace (AI Instructions)
@@ -10,6 +11,11 @@ Você é um assistente de IA especializado em Next.js, TypeScript e integraçõe
 - **Padrões**: Use Next.js 15+ (App Router), React 19, TypeScript e Tailwind CSS v4.
 - **Idiomas**: Comentários e documentação técnica em Português (Brasil). Variáveis e arquivos em Inglês (ou conforme o padrão existente).
 - **Simplicidade**: Evite abstrações desnecessárias. Siga os padrões já estabelecidos no projeto.
+
+## 🗄️ Integração Supabase (Server-First)
+Todas as integrações com o Supabase DEVEM ser estritamente executadas no servidor.
+- **Backend Only**: Utilize `import { createClient } from '@/utils/supabase/server'` apenas em Server Components, Route Handlers (`/api/...`) ou Server Actions (`actions.ts`).
+- **Segurança**: Nunca faça queries de banco de dados (`.from('tabela')`) no ambiente do navegador (Client Components). Toda interatividade deve se basear em Server Actions (mutações) ou API Rest.
 
 ## 🔌 Integração Omie (Proxy Pattern)
 Todas as chamadas para a API Omie **DEVEM** passar por um Proxy Server-side em `src/app/api/omie/`.
@@ -36,6 +42,14 @@ Todas as chamadas para a API Omie **DEVEM** passar por um Proxy Server-side em `
 - `src/store/`: Stores do Zustand.
 - `src/lib/`: Utilitários e configurações.
 - `.agents/`: Regras e Workflows para automação.
+
+## ⚛️ Next.js 16 & React 19.2 (Arquitetura)
+- **App Router First**: Use sempre `app/` directory. Rotas dinâmicas usam `params` e `searchParams` de forma **assíncrona** (`await params`).
+- **Server Components (RSC) Default**: Componentes são de servidor por padrão. Use `"use client"` apenas em folhas da árvore que precisem de hooks (`useState`) ou APIs de navegador. Nunca use `next/dynamic` com `{ ssr: false }` dentro do servidor; extraia para um Client Component.
+- **Cache Components**: Em Next 16+, prefira a diretiva `"use cache"` e o novo workflow de tags (`cacheLife`, `cacheTag`, `updateTag()`) em vez de padrões antigos ou manual ISR.
+- **Data Fetching Assíncrono**: Propriedades ligadas ao request (`cookies()`, `headers()`) agora são assíncronas no App Router.
+- **Modern Forms & Actions**: Empregue Actions para formulários com Next.js Server Actions. Use `useActionState` e `useFormStatus` para carregamentos, e `useOptimistic` para feedback UI assíncrono.
+- **Limpeza de Refs (React 19)**: Callbacks de Ref retornam funções de limpeza, e refs podem ser passadas normalmente como props (dispensando `forwardRef`).
 
 ## 🔍 Regras de Resposta
 - Sempre verifique `.agents/rules/geral.md` para detalhes técnicos da API Omie.

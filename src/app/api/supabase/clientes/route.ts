@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { escapeFilterValue } from '@/utils/supabase/filter-utils';
 import { NextResponse } from 'next/server';
+import { apiError } from '@/utils/api-error';
 
 export async function GET(req: Request) {
   try {
@@ -9,7 +10,7 @@ export async function GET(req: Request) {
     // Verify user session
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return apiError(authError, 'GET /api/supabase/clientes', 401);
     }
 
     const { searchParams } = new URL(req.url);
@@ -17,17 +18,19 @@ export async function GET(req: Request) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '100');
     const search = searchParams.get('search') || '';
+    const sortField = searchParams.get('sortField') || 'razao_social';
+    const sortOrder = searchParams.get('sortOrder') || 'asc';
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
     let query = supabase
-      .from('Clientes')
+      .from('clientes')
       .select('*', { count: 'exact' });
 
     // Handle single item fetch if omieId is provided
     if (omieId) {
-      const { data, error } = await query.eq('OmieId', parseInt(omieId)).single();
+      const { data, error } = await query.eq('omie_id', parseInt(omieId)).single();
       if (error && error.code !== 'PGRST116') throw error;
       
       return NextResponse.json({
@@ -40,11 +43,11 @@ export async function GET(req: Request) {
 
     if (search) {
       const escapedSearch = escapeFilterValue(`%${search}%`);
-      query = query.or(`RazaoSocial.ilike.${escapedSearch},NomeFantasia.ilike.${escapedSearch},CnpjCpf.ilike.${escapedSearch}`);
+      query = query.or(`razao_social.ilike.${escapedSearch},nome_fantasia.ilike.${escapedSearch},cnpj_cpf.ilike.${escapedSearch}`);
     }
 
     const { data, error, count } = await query
-      .order('RazaoSocial', { ascending: true })
+      .order(sortField, { ascending: sortOrder === 'asc' })
       .range(from, to);
 
     if (error) throw error;
@@ -55,8 +58,7 @@ export async function GET(req: Request) {
       total_de_registros: count,
       pagina: page
     });
-  } catch (error: any) {
-    console.error('API Error (Supabase Clientes):', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return apiError(error, 'GET /api/supabase/clientes');
   }
 }

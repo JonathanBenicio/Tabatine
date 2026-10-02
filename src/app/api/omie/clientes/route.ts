@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
+import { apiError } from '@/utils/api-error';
 
 const OMIE_API_URL = process.env.OMIE_API_URL || 'https://app.omie.com.br/api/v1/';
 const OMIE_Endpoint = `${OMIE_API_URL}geral/clientes/`;
@@ -11,10 +12,7 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     if (!APP_KEY || !APP_SECRET) {
-      return NextResponse.json(
-        { error: 'Missing Omie credentials in server environment' },
-        { status: 500 }
-      );
+      return apiError(new Error('Missing Omie credentials'), 'POST /api/omie/clientes', 500);
     }
 
     // Inject credentials into the request body
@@ -32,11 +30,11 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(response.data);
-  } catch (error: any) {
-    console.error('Error proxying Omie request (Clientes):', error.response?.data || error.message);
-    return NextResponse.json(
-      { error: error.response?.data?.faultstring || 'Internal Server Error', details: error.message },
-      { status: error.response?.status || 500 }
-    );
+  } catch (error: unknown) {
+    let status = 500;
+    if (axios.isAxiosError(error)) {
+      status = error.response?.status || 500;
+    }
+    return apiError(error, 'POST /api/omie/clientes', status);
   }
 }

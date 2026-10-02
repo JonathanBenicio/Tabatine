@@ -1,6 +1,8 @@
 import ClientesTable from '@/components/ClientesTable';
 import { Users } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default function ClientesPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in zoom-in duration-500">

@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
+import { apiError } from '@/utils/api-error';
 
 export async function GET(req: Request) {
   try {
@@ -8,7 +9,7 @@ export async function GET(req: Request) {
     // Verify user session
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return apiError(authError, 'GET /api/supabase/contas', 401);
     }
 
     const { searchParams } = new URL(req.url);
@@ -19,14 +20,16 @@ export async function GET(req: Request) {
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
+    const sortField = searchParams.get('sortField') || 'descricao';
+    const sortOrder = searchParams.get('sortOrder') || 'asc';
     
     let query = supabase
-      .from('ContasCorrente')
-      .select('*, Bancos(CodigoBanco)', { count: 'exact' });
+      .from('contas_corrente')
+      .select('*, bancos(codigo_banco)', { count: 'exact' });
 
     // Handle single item fetch if omieId is provided
     if (omieId) {
-      const { data, error } = await query.eq('OmieId', parseInt(omieId)).single();
+      const { data, error } = await query.eq('omie_id', parseInt(omieId)).single();
       if (error && error.code !== 'PGRST116') throw error;
       
       return NextResponse.json({ 
@@ -38,11 +41,11 @@ export async function GET(req: Request) {
     }
 
     if (search) {
-      query = query.or(`Descricao.ilike.%${search}%`);
+      query = query.ilike('descricao', `%${search}%`);
     }
 
     const { data, error, count } = await query
-      .order('Descricao', { ascending: true })
+      .order(sortField, { ascending: sortOrder === 'asc' })
       .range(from, to);
 
     if (error) throw error;
@@ -53,8 +56,7 @@ export async function GET(req: Request) {
       total_de_registros: count,
       pagina: page
     });
-  } catch (error: any) {
-    console.error('API Error (Supabase Contas):', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return apiError(error, 'GET /api/supabase/contas');
   }
 }

@@ -1,4 +1,6 @@
 import { create } from 'zustand'
+import { mapSupabaseToClientes, mapSupabaseToCliente } from '@/lib/clientes-mapper'
+import { SortingState, Updater } from '@tanstack/react-table'
 
 export interface ClienteCadastro {
   codigo_cliente_omie: number
@@ -19,7 +21,7 @@ export interface ClienteCadastro {
   inscricao_municipal?: string
   optante_simples_nacional?: boolean
   tags: { tag: string }[]
-  [key: string]: any
+  [key: string]: string | number | boolean | object | undefined | null
 }
 
 interface ClienteStoreState {
@@ -30,8 +32,10 @@ interface ClienteStoreState {
   totalRegistros: number
   currentPage: number
   searchTerm: string
+  sorting: SortingState
   setSearchTerm: (term: string) => void
   setCurrentPage: (page: number) => void
+  setSorting: (updater: Updater<SortingState>) => void
   fetchClientes: (page?: number, search?: string) => Promise<void>
   fetchClienteByOmieId: (omieId: number) => Promise<ClienteCadastro | null>
 }
@@ -47,8 +51,15 @@ export const useClienteStore = create<ClienteStoreState>((set, get) => ({
   totalRegistros: 0,
   currentPage: 1,
   searchTerm: '',
-  setSearchTerm: (term: string) => set({ searchTerm: term }),
+  sorting: [{ id: 'razao_social', desc: false }],
+  setSearchTerm: (term: string) => set({ searchTerm: term, currentPage: 1 }),
   setCurrentPage: (page: number) => set({ currentPage: page }),
+  setSorting: (updaterOrValue: Updater<SortingState>) => {
+    const nextState = typeof updaterOrValue === 'function' 
+      ? updaterOrValue(get().sorting) 
+      : updaterOrValue;
+    set({ sorting: nextState, currentPage: 1 });
+  },
 
   fetchClientes: async (page = 1, search) => {
     const currentSearch = search !== undefined ? search : get().searchTerm
@@ -66,26 +77,7 @@ export const useClienteStore = create<ClienteStoreState>((set, get) => ({
         throw new Error(data.error || 'Failed to fetch Clientes from Supabase')
       }
 
-      const mappedClientes = (data.clientes || []).map((c: any) => ({
-        codigo_cliente_omie: c.OmieId,
-        codigo_cliente_integracao: c.CodigoClienteIntegracao,
-        razao_social: c.RazaoSocial,
-        nome_fantasia: c.NomeFantasia,
-        cnpj_cpf: c.CnpjCpf,
-        telefone1_ddd: '',
-        telefone1_numero: c.Telefone || '',
-        email: c.Email,
-        cidade: c.Cidade,
-        estado: c.Estado,
-        bairro: c.Bairro,
-        endereco: c.Endereco,
-        endereco_numero: c.EnderecoNumero,
-        endereco_complemento: c.EnderecoComplemento,
-        inscricao_estadual: c.InscricaoEstadual,
-        inscricao_municipal: c.InscricaoMunicipal,
-        optante_simples_nacional: c.OptanteSimplesNacional,
-        tags: [] // Tags are not yet synced to Supabase in this version
-      }))
+      const mappedClientes = mapSupabaseToClientes(data.clientes);
 
       set({
         clientes: mappedClientes,
@@ -94,8 +86,8 @@ export const useClienteStore = create<ClienteStoreState>((set, get) => ({
         currentPage: data.pagina || page,
         loading: false,
       })
-    } catch (error: any) {
-      set({ error: error.message, loading: false })
+    } catch (error: unknown) {
+      set({ error: (error as Error).message, loading: false })
     }
   },
 
@@ -123,26 +115,7 @@ export const useClienteStore = create<ClienteStoreState>((set, get) => ({
         const c = data.clientes?.[0]
         if (!c) return null
 
-        const mapped: ClienteCadastro = {
-          codigo_cliente_omie: c.OmieId,
-          codigo_cliente_integracao: c.CodigoClienteIntegracao,
-          razao_social: c.RazaoSocial,
-          nome_fantasia: c.NomeFantasia,
-          cnpj_cpf: c.CnpjCpf,
-          telefone1_ddd: '',
-          telefone1_numero: c.Telefone || '',
-          email: c.Email,
-          cidade: c.Cidade,
-          estado: c.Estado,
-          bairro: c.Bairro,
-          endereco: c.Endereco,
-          endereco_numero: c.EnderecoNumero,
-          endereco_complemento: c.EnderecoComplemento,
-          inscricao_estadual: c.InscricaoEstadual,
-          inscricao_municipal: c.InscricaoMunicipal,
-          optante_simples_nacional: c.OptanteSimplesNacional,
-          tags: []
-        }
+        const mapped = mapSupabaseToCliente(data.clientes?.[0]);
 
         set(state => ({ 
           clientes: [...state.clientes.filter(item => item.codigo_cliente_omie !== omieId), mapped],
@@ -150,8 +123,8 @@ export const useClienteStore = create<ClienteStoreState>((set, get) => ({
         }))
 
         return mapped
-      } catch (error: any) {
-        set({ error: error.message, loading: false })
+      } catch (error: unknown) {
+        set({ error: (error as Error).message, loading: false })
         return null
       } finally {
         fetchingPromises.delete(omieId);

@@ -1,4 +1,6 @@
-import { create } from 'zustand'
+import { create } from 'zustand';
+import { mapSupabaseToContasCorrentes, mapSupabaseToContaCorrente } from '@/lib/contas-mapper';
+import { SortingState } from '@tanstack/react-table';
 
 export interface ContaCorrente {
   nCodCC: number
@@ -13,6 +15,7 @@ export interface ContaCorrente {
   pdv_enviar: string
   codigo_integracao?: string
   omie_updated_at?: string
+  id?: string
 }
 
 interface ContasCorrentesStoreState {
@@ -23,9 +26,11 @@ interface ContasCorrentesStoreState {
   totalRegistros: number
   currentPage: number
   searchTerm: string
+  sorting: SortingState
   setSearchTerm: (term: string) => void
   setCurrentPage: (page: number) => void
-  fetchContas: (page?: number, search?: string) => Promise<void>
+  setSorting: (sorting: SortingState) => void
+  fetchContas: (page?: number, search?: string, sorting?: SortingState) => Promise<void>
   fetchContaByCodCC: (nCodCC: number) => Promise<ContaCorrente | null>
 }
 
@@ -40,17 +45,25 @@ export const useContasCorrentesStore = create<ContasCorrentesStoreState>((set, g
   totalRegistros: 0,
   currentPage: 1,
   searchTerm: '',
+  sorting: [{ id: 'descricao', desc: false }],
   setSearchTerm: (term: string) => set({ searchTerm: term }),
   setCurrentPage: (page: number) => set({ currentPage: page }),
+  setSorting: (sorting: SortingState) => set({ sorting }),
 
-  fetchContas: async (page = 1, search) => {
+  fetchContas: async (page = 1, search, sorting: SortingState | undefined) => {
     const currentSearch = search !== undefined ? search : get().searchTerm
+    const currentSorting = sorting !== undefined ? sorting : get().sorting
     set({ loading: true, error: null })
     try {
+      const sortField = currentSorting.length > 0 ? currentSorting[0].id : 'descricao';
+      const sortOrder = currentSorting.length > 0 ? (currentSorting[0].desc ? 'desc' : 'asc') : 'asc';
+
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '10',
-        search: currentSearch
+        search: currentSearch,
+        sortField,
+        sortOrder
       })
       const response = await fetch(`/api/supabase/contas?${params}`)
       const data = await response.json()
@@ -59,20 +72,7 @@ export const useContasCorrentesStore = create<ContasCorrentesStoreState>((set, g
         throw new Error(data.error || 'Failed to fetch Contas Correntes from Supabase')
       }
 
-      const mappedContas = (data.contas || []).map((c: any) => ({
-        nCodCC: c.OmieId,
-        descricao: c.Descricao,
-        codigo_banco: c.Bancos?.CodigoBanco || '',
-        codigo_agencia: '',
-        numero_conta_corrente: '',
-        tipo: c.Tipo,
-        tipo_conta_corrente: '',
-        inativo: c.Inativa ? 'S' : 'N',
-        saldo_inicial: 0,
-        pdv_enviar: 'N',
-        codigo_integracao: c.CodigoIntegracao,
-        omie_updated_at: c.OmieUpdatedAt
-      }))
+      const mappedContas = mapSupabaseToContasCorrentes(data.contas);
 
       set({
         contas: mappedContas,
@@ -81,8 +81,8 @@ export const useContasCorrentesStore = create<ContasCorrentesStoreState>((set, g
         currentPage: data.pagina || page,
         loading: false,
       })
-    } catch (error: any) {
-      set({ error: error.message, loading: false })
+    } catch (error: unknown) {
+      set({ error: (error as Error).message, loading: false })
     }
   },
 
@@ -108,21 +108,7 @@ export const useContasCorrentesStore = create<ContasCorrentesStoreState>((set, g
         }
 
         if (data.contas && data.contas.length > 0) {
-          const c = data.contas[0]
-          const mapped: ContaCorrente = {
-            nCodCC: c.OmieId,
-            descricao: c.Descricao,
-            codigo_banco: c.Bancos?.CodigoBanco || '',
-            codigo_agencia: '',
-            numero_conta_corrente: '',
-            tipo: c.Tipo,
-            tipo_conta_corrente: '',
-            inativo: c.Inativa ? 'S' : 'N',
-            saldo_inicial: 0,
-            pdv_enviar: 'N',
-            codigo_integracao: c.CodigoIntegracao,
-            omie_updated_at: c.OmieUpdatedAt
-          }
+          const mapped = mapSupabaseToContaCorrente(data.contas[0]);
           
           set(state => ({
             contas: [...state.contas.filter(item => item.nCodCC !== mapped.nCodCC), mapped],
@@ -132,8 +118,8 @@ export const useContasCorrentesStore = create<ContasCorrentesStoreState>((set, g
         }
         set({ loading: false })
         return null
-      } catch (error: any) {
-        set({ error: error.message, loading: false })
+      } catch (error: unknown) {
+        set({ error: (error as Error).message, loading: false })
         return null
       } finally {
         fetchingPromises.delete(nCodCC);

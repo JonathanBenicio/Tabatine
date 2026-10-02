@@ -1,0 +1,135 @@
+name: Playwright Tests
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+    - name: Install dependencies
+      run: npm ci
+    - name: Run lint
+      run: npm run lint
+
+  test:
+    needs: lint
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    environment: github-pages
+    permissions:
+      contents: read
+      pull-requests: write
+      pages: write
+      id-token: write
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+    - name: Install dependencies
+      run: npm ci
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps
+    - name: Build Next.js App
+      run: npm run build
+      env:
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+        APP_KEY: ${{ secrets.APP_KEY }}
+        APP_SECRET: ${{ secrets.APP_SECRET }}
+        OMIE_API_URL: ${{ secrets.OMIE_API_URL }}
+    - name: Run Playwright tests
+      run: npx playwright test
+      env:
+        # Credenciais e Variáveis essenciais para a API do Omie e Supabase
+        APP_KEY: ${{ secrets.APP_KEY }}
+        APP_SECRET: ${{ secrets.APP_SECRET }}
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+        # Credenciais fictícias ou reais do seu ambiente de teste
+        PLAYWRIGHT_TEST_EMAIL: ${{ secrets.PLAYWRIGHT_TEST_EMAIL }}
+        PLAYWRIGHT_TEST_PASSWORD: ${{ secrets.PLAYWRIGHT_TEST_PASSWORD }}
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report
+        path: playwright-report/
+        retention-days: 30
+
+    - name: 🔍 Debug File Structure (CI Only)
+      if: always()
+      run: |
+        echo "Root directory:"
+        ls -F
+        echo "Listing all files (recursive):"
+        ls -R | grep -v node_modules | grep -v .next || true
+
+    - name: 📊 Generate Code Coverage Summary
+      if: always()
+      run: node scripts/generate-coverage-summary.js
+
+    - name: 💬 Comment on PR with Coverage
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const fs = require('fs');
+          if (fs.existsSync('./coverage-summary.md')) {
+            const body = fs.readFileSync('./coverage-summary.md', 'utf8');
+            
+            // Buscar comentários anteriores do bot para evitar spam
+            const comments = await github.rest.issues.listComments({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            const botComment = comments.data.find(c => c.body.includes('Relatório de Cobertura de Código (E2E)'));
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                comment_id: botComment.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+            }
+          }
+
+    - name: 🏗️ Prepare GitHub Pages site
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+      run: |
+        mkdir -p public-report/coverage
+        cp -r playwright-report/* public-report/
+        cp -r coverage/html/* public-report/coverage/
+        echo "Reports ready in public-report/"
+
+    - name: 🚀 Upload artifact for GitHub Pages
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: public-report/
+
+  deploy:
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: 🚀 Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

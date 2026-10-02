@@ -4,7 +4,7 @@ import axios from "axios";
 export interface WebhookEvent {
   id: string;
   timestamp: string;
-  payload: any;
+  payload: Record<string, unknown>;
 }
 
 interface NotificationState {

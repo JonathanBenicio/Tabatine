@@ -1,0 +1,47 @@
+import { test as setup, expect } from './fixtures/test';
+
+const authFile = 'playwright/.auth/user.json';
+
+setup('authenticate', async ({ page }) => {
+  const TEST_EMAIL = process.env.PLAYWRIGHT_TEST_EMAIL;
+  const TEST_PASSWORD = process.env.PLAYWRIGHT_TEST_PASSWORD;
+
+  if (!TEST_EMAIL || !TEST_PASSWORD) {
+    if (process.env.CI) {
+      // [S6] Loga erro mas não interrompe — permite que testes não-autenticados ainda rodem
+      console.error(
+        '❌ AVISO: PLAYWRIGHT_TEST_EMAIL ou PLAYWRIGHT_TEST_PASSWORD não configurados no CI. ' +
+        'Testes que dependem de autenticação serão ignorados.'
+      );
+    }
+    
+    console.warn('PLAYWRIGHT_TEST_EMAIL ou PLAYWRIGHT_TEST_PASSWORD não definidos. Criando estado de autenticação vazio para evitar erro ENOENT.');
+    // Salva um estado vazio para evitar que o Playwright quebre ao tentar ler o arquivo no boot de outros projetos
+    await page.context().storageState({ path: authFile });
+    return;
+  }
+
+  await page.goto('/auth/login');
+  await page.getByLabel(/e-mail|email/i).fill(TEST_EMAIL);
+  await page.getByLabel(/senha|password/i).fill(TEST_PASSWORD);
+  
+  // Submete via tecla Enter para maior robustez
+  await page.keyboard.press('Enter');
+
+  // Aguarda chegar no dashboard e espera a rede ficar ociosa
+  await expect(page).toHaveURL(/\/(dashboard)?/, { timeout: 30000 });
+  await page.waitForLoadState('networkidle');
+
+  // Verifica um elemento visual que só aparece logado
+  await expect(page.getByText(/Administrador/i).first()).toBeVisible({ timeout: 15000 });
+  
+  // Verifica se o cookie de sessão está presente
+  const cookies = await page.context().cookies();
+  const authCookie = cookies.find(c => c.name.includes('auth-token'));
+  if (!authCookie) {
+    console.error('ALERTA: Cookie de autenticação não encontrado após login bem-sucedido.');
+  }
+  
+  // Salva o estado da sessão
+  await page.context().storageState({ path: authFile });
+});

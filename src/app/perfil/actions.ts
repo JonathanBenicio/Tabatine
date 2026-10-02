@@ -1,68 +1,63 @@
-'use server'
+'use server';
 
-import { createClient } from '@/utils/supabase/server'
-import { revalidatePath } from 'next/cache'
+import { createClient } from '@/utils/supabase/server';
+import { revalidatePath } from 'next/cache';
+import { ProfileNameSchema, ProfilePasswordSchema } from '@/lib/profile-validation';
 
-export async function updateProfile(formData: FormData) {
-  const supabase = await createClient()
-
-  const fullName = formData.get('fullName') as string
-  const avatarUrl = formData.get('avatarUrl') as string
-
-  const { error } = await supabase.auth.updateUser({
-    data: {
-      full_name: fullName,
-      ...(avatarUrl ? { avatar_url: avatarUrl } : {})
-    }
-  })
-
-  if (error) {
-    return { error: error.message }
-  }
-
-  revalidatePath('/perfil')
-  return { success: true }
+interface ProfileActionResult {
+  success?: boolean;
+  error?: string;
 }
 
-export async function updatePassword(formData: FormData) {
-  const supabase = await createClient()
-  const password = formData.get('password') as string
-
-  if (!password || password.length < 6) {
-    return { error: 'A senha deve ter pelo menos 6 caracteres' }
+export async function updateProfile(formData: FormData): Promise<ProfileActionResult> {
+  const input = ProfileNameSchema.safeParse({ fullName: formData.get('fullName') });
+  if (!input.success) return { error: input.error.issues[0].message };
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return { error: 'Faça login para continuar.' };
+  const { data, error } = await supabase.from('perfis')
+    .update({ nome: input.data.fullName, updated_at: new Date().toISOString() })
+    .eq('id', user.id).select('id').maybeSingle();
+  if (error || !data) {
+    console.error('Profile update failed:', error?.code ?? 'profile_not_found');
+    return { error: 'Não foi possível atualizar seu nome. Tente novamente.' };
   }
-
-  const { error } = await supabase.auth.updateUser({
-    password
-  })
-
-  if (error) {
-    return { error: error.message }
-  }
-
-  return { success: true }
+  revalidatePath('/perfil');
+  return { success: true };
 }
 
-export async function deleteAccount() {
-  const supabase = await createClient()
+export async function updatePassword(formData: FormData): Promise<ProfileActionResult> {
+  const input = ProfilePasswordSchema.safeParse({ password: formData.get('password'), confirmPassword: formData.get('confirmPassword') });
+  if (!input.success) return { error: input.error.issues[0].message };
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return { error: 'Faça login para continuar.' };
+  const { error } = await supabase.auth.updateUser({ password: input.data.password });
+  if (error) {
+    console.error('Password update failed:', error.code);
+    return { error: 'Não foi possível atualizar sua senha. Tente novamente.' };
+  }
+  return { success: true };
+}
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
+export async function toggleReceiveLogsAction(currentValue: boolean) {
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    return { error: 'Não autorizado' }
+  if (authError || !user) {
+    throw new Error('Usuário não autenticado.');
   }
 
-  // Se não tiver a chave service_role no env, vai falhar a exclusão admin
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.warn("SUPABASE_SERVICE_ROLE_KEY não encontrada. A exclusão de usuário pode falhar.");
+  const newValue = !currentValue;
+
+  const { error } = await supabase
+    .from('perfis')
+    .update({ receive_logs: newValue, updated_at: new Date().toISOString() })
+    .eq('id', user.id);
+  if (error) {
+    throw new Error(error.message);
   }
 
-  const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id)
-
-  if (deleteError) {
-    console.error('Erro ao excluir usuário:', deleteError)
-    return { error: 'Erro ao excluir conta. Verifique as permissões do servidor.' }
-  }
-
-  return { success: true }
+  revalidatePath('/perfil');
+  return { receive_logs: newValue };
 }

@@ -1,4 +1,6 @@
 import { create } from 'zustand'
+import { mapSupabaseToVendedores, mapSupabaseToVendedor } from '@/lib/vendedores-mapper'
+import { SortingState, Updater } from '@tanstack/react-table'
 
 export interface Vendedor {
   codigo: number
@@ -19,8 +21,10 @@ interface VendedoresStoreState {
   totalRegistros: number
   currentPage: number
   searchTerm: string
+  sorting: SortingState
   setSearchTerm: (term: string) => void
   setCurrentPage: (page: number) => void
+  setSorting: (updater: Updater<SortingState>) => void
   fetchVendedores: (page?: number, search?: string) => Promise<void>
   fetchVendedorByCodigo: (codigo: number) => Promise<Vendedor | null>
 }
@@ -36,8 +40,15 @@ export const useVendedoresStore = create<VendedoresStoreState>((set, get) => ({
   totalRegistros: 0,
   currentPage: 1,
   searchTerm: '',
-  setSearchTerm: (term: string) => set({ searchTerm: term }),
+  sorting: [{ id: 'nome', desc: false }],
+  setSearchTerm: (term: string) => set({ searchTerm: term, currentPage: 1 }),
   setCurrentPage: (page: number) => set({ currentPage: page }),
+  setSorting: (updaterOrValue: Updater<SortingState>) => {
+    const nextState = typeof updaterOrValue === 'function' 
+      ? updaterOrValue(get().sorting) 
+      : updaterOrValue;
+    set({ sorting: nextState, currentPage: 1 });
+  },
 
   fetchVendedores: async (page = 1, search) => {
     const currentSearch = search !== undefined ? search : get().searchTerm
@@ -55,13 +66,7 @@ export const useVendedoresStore = create<VendedoresStoreState>((set, get) => ({
         throw new Error(data.error || 'Failed to fetch Vendedores from Supabase')
       }
 
-      const mappedVendedores = (data.vendedores || []).map((v: any) => ({
-        codigo: v.OmieId,
-        nome: v.Nome,
-        email: v.Email,
-        comissao: v.Comissao,
-        inativo: v.Inativo ? 'S' : 'N'
-      }))
+      const mappedVendedores = mapSupabaseToVendedores(data.vendedores);
 
       set({
         vendedores: mappedVendedores,
@@ -70,8 +75,8 @@ export const useVendedoresStore = create<VendedoresStoreState>((set, get) => ({
         currentPage: data.pagina || page,
         loading: false,
       })
-    } catch (error: any) {
-      set({ error: error.message, loading: false })
+    } catch (error: unknown) {
+      set({ error: (error as Error).message, loading: false })
     }
   },
 
@@ -97,17 +102,7 @@ export const useVendedoresStore = create<VendedoresStoreState>((set, get) => ({
         }
 
         if (data.vendedores && data.vendedores.length > 0) {
-          const v = data.vendedores[0]
-          const mapped: Vendedor = {
-            codigo: v.OmieId,
-            nome: v.Nome,
-            email: v.Email,
-            comissao: v.Comissao,
-            inativo: v.Inativo ? 'S' : 'N',
-            codInt: v.CodInt || '',
-            fatura_pedido: v.FaturaPedido || 'N',
-            visualiza_pedido: v.VisualizaPedido || 'N'
-          }
+          const mapped = mapSupabaseToVendedor(data.vendedores[0]);
           
           set(state => ({
             vendedores: [...state.vendedores.filter(item => item.codigo !== mapped.codigo), mapped],
@@ -117,8 +112,8 @@ export const useVendedoresStore = create<VendedoresStoreState>((set, get) => ({
         }
         set({ loading: false })
         return null
-      } catch (error: any) {
-        set({ error: error.message, loading: false })
+      } catch (error: unknown) {
+        set({ error: (error as Error).message, loading: false })
         return null
       } finally {
         fetchingPromises.delete(codigo);
