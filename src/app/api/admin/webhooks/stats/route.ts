@@ -1,15 +1,13 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
+import { requireAdmin } from '@/utils/supabase/auth-guard';
+import { apiError } from '@/utils/api-error';
 
 export async function GET() {
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-  }
-
   try {
+    await requireAdmin();
+    const supabase = await createClient();
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayIso = today.toISOString();
@@ -41,9 +39,7 @@ export async function GET() {
       completedToday: completedToday.count ?? 0,
       lastEventAt: lastEvent.data?.created_at ?? null,
     });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Erro desconhecido';
-    console.error('[API /admin/webhooks/stats] GET error:', message);
-    return NextResponse.json({ error: 'Erro ao calcular estatísticas no Supabase' }, { status: 500 });
+  } catch (error) {
+    return apiError(error, 'GET /api/admin/webhooks/stats');
   }
 }

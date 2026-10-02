@@ -1,20 +1,18 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/utils/supabase/auth-guard';
+import { apiError } from '@/utils/api-error';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
 export async function POST(_request: NextRequest, { params }: RouteParams) {
-  const { id } = await params;
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-  }
-
   try {
+    await requireAdmin();
+    const { id } = await params;
+    const supabase = await createClient();
+
     const { error } = await supabase
       .from('webhook_events')
       .update({ 
@@ -35,9 +33,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
       newStatus: 'Pending',
       retryCount: 0
     }, { status: 200 });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Erro desconhecido';
-    console.error(`[API /admin/webhooks/${id}/retry] POST error:`, message);
-    return NextResponse.json({ error: 'Erro ao re-processar evento no Supabase' }, { status: 500 });
+  } catch (error) {
+    return apiError(error, 'POST /api/admin/webhooks/[id]/retry');
   }
 }

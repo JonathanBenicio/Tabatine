@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import { apiError } from '@/utils/api-error';
 
 export async function GET(request: NextRequest) {
   try {
@@ -35,8 +36,7 @@ export async function GET(request: NextRequest) {
       total_de_paginas: count ? Math.ceil(count / limit) : 1,
       total_de_registros: count || 0
     });
-  } catch (error: unknown) {
-    console.error('API /meios-pagamento Error:', error);
-    return NextResponse.json({ error: (error instanceof Error ? (error instanceof Error ? error.message : 'Internal Server Error') : 'Internal Server Error') }, { status: 500 });
+  } catch (error) {
+    return apiError(error, 'GET /api/supabase/meios-pagamento');
   }
 }
