@@ -1,5 +1,5 @@
-import { VendaPlana, ParcelaInfo } from '@/store/useVendasStore';
-import { OmiePedidoVendaProduto, OmieParcela, OmieDet } from '@/types/omie-raw';
+import type { VendaPlana, ParcelaInfo } from '@/store/useVendasStore';
+import type { OmiePedidoVendaProduto, OmieParcela, OmieDet } from '@/types/omie-raw';
 
 /**
  * Maps a date string to a PT-BR formatted date and time.
@@ -78,7 +78,7 @@ export function mapOrderToFlatVendas(ped: OmiePedidoVendaProduto): VendaPlana[] 
     const altInfo = formatISOToBR(info.dAlt || '');
 
     // Smart Status Logic
-    const isFaturado = cabecalho.etapa === '90';
+    const isFaturado = info.faturado === 'S';
     const firstDue = parcelasInfo[0] ? parseAnyDate(parcelasInfo[0].data_vencimento || '') : null;
     const isOverdue = !isFaturado && firstDue && firstDue < today;
 
@@ -90,7 +90,7 @@ export function mapOrderToFlatVendas(ped: OmiePedidoVendaProduto): VendaPlana[] 
 
     flatRows.push({
       id_linha: `${cabecalho.codigo_pedido || 0}-${idx}`,
-      data: info.dFat || cabecalho.data_pedido || cabecalho.data_previsao || '--',
+      data: info.dInc || cabecalho.data_previsao || '--',
       cliente: cabecalho.codigo_cliente?.toString() || '--',
       vendedor: infoAdicional.codVend?.toString() || '--',
       codVendedor: Number(infoAdicional.codVend || 0),
@@ -117,7 +117,7 @@ export function mapOrderToFlatVendas(ped: OmiePedidoVendaProduto): VendaPlana[] 
       omieData: ped,
 
       // Cabecalho extra
-      dataPedido: cabecalho.data_pedido || '--',
+      dataPedido: info.dInc || '--',
       dataPrevisao: cabecalho.data_previsao || '--',
       etapa: cabecalho.etapa || '--',
       qtdItens: det.length,

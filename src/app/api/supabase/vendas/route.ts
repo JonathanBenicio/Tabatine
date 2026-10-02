@@ -182,14 +182,12 @@ export async function GET(req: Request) {
           codigo_pedido: order.omie_id,
           numero_pedido: order.numero_pedido,
           etapa: order.etapa,
-          data_pedido: order.data_inclusao || order.created_at,
           data_previsao: order.data_previsao,
           codigo_cliente: (order as any).clientes?.omie_id,
           codigo_parcela: order.codigo_parcela,
           meio_pagamento: (order as any).formas_pagamento?.descricao || order.meio_pagamento || '',
           quantidade_itens: itens.length,
           qtde_parcelas: order.quantidade_parcelas || 0,
-          faturado: order.faturado ? 'S' : 'N',
           devolvido: order.devolvido ? 'S' : 'N'
         },
         det: (itens as any[]).map((item: any) => ({
@@ -278,6 +276,7 @@ export async function GET(req: Request) {
           valor_total_nfe: num(nf?.valor_total),
           chave_nfe: nf?.chave_acesso || '',
           cancelado: order.cancelado ? 'S' : 'N',
+          faturado: order.faturado ? 'S' : 'N',
           autorizado: order.autorizado ? 'S' : 'N',
           denegado: order.denegado ? 'S' : 'N',
           cliente_nome: (order as any).clientes?.razao_social || (order as any).clientes?.nome_fantasia

@@ -11,9 +11,11 @@ O arquivo `src/lib/vendas-mapper.ts` centraliza a "inteligência" do módulo, tr
 
 ### Lógicas de Status (Heurísticas Sugeridas)
 - **🚦 Status de Vencimento**: 
-  - Se a etapa for '90' (Faturado), o status é **Faturado**.
+  - Se `infoCadastro.faturado === 'S'`, o status é **Faturado**, independentemente da etapa.
+  - A etapa '50' significa **Faturar** e, por si só, não indica que o pedido foi faturado.
   - Se não estiver faturado e a data da 1ª parcela for menor que hoje, o status é **Atrasado**.
   - Caso contrário, exibe o nome da **Etapa do Pedido**.
+- **📅 Data do Pedido**: A data exibida na lista usa `infoCadastro.dInc` (inclusão), com fallback para `cabecalho.data_previsao` quando ausente. O campo `dataPedido` usa `dInc` ou `--`; a data de faturamento permanece separada em `dataFaturamento`.
 - **💰 Status de Comissão**: 
   - Implementada uma heurística inicial: se a Nota Fiscal estiver Autorizada (`autorizado === 'S'`), o status é **DISPONÍVEL**, caso contrário, **PENDENTE**.
 - **📄 Status de NF**: 
